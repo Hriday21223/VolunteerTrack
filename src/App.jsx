@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import { AuthProvider, useAuth } from '@/hooks/useAuth.jsx'
 import { DataProvider, useData } from '@/hooks/useData.jsx'
 import MobileTabBar from '@/components/MobileTabBar.jsx'
@@ -68,6 +69,7 @@ export default function App() {
     <AuthProvider>
       <DataProvider>
         <Shell />
+        <Analytics />
       </DataProvider>
     </AuthProvider>
   )
