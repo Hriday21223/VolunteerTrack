@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, Link } from 'react-router-dom'
 import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell, Plus } from 'lucide-react'
 import { cn } from '@/utils/cn.js'
 
