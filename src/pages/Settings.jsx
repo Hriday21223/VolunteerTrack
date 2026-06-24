@@ -11,7 +11,7 @@ import Toast from '@/components/Toast.jsx'
 
 export default function Settings() {
   const { theme, setTheme, toggle } = useTheme()
-  const { user, logout, deleteAccount } = useAuth()
+  const { user, logout, deleteAccount, updateProfile } = useAuth()
   const { goals, saveGoal, removeGoal } = useData()
   const nav = useNavigate()
   const [newGoal, setNewGoal] = useState({ title: '', targetHours: 50, primary: false })

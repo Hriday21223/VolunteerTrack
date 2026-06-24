@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { keys, read, write, remove } from '@/lib/storage.js'
 import {
   findUserByEmail, verifyPassword, createUser, updateUser as persistUser,
-  deleteUser, clearUserData, verifyPin, hashPin, sendPinResetCode,
+  deleteUser, clearUserData, verifyPin, hashPin, hashPassword, sendPinResetCode,
   isResetPinCodeValid, clearPinResetCode,
   sendPasswordResetCode, isResetPasswordCodeValid, clearPasswordResetCode,
 } from '@/api/index.js'
