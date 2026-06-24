@@ -113,7 +113,7 @@ export default function Contact() {
               <div className="flex gap-3">
                 <a className="p-2 rounded-lg bg-earth-100 hover:bg-earth-200 dark:bg-[#1b2a22] dark:hover:bg-[#243529]" href="#" aria-label="GitHub"><Github className="w-4 h-4" /></a>
                 <a className="p-2 rounded-lg bg-earth-100 hover:bg-earth-200 dark:bg-[#1b2a22] dark:hover:bg-[#243529]" href="#" aria-label="Twitter"><Twitter className="w-4 h-4" /></a>
-                <a className="p-2 rounded-lg bg-earth-100 hover:bg-earth-200 dark:bg-[#1b2a22] dark:hover:bg-[#243529]" href="#" aria-label="Instagram"><Instagram className="w-4 h-4" /></a>
+                <a className="p-2 rounded-lg bg-earth-100 hover:bg-earth-200 dark:bg-[#1b2a22] dark:hover:bg-[#243529]" href="https://www.instagram.com/volunteertrackofficial/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><Instagram className="w-4 h-4" /></a>
               </div>
             </Card>
           </div>

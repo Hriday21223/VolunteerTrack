@@ -108,6 +108,30 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Mobile-first summary cards */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 md:hidden">
+        <Card className="p-4">
+          <div className="text-xs font-medium text-earth-500 uppercase tracking-wide">Total hours</div>
+          <div className="mt-1 text-2xl font-bold text-white">{fmtHours(total)}</div>
+          <div className="text-xs text-earth-400 mt-1">{logs.length} sessions</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-xs font-medium text-earth-500 uppercase tracking-wide">This month</div>
+          <div className="mt-1 text-2xl font-bold text-white">{fmtHours(thisMonth)}</div>
+          <div className="text-xs text-earth-400 mt-1">Monthly progress</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-xs font-medium text-earth-500 uppercase tracking-wide">Goal</div>
+          <div className="mt-1 text-2xl font-bold text-white">{Math.round(percent * 100)}%</div>
+          <div className="text-xs text-earth-400 mt-1">{primary?.title || 'No goal set'}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-xs font-medium text-earth-500 uppercase tracking-wide">Badges</div>
+          <div className="mt-1 text-2xl font-bold text-white">{earned.length}/12</div>
+          <div className="text-xs text-earth-400 mt-1">Achievements</div>
+        </Card>
+      </div>
+
       <div className="grid gap-5">
         <Card className="overflow-hidden lg:col-span-3">
           <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] bg-gradient-to-r from-brand-800 via-slate-950 to-slate-900 p-8">

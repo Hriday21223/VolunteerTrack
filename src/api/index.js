@@ -8,8 +8,8 @@ export function getUsers() {
   if (users.length === 0) {
     const demoUser = {
       id: uid('usr'),
-      name: 'Test User',
-      email: 'test@voluntrack.app',
+      name: 'Hriday Karnatam',
+      email: 'karnatamhriday@gmail.com',
       school: 'Demo School',
       grade: '12',
       passwordHash: hashPassword('test123'),

@@ -16,7 +16,7 @@ export default defineConfig({
       },
 
       includeAssets: [
-        'favicon.svg',
+        'logo.png',
         'icons/icon-192.png',
         'icons/icon-512.png'
       ],
@@ -35,9 +35,9 @@ export default defineConfig({
 
         icons: [
           {
-            src: 'favicon.svg',
+            src: 'logo.png',
             sizes: 'any',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'maskable any',
           },
           {

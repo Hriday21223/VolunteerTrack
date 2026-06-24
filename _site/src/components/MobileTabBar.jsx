@@ -1,6 +1,9 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell } from 'lucide-react'
+import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell, ShieldCheck } from 'lucide-react'
 import { cn } from '@/utils/cn.js'
+import { useAuth } from '@/hooks/useAuth.jsx'
+
+const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
 
 const ITEMS = [
   { to: '/',             label: 'Home',     icon: Home },
@@ -16,10 +19,14 @@ const ITEMS = [
 /** Mobile bottom navigation. Max 5 visible items for usability. */
 export default function MobileTabBar() {
   const { pathname } = useLocation()
+  const { user } = useAuth()
+  const items = user?.email === ADMIN_EMAIL
+    ? [...ITEMS, { to: '/admin', label: 'Admin', icon: ShieldCheck }]
+    : ITEMS
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white dark:bg-[#0f1a14] border-t border-earth-100 dark:border-[#1f2e25] pb-[env(safe-area-inset-bottom)]">
-      <ul className="grid grid-cols-7">
-        {ITEMS.map(({ to, label, icon: Icon }) => {
+      <ul className="grid" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+        {items.map(({ to, label, icon: Icon }) => {
           const active = to === '/' ? pathname === '/' : pathname.startsWith(to)
           return (
             <li key={to}>

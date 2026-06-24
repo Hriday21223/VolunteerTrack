@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Save, Trash2, Upload, Mail, User, FileSignature, ShieldCheck } from 'lucide-react'
+import { Save, Trash2, Upload, Mail, User, FileSignature, ShieldCheck, MapPin, Navigation } from 'lucide-react'
 import { useData } from '@/hooks/useData.jsx'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
@@ -31,6 +31,8 @@ export default function LogHours({ editId, onCloseEdit }) {
   const [form, setForm] = useState(blank())
   const [toast, setToast] = useState(false)
   const [error, setError] = useState('')
+  const [locating, setLocating] = useState(false)
+  const [locError, setLocError] = useState('')
 
   useEffect(() => {
     if (editId) {
@@ -50,6 +52,7 @@ export default function LogHours({ editId, onCloseEdit }) {
     e.preventDefault()
     setError('')
     if (!form.activity.trim()) { setError('Please enter an activity name.'); return }
+    if (!form.location.trim()) { setError('Please enter a location or use the button below to detect it.'); return }
     if (hours <= 0)             { setError('End time must be after start time.'); return }
 
     try {
@@ -65,6 +68,47 @@ export default function LogHours({ editId, onCloseEdit }) {
       }
     } catch (err) {
       setError('Could not save — your proof file might be too large. Try a smaller image.')
+    }
+  }
+
+  const getCurrentLocation = async () => {
+    setLocating(true)
+    setLocError('')
+    try {
+      const position = await new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error('Geolocation is not supported by your browser.'))
+          return
+        }
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        })
+      })
+
+      const { latitude, longitude } = position.coords
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            'Accept-Language': 'en',
+            'User-Agent': 'VolunTrack/1.0',
+          },
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to look up address.')
+      }
+
+      const data = await response.json()
+      const address = data.display_name || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
+      setForm((f) => ({ ...f, location: address }))
+    } catch (err) {
+      setLocError(err.message || 'Could not get your location.')
+    } finally {
+      setLocating(false)
     }
   }
 
@@ -123,8 +167,27 @@ export default function LogHours({ editId, onCloseEdit }) {
             <SectionTitle>Where</SectionTitle>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="label">Location</label>
-                <input className="input" placeholder="123 Main St, Library, Online, etc." value={form.location} onChange={onChange('location')} />
+                <label className="label">Location *</label>
+                <div className="flex gap-2">
+                  <input
+                    className="input flex-1"
+                    placeholder="123 Main St, Library, Online, etc."
+                    value={form.location}
+                    onChange={onChange('location')}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={getCurrentLocation}
+                    disabled={locating}
+                    className="btn-ghost inline-flex items-center gap-1.5 whitespace-nowrap"
+                    title="Use current location"
+                  >
+                    <Navigation className={`w-4 h-4 ${locating ? 'animate-spin' : ''}`} />
+                    {locating ? 'Locating…' : 'Current'}
+                  </button>
+                </div>
+                {locError && <div className="text-xs text-red-600 mt-1">{locError}</div>}
               </div>
               <div>
                 <label className="label">Notes</label>

@@ -13,6 +13,7 @@ import ResetPassword from '@/pages/ResetPassword.jsx'
 import ResetPin from '@/pages/ResetPin.jsx'
 import About from '@/pages/About.jsx'
 import Contact from '@/pages/Contact.jsx'
+import Admin from '@/pages/Admin.jsx'
 import Dashboard from '@/pages/Dashboard.jsx'
 import LogHours from '@/pages/LogHours.jsx'
 import CalendarView from '@/pages/CalendarView.jsx'
@@ -32,6 +33,16 @@ function Protected({ children }) {
 function PublicOnly({ children }) {
   const { user } = useAuth()
   if (user) return <Navigate to="/" replace />
+  return children
+}
+
+const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
+
+function AdminOnly({ children }) {
+  const { user } = useAuth()
+  const loc = useLocation()
+  if (!user) return <Navigate to="/login" state={{ from: loc }} replace />
+  if (user.email !== ADMIN_EMAIL) return <Navigate to="/" replace />
   return children
 }
 
@@ -61,6 +72,7 @@ function Shell() {
         <Route path="/reports"      element={<Protected><Reports /></Protected>} />
         <Route path="/profile"      element={<Protected><Profile /></Protected>} />
         <Route path="/settings"     element={<Protected><Settings /></Protected>} />
+        <Route path="/admin"        element={<AdminOnly><Admin /></AdminOnly>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

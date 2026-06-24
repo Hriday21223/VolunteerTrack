@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Heart, ArrowLeft, Mail, MessageSquare, Send, CheckCircle2, Github, Twitter, Instagram } from 'lucide-react'
+import { ArrowLeft, Mail, MessageSquare, Send, CheckCircle2, Instagram } from 'lucide-react'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
 
@@ -8,31 +8,50 @@ export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', subject: 'General question', message: '' })
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
+  const [sendErr, setSendErr] = useState('')
 
   const onChange = (k) => (e) => setForm({ ...form, [k]: e.target.value })
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault()
-    if (!form.message.trim()) return
+    setSendErr('')
+    setDone(false)
+    if (!form.message.trim() || !form.name.trim() || !form.email.trim()) {
+      return
+    }
     setBusy(true)
-    // Demo only: persist the message in localStorage so the user can see it was "sent."
-    const list = JSON.parse(localStorage.getItem('voluntrack:messages') || '[]')
-    list.push({ ...form, sentAt: new Date().toISOString() })
-    localStorage.setItem('voluntrack:messages', JSON.stringify(list))
-    setTimeout(() => {
-      setBusy(false)
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          subject: form.subject,
+          message: form.message,
+        }),
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(data.error || `Server responded with ${response.status}`)
+      }
+      const list = JSON.parse(localStorage.getItem('voluntrack:contacts') || '[]')
+      list.push({ ...form, sentAt: new Date().toISOString() })
+      localStorage.setItem('voluntrack:contacts', JSON.stringify(list))
       setDone(true)
       setForm({ name: '', email: '', subject: 'General question', message: '' })
-    }, 700)
+    } catch (err) {
+      setSendErr(err.message || 'Something went wrong. Please try again.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 via-earth-50 to-earth-100 dark:from-[#0f1813] dark:via-[#0f1813] dark:to-[#14201a]">
       <header className="px-4 md:px-8 py-5 flex items-center justify-between">
         <Link to="/login" className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white shadow-soft">
-            <Heart className="w-5 h-5" />
-          </div>
+          <img src="/logo.png" alt="VolunTrack" className="w-9 h-9 object-contain" />
           <span className="font-display font-bold text-lg">VolunTrack</span>
         </Link>
         <Link to="/login" className="btn-ghost"><ArrowLeft className="w-4 h-4" /> Back to sign in</Link>
@@ -81,6 +100,7 @@ export default function Contact() {
                   placeholder="Tell us a little about what you need…"
                 />
               </div>
+              {sendErr && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-300 px-3 py-2 rounded-lg">{sendErr}</div>}
               <button className="btn-primary" disabled={busy}>
                 {busy ? 'Sending…' : <>Send message <Send className="w-4 h-4" /></>}
               </button>
@@ -92,8 +112,8 @@ export default function Contact() {
               <h3 className="font-display font-semibold flex items-center gap-2 mb-2">
                 <Mail className="w-4 h-4 text-brand-600" /> Email
               </h3>
-              <a href="mailto:hello@voluntrack.app" className="text-brand-700 dark:text-brand-300 hover:underline font-medium">
-                hello@voluntrack.app
+               <a href="mailto:volunteertrack@googlegroups.com" className="text-brand-700 dark:text-brand-300 hover:underline font-medium">
+                volunteertrack@googlegroups.com
               </a>
               <p className="text-sm text-earth-500 dark:text-earth-400 mt-1">For general questions and support.</p>
             </Card>
@@ -111,9 +131,7 @@ export default function Contact() {
             <Card>
               <h3 className="font-display font-semibold mb-3">Follow along</h3>
               <div className="flex gap-3">
-                <a className="p-2 rounded-lg bg-earth-100 hover:bg-earth-200 dark:bg-[#1b2a22] dark:hover:bg-[#243529]" href="#" aria-label="GitHub"><Github className="w-4 h-4" /></a>
-                <a className="p-2 rounded-lg bg-earth-100 hover:bg-earth-200 dark:bg-[#1b2a22] dark:hover:bg-[#243529]" href="#" aria-label="Twitter"><Twitter className="w-4 h-4" /></a>
-                <a className="p-2 rounded-lg bg-earth-100 hover:bg-earth-200 dark:bg-[#1b2a22] dark:hover:bg-[#243529]" href="#" aria-label="Instagram"><Instagram className="w-4 h-4" /></a>
+                <a className="p-2 rounded-lg bg-earth-100 hover:bg-earth-200 dark:bg-[#1b2a22] dark:hover:bg-[#243529]" href="https://www.instagram.com/volunteertrackofficial/?hl=en" target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram className="w-4 h-4" /></a>
               </div>
             </Card>
           </div>

@@ -21,6 +21,7 @@ import Reports from '@/pages/Reports.jsx'
 import Profile from '@/pages/Profile.jsx'
 import Settings from '@/pages/Settings.jsx'
 import Reminders from '@/pages/Reminders.jsx'
+import Admin from '@/pages/Admin.jsx'
 
 function Protected({ children }) {
   const { user } = useAuth()
@@ -61,6 +62,7 @@ function Shell() {
         <Route path="/reports"      element={<Protected><Reports /></Protected>} />
         <Route path="/profile"      element={<Protected><Profile /></Protected>} />
         <Route path="/settings"     element={<Protected><Settings /></Protected>} />
+        <Route path="/admin"         element={<Protected><Admin /></Protected>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Heart, ArrowRight, Target, Trophy, FileText, Calendar, Sparkles, ShieldCheck, Users } from 'lucide-react'
+import { Heart, ArrowRight, Target, Trophy, FileText, Calendar, Sparkles, ShieldCheck, Users, Instagram } from 'lucide-react'
 import Card from '@/components/Card.jsx'
 
 const FEATURES = [
@@ -148,6 +148,23 @@ export default function About() {
             </div>
           </Card>
         </section>
+
+        <footer className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-8 text-sm text-earth-500 dark:text-earth-400">
+          <span>© {new Date().getFullYear()} VolunTrack</span>
+          <div className="flex items-center gap-4">
+            <Link to="/contact" className="hover:text-white">Contact</Link>
+            <a
+              href="https://www.instagram.com/volunteertrackofficial/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-white"
+              aria-label="Instagram"
+            >
+              <Instagram className="w-4 h-4" />
+              @volunteertrackofficial
+            </a>
+          </div>
+        </footer>
       </main>
     </div>
   </div>

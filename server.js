@@ -2,14 +2,21 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import nodemailer from 'nodemailer'
+import { fileURLToPath } from 'url'
+import path from 'path'
 
 dotenv.config()
 
 const app = express()
 const port = process.env.BACKEND_PORT || 5174
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 app.use(cors())
 app.use(express.json())
+
+const distPath = path.join(__dirname, 'dist')
+app.use(express.static(distPath))
 
 // In-memory dev ring buffer of the most recent codes we tried to send. Useful
 // when the user is on the GitHub Pages demo and SMTP isn't configured: the
@@ -113,6 +120,44 @@ app.get('/api/dev-recovery-code', (req, res) => {
   const hit = devCodeLog.find((entry) => entry.email.toLowerCase() === email)
   if (!hit) return res.status(404).json({ error: 'No recent code for that email.' })
   return res.json({ code: hit.code, type: hit.type, at: hit.at })
+})
+
+app.post('/api/contact', async (req, res) => {
+  const { name, email, subject, message } = req.body
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'Missing name, email, or message.' })
+  }
+
+  const { transport, missing } = transporter()
+  if (!transport) {
+    return res.status(503).json({
+      error: 'Email backend is not configured.',
+      missingVars: missing,
+    })
+  }
+
+  const to = process.env.EMAIL_FROM || process.env.EMAIL_USER
+  const body = `New contact message from ${name} <${email}>\nSubject: ${subject || 'General question'}\n\n${message}`
+
+  try {
+    await transport.sendMail({
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      to,
+      replyTo: email,
+      subject: `VolunTrack contact: ${subject || 'General question'}`,
+      text: body,
+      html: `<pre style="font-family: sans-serif; white-space: pre-wrap;">${body}</pre>`,
+    })
+    return res.status(200).json({ ok: true })
+  } catch (error) {
+    console.error('Contact email failed:', error)
+    return res.status(500).json({ error: 'Failed to send message.' })
+  }
+})
+
+// SPA fallback: serve index.html for any non-API route so React Router handles it.
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'))
 })
 
 app.listen(port, () => {

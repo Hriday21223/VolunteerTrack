@@ -1,6 +1,9 @@
-import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Heart, Bell } from 'lucide-react'
+import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Heart, Bell, ShieldCheck, Instagram } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/utils/cn.js'
+import { useAuth } from '@/hooks/useAuth.jsx'
+
+const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
 
 const ITEMS = [
   { to: '/',           label: 'Dashboard',   icon: Home },
@@ -14,6 +17,7 @@ const ITEMS = [
 ]
 
 export default function Sidebar() {
+  const { user } = useAuth()
   return (
     <aside className="hidden md:flex md:flex-col w-72 shrink-0 border-r border-earth-900/80 bg-[#06141a] text-earth-200 sticky top-0 h-screen">
       <div className="px-6 py-6">
@@ -47,6 +51,22 @@ export default function Sidebar() {
             {label}
           </NavLink>
         ))}
+        {user?.email === ADMIN_EMAIL && (
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition',
+                isActive
+                  ? 'bg-brand-700/10 text-white shadow-sm shadow-brand-500/10'
+                  : 'text-earth-300 hover:bg-white/5 hover:text-white',
+              )
+            }
+          >
+            <ShieldCheck className="w-4 h-4" />
+            Admin
+          </NavLink>
+        )}
       </nav>
 
       <div className="px-5 pb-6 pt-4 text-xs text-earth-400 border-t border-earth-900/80">
@@ -56,6 +76,9 @@ export default function Sidebar() {
         <div className="mt-4 flex gap-3">
           <a href="/about" className="text-earth-300 hover:text-white">About</a>
           <a href="/contact" className="text-earth-300 hover:text-white">Contact</a>
+          <a href="https://www.instagram.com/volunteertrackofficial/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-earth-300 hover:text-white" aria-label="Instagram">
+            <Instagram className="w-3.5 h-3.5" /> Instagram
+          </a>
         </div>
         <div className="mt-4 text-earth-500">© {new Date().getFullYear()}</div>
       </div>

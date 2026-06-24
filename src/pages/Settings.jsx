@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Moon, Sun, Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
@@ -220,6 +220,16 @@ export default function Settings() {
               <Trash2 className="w-4 h-4 mr-2" /> Delete account
             </button>
           )}
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <Link to="/admin" className="block p-4 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition">
+            <div className="flex items-center gap-2 mb-1">
+              <ShieldCheck className="w-4 h-4 text-brand-600" />
+              <span className="font-semibold text-earth-900 dark:text-earth-100">Admin inbox</span>
+            </div>
+            <p className="text-sm text-earth-500 dark:text-earth-400">Review contact form submissions.</p>
+          </Link>
         </Card>
 
         <Card className="lg:col-span-2">

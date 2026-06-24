@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { Heart, Mail, Lock, ArrowRight } from 'lucide-react'
+import { Mail, Lock, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -41,7 +41,7 @@ export default function Login() {
       <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.2fr_0.8fr] items-center">
         <div className="space-y-8">
           <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-slate-900/60 px-4 py-2 text-sm text-brand-100 shadow-soft backdrop-blur">
-            <Heart className="w-5 h-5 text-brand-300" />
+            <img src="/logo.png" alt="VolunTrack" className="w-5 h-5 object-contain" />
             VolunTrack login
           </div>
 
@@ -71,9 +71,7 @@ export default function Login() {
                   <p className="text-sm text-brand-200 uppercase tracking-[0.3em]">Secure sign in</p>
                   <h2 className="text-3xl font-bold text-white">Welcome back</h2>
                 </div>
-                <div className="w-12 h-12 rounded-3xl bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white shadow-soft">
-                  <Heart className="w-5 h-5" />
-                </div>
+                <img src="/logo.png" alt="VolunTrack" className="w-12 h-12 object-contain" />
               </div>
 
               <div className="mb-4 inline-flex rounded-full bg-white/10 p-1">

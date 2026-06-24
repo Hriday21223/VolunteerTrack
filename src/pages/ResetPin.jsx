@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Heart, Mail, Lock, CheckCircle2, Shield, AlertTriangle, Inbox, RefreshCw, Settings } from 'lucide-react'
+import { Mail, Lock, CheckCircle2, Shield, AlertTriangle, Inbox, RefreshCw, Settings } from 'lucide-react'
 import Card from '@/components/Card.jsx'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { sendRecoveryEmail, getRecoveryStatus, fetchDevRecoveryCode } from '@/lib/recovery.js'
@@ -109,9 +109,7 @@ export default function ResetPin() {
     <div className="min-h-screen grid place-items-center px-4 py-8 bg-gradient-to-br from-brand-50 via-earth-50 to-earth-100 dark:from-[#0f1813] dark:via-[#0f1813] dark:to-[#14201a] text-earth-900 dark:text-earth-100">
       <div className="w-full max-w-md">
         <Link to="/login" className="flex items-center gap-2.5 justify-center mb-6">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white shadow-soft">
-            <Heart className="w-5 h-5" />
-          </div>
+          <img src="/logo.png" alt="VolunTrack" className="w-10 h-10 object-contain" />
           <span className="font-display font-bold text-2xl">VolunTrack</span>
         </Link>
 
@@ -186,7 +184,7 @@ export default function ResetPin() {
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-earth-400" />
                       <input
-                        type="text"
+                        type="password"
                         required
                         inputMode="numeric"
                         pattern="[0-9]{6}"
