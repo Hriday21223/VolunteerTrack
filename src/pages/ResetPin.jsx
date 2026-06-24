@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Heart, Mail, Lock, CheckCircle2, Shield } from 'lucide-react'
+import { Heart, Mail, Lock, CheckCircle2, Shield, AlertTriangle, Inbox, RefreshCw, Settings } from 'lucide-react'
 import Card from '@/components/Card.jsx'
 import { useAuth } from '@/hooks/useAuth.jsx'
+import { sendRecoveryEmail, getRecoveryStatus, fetchDevRecoveryCode } from '@/lib/recovery.js'
 
 export default function ResetPin() {
   const { requestPinReset, completePinReset } = useAuth()
@@ -13,19 +14,74 @@ export default function ResetPin() {
   const [confirm, setConfirm] = useState('')
   const [stage, setStage] = useState('request')
   const [sentCode, setSentCode] = useState('')
+  const [delivery, setDelivery] = useState({ status: 'idle', reason: '', missingVars: [] })
+  const [serverInfo, setServerInfo] = useState({ ok: false, smtpConfigured: false, missingVars: [], backendAvailable: false })
+  const [retrying, setRetrying] = useState(false)
   const [err, setErr] = useState('')
   const [done, setDone] = useState(false)
+
+  // Probe the email backend so the page can show setup hints up front.
+  useEffect(() => { getRecoveryStatus().then(setServerInfo) }, [])
 
   const sendCode = async (e) => {
     e.preventDefault()
     setErr('')
+    setDelivery({ status: 'sending', reason: '', missingVars: [] })
     try {
-      const code = await requestPinReset(email)
-      setSentCode(code)
+      const generated = await requestPinReset(email)
+      setSentCode(generated)
+      setCode(generated)
+
+      // If the backend isn't reachable at all (e.g. static GitHub Pages host),
+      // skip the email + dev-code round trips and just show the code locally.
+      const status = await getRecoveryStatus()
+      setServerInfo(status)
+      if (!status.backendAvailable) {
+        setDelivery({ status: 'fallback', reason: 'no-backend', missingVars: [] })
+        setStage('verify')
+        return
+      }
+
+      const result = await sendRecoveryEmail({ email, code: generated, type: 'pin' })
+
+      let finalResult = result
+      if (!result.ok && result.missingVars?.length) {
+        const dev = await fetchDevRecoveryCode(email)
+        if (dev.ok) {
+          setCode(dev.code)
+          setSentCode(dev.code)
+          finalResult = { ok: true, viaDev: true }
+        }
+      }
+
+      setDelivery(
+        finalResult.ok
+          ? { status: 'sent', reason: '', missingVars: [] }
+          : { status: 'fallback', reason: finalResult.reason, missingVars: finalResult.missingVars || [] }
+      )
       setStage('verify')
     } catch (error) {
+      setDelivery({ status: 'idle', reason: '', missingVars: [] })
       setErr(error.message)
     }
+  }
+
+  const resend = async () => {
+    setRetrying(true)
+    const status = await getRecoveryStatus()
+    setServerInfo(status)
+    if (!status.backendAvailable) {
+      setDelivery({ status: 'fallback', reason: 'no-backend', missingVars: [] })
+      setRetrying(false)
+      return
+    }
+    const result = await sendRecoveryEmail({ email, code: sentCode, type: 'pin' })
+    if (result.ok) {
+      setDelivery({ status: 'sent', reason: '', missingVars: [] })
+    } else {
+      setDelivery({ status: 'fallback', reason: result.reason, missingVars: result.missingVars || [] })
+    }
+    setRetrying(false)
   }
 
   const resetPin = async (e) => {
@@ -76,7 +132,7 @@ export default function ResetPin() {
                 <Shield className="w-6 h-6 text-brand-500" />
                 <div>
                   <h1 className="text-2xl font-bold">Reset your PIN</h1>
-                  <p className="text-sm text-earth-500 dark:text-earth-400">We’ll send a recovery code to your email.</p>
+                  <p className="text-sm text-earth-500 dark:text-earth-400">We&rsquo;ll email a recovery code to confirm it&rsquo;s really you.</p>
                 </div>
               </div>
 
@@ -97,16 +153,34 @@ export default function ResetPin() {
                     </div>
                   </div>
 
+                  {serverInfo.ok && !serverInfo.smtpConfigured && (
+                    <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+                      <div className="flex items-start gap-2">
+                        <Settings className="w-4 h-4 mt-0.5 shrink-0" />
+                        <div>
+                          The recovery server is up, but SMTP isn&rsquo;t configured. Add{' '}
+                          {serverInfo.missingVars.length ? (
+                            <code className="font-mono">{serverInfo.missingVars.join(', ')}</code>
+                          ) : (
+                            'your email credentials'
+                          )}{' '}
+                          to <code className="font-mono">.env</code> and restart <code className="font-mono">npm run backend</code>.
+                          For now, the recovery code will appear on screen so you can finish.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {err && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-300 px-3 py-2 rounded-lg">{err}</div>}
 
-                  <button className="btn-primary w-full" type="submit">Send recovery code</button>
-
-                  <div className="text-sm text-earth-500 dark:text-earth-400">
-                    This app can’t send real email, so the recovery code is shown after you submit.
-                  </div>
+                  <button className="btn-primary w-full" type="submit" disabled={delivery.status === 'sending'}>
+                    {delivery.status === 'sending' ? 'Sending code…' : 'Send recovery code'}
+                  </button>
                 </form>
               ) : (
                 <form onSubmit={resetPin} className="space-y-4">
+                  <DeliveryBanner delivery={delivery} email={email} sentCode={sentCode} onResend={resend} retrying={retrying} />
+
                   <div>
                     <label className="label">Recovery code</label>
                     <div className="relative">
@@ -124,12 +198,6 @@ export default function ResetPin() {
                       />
                     </div>
                   </div>
-
-                  {sentCode && (
-                    <div className="rounded-2xl border border-brand-500/20 bg-brand-500/10 p-3 text-sm text-brand-100">
-                      Your recovery code is <span className="font-semibold">{sentCode}</span>. Use it within 15 minutes.
-                    </div>
-                  )}
 
                   <div>
                     <label className="label">New 4-digit PIN</label>
@@ -174,4 +242,63 @@ export default function ResetPin() {
       </div>
     </div>
   )
+}
+
+function DeliveryBanner({ delivery, email, sentCode, onResend, retrying }) {
+  if (delivery.status === 'sent') {
+    return (
+      <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-800 dark:text-emerald-200 flex items-start gap-2">
+        <Inbox className="w-4 h-4 mt-0.5 shrink-0" />
+        <span>
+          A recovery code has been sent to <span className="font-semibold">{email}</span>. It expires in 15 minutes.
+        </span>
+      </div>
+    )
+  }
+  if (delivery.status === 'fallback') {
+    const isStaticHost = delivery.reason === 'no-backend'
+    return (
+      <div className="space-y-2">
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+            <div className="flex-1">
+              {isStaticHost ? (
+                <div>
+                  This deployment is a static site, so there&rsquo;s no email server reachable from here.
+                  The recovery code is shown below &mdash; only you can see this screen.
+                </div>
+              ) : (
+                <div>
+                  Email delivery is not available right now{delivery.reason && delivery.reason !== 'no-backend' ? ` (${delivery.reason})` : ''}.
+                  Use the code below to continue &mdash; only you can see this screen.
+                </div>
+              )}
+              {delivery.missingVars?.length > 0 && (
+                <div className="mt-1 text-xs">
+                  Add <code className="font-mono">{delivery.missingVars.join(', ')}</code> to your <code className="font-mono">.env</code> and restart the backend to enable real email.
+                </div>
+              )}
+              {!isStaticHost && onResend && (
+                <button
+                  type="button"
+                  onClick={onResend}
+                  disabled={retrying}
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-semibold underline underline-offset-2 disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3 h-3 ${retrying ? 'animate-spin' : ''}`} /> {retrying ? 'Retrying…' : 'Try again'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+        {sentCode && (
+          <div className="rounded-2xl border border-brand-500/20 bg-brand-500/10 p-3 text-sm text-brand-900 dark:text-brand-100">
+            Your recovery code is <span className="font-semibold">{sentCode}</span>. Use it within 15 minutes.
+          </div>
+        )}
+      </div>
+    )
+  }
+  return null
 }

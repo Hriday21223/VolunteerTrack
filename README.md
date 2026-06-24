@@ -21,7 +21,7 @@ A warm, focused volunteer hour tracker. Log hours, set goals, earn achievements,
 
 ## Features
 
-- 🔐 Auth (local-only): login, register, password reset
+- 🔐 Auth (local-only): login, register, password reset, PIN reset
 - 📊 Dashboard with total/monthly hours, weekly chart, progress ring, recent activity
 - ⏰ Log hours with drag-and-drop proof upload, supervisor verification fields
 - 📅 Calendar view with session indicators per day
@@ -35,10 +35,31 @@ A warm, focused volunteer hour tracker. Log hours, set goals, earn achievements,
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # production build to /dist
-npm run preview  # preview the build
+npm run dev       # http://localhost:5173
+npm run backend   # optional: enable real recovery emails (see below)
+npm run build     # production build to /dist
+npm run preview   # preview the build
 ```
+
+### Recovery emails (optional)
+
+The recovery backend lives in `server.js` and is wired to `POST /api/send-reset-email`,
+which Vite proxies to `http://localhost:5174` for you. By default no SMTP credentials
+are set, so `ResetPin` and `ForgotPassword` show the recovery code locally and skip
+the email step.
+
+To deliver real emails, copy `.env.example` to `.env` and fill in your SMTP details,
+then run `npm run backend` in a second terminal:
+
+```bash
+cp .env.example .env
+# edit .env, then:
+npm run backend
+```
+
+Any SMTP provider works (Resend, SendGrid, Mailgun, Gmail app passwords, etc.).
+The backend returns 503 when SMTP isn't configured, and the UI gracefully falls back
+to "code on screen" so you never get a dead-end.
 
 ## Data model
 

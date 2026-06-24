@@ -1,50 +1,71 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Heart, Mail, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { Heart, Mail, ArrowRight, CheckCircle2, AlertTriangle, Inbox, RefreshCw, Settings } from 'lucide-react'
 import Card from '@/components/Card.jsx'
 import { useAuth } from '@/hooks/useAuth.jsx'
+import { sendRecoveryEmail, getRecoveryStatus, fetchDevRecoveryCode } from '@/lib/recovery.js'
 
 export default function ForgotPassword() {
   const { requestPasswordReset } = useAuth()
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
-  const [sent, setSent] = useState(false)
+  const [delivery, setDelivery] = useState({ status: 'idle', reason: '', missingVars: [] })
+  const [serverInfo, setServerInfo] = useState({ ok: false, smtpConfigured: false, missingVars: [], backendAvailable: false })
+  const [retrying, setRetrying] = useState(false)
   const [err, setErr] = useState('')
-  const [emailSent, setEmailSent] = useState(false)
-  const [emailError, setEmailError] = useState('')
+
+  useEffect(() => { getRecoveryStatus().then(setServerInfo) }, [])
+
+  const attemptDelivery = async ({ email, code, type }) => {
+    const status = await getRecoveryStatus()
+    setServerInfo(status)
+    if (!status.backendAvailable) {
+      return { ok: false, reason: 'no-backend', backendAvailable: false }
+    }
+    const result = await sendRecoveryEmail({ email, code, type })
+    if (!result.ok && result.missingVars?.length) {
+      const dev = await fetchDevRecoveryCode(email)
+      if (dev.ok) return { ok: true, code: dev.code, viaDev: true }
+    }
+    return result
+  }
 
   const onSubmit = async (e) => {
     e.preventDefault()
     setErr('')
-    setEmailError('')
-    setEmailSent(false)
+    setDelivery({ status: 'sending', reason: '', missingVars: [] })
 
     try {
-      const resetCode = await requestPasswordReset(email)
-      setCode(resetCode)
-      setSent(true)
+      const generated = await requestPasswordReset(email)
+      setCode(generated)
 
-      try {
-        const response = await fetch('/api/send-reset-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, code: resetCode, type: 'password' }),
-        })
+      const result = await attemptDelivery({ email, code: generated, type: 'password' })
+      if (result.ok && result.code) setCode(result.code)
 
-        if (!response.ok) {
-          const body = await response.json().catch(() => null)
-          setEmailError(body?.error || 'Email service is unavailable.')
-          return
-        }
-
-        setEmailSent(true)
-      } catch (sendError) {
-        setEmailError(sendError.message || 'Unable to send email.')
-      }
+      setDelivery(
+        result.ok
+          ? { status: 'sent', reason: '', missingVars: [] }
+          : { status: 'fallback', reason: result.reason, missingVars: result.missingVars || [] }
+      )
     } catch (error) {
+      setDelivery({ status: 'idle', reason: '', missingVars: [] })
       setErr(error.message)
     }
   }
+
+  const resend = async () => {
+    setRetrying(true)
+    const result = await attemptDelivery({ email, code, type: 'password' })
+    if (result.ok && result.code) setCode(result.code)
+    setDelivery(
+      result.ok
+        ? { status: 'sent', reason: '', missingVars: [] }
+        : { status: 'fallback', reason: result.reason, missingVars: result.missingVars || serverInfo.missingVars || [] }
+    )
+    setRetrying(false)
+  }
+
+  const delivered = delivery.status === 'sent' || delivery.status === 'fallback'
 
   return (
     <div className="min-h-screen grid place-items-center px-4 bg-gradient-to-br from-brand-50 via-earth-50 to-earth-100 dark:from-[#0f1813] dark:via-[#0f1813] dark:to-[#14201a]">
@@ -57,27 +78,62 @@ export default function ForgotPassword() {
         </Link>
 
         <Card padded={false} className="p-7">
-          {sent ? (
-            <div className="text-center">
+          {delivered ? (
+            <div>
               <div className="w-12 h-12 rounded-full bg-brand-100 dark:bg-brand-900/30 grid place-items-center text-brand-700 mx-auto">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
-              <h1 className="text-2xl font-bold mt-3">Recovery code ready</h1>
-              <p className="text-sm text-earth-500 dark:text-earth-400 mt-2">
-                The code for <span className="font-medium text-earth-800 dark:text-earth-100">{email}</span> is shown below.
-              </p>
-              <div className="rounded-2xl border border-brand-500/20 bg-brand-500/10 p-3 text-sm text-brand-900 dark:text-brand-100 mt-4">
-                Recovery code: <span className="font-semibold">{code}</span>
-              </div>
-              {emailSent ? (
-                <p className="mt-3 text-sm text-earth-500 dark:text-earth-400">Email has been queued for delivery.</p>
+              <h1 className="text-2xl font-bold mt-3 text-center">Recovery code ready</h1>
+
+              {delivery.status === 'sent' ? (
+                <div className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-800 dark:text-emerald-200 flex items-start gap-2">
+                  <Inbox className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span>
+                    A recovery code has been emailed to <span className="font-semibold">{email}</span>. It expires in 15 minutes.
+                  </span>
+                </div>
               ) : (
-                <p className="mt-3 text-sm text-earth-500 dark:text-earth-400">Email delivery is not configured or failed, so the code is shown locally for testing.</p>
+                <div className="space-y-3 mt-4">
+                  <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                      <div className="flex-1">
+                        {delivery.reason === 'no-backend' ? (
+                          <div>
+                            This deployment is a static site, so there&rsquo;s no email server reachable from here.
+                            The recovery code is shown below &mdash; only you can see this screen.
+                          </div>
+                        ) : (
+                          <div>
+                            Email delivery is not available right now{delivery.reason && delivery.reason !== 'no-backend' ? ` (${delivery.reason})` : ''}.
+                            Use the code below to continue.
+                          </div>
+                        )}
+                        {delivery.missingVars?.length > 0 && (
+                          <div className="mt-1 text-xs">
+                            Add <code className="font-mono">{delivery.missingVars.join(', ')}</code> to your <code className="font-mono">.env</code> and restart the backend to enable real email.
+                          </div>
+                        )}
+                        {delivery.reason !== 'no-backend' && (
+                          <button
+                            type="button"
+                            onClick={resend}
+                            disabled={retrying}
+                            className="mt-2 inline-flex items-center gap-1 text-xs font-semibold underline underline-offset-2 disabled:opacity-50"
+                          >
+                            <RefreshCw className={`w-3 h-3 ${retrying ? 'animate-spin' : ''}`} /> {retrying ? 'Retrying…' : 'Try again'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-brand-500/20 bg-brand-500/10 p-3 text-sm text-brand-900 dark:text-brand-100">
+                    Recovery code: <span className="font-semibold">{code}</span>
+                  </div>
+                </div>
               )}
-              {emailError && (
-                <div className="mt-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-200">{emailError}</div>
-              )}
-              <Link to="/reset-password" state={{ email, code }} className="btn-primary mt-6 inline-flex">
+
+              <Link to="/reset-password" state={{ email, code }} className="btn-primary mt-6 inline-flex w-full justify-center">
                 Continue to reset <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -85,7 +141,7 @@ export default function ForgotPassword() {
             <>
               <h1 className="text-2xl font-bold mb-1">Forgot password?</h1>
               <p className="text-sm text-earth-500 dark:text-earth-400 mb-6">
-                Enter the email on your account and we'll generate a recovery code.
+                Enter the email on your account and we&rsquo;ll email a recovery code.
               </p>
               <form onSubmit={onSubmit} className="space-y-4">
                 <div>
@@ -103,14 +159,30 @@ export default function ForgotPassword() {
                   </div>
                 </div>
 
+                {serverInfo.ok && !serverInfo.smtpConfigured && (
+                  <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+                    <div className="flex items-start gap-2">
+                      <Settings className="w-4 h-4 mt-0.5 shrink-0" />
+                      <div>
+                        SMTP isn&rsquo;t configured. Add{' '}
+                        {serverInfo.missingVars.length ? (
+                          <code className="font-mono">{serverInfo.missingVars.join(', ')}</code>
+                        ) : (
+                          'your email credentials'
+                        )}{' '}
+                        to <code className="font-mono">.env</code> and restart <code className="font-mono">npm run backend</code>.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {err && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-300 px-3 py-2 rounded-lg">{err}</div>}
 
-                <button className="btn-primary w-full" type="submit">Generate recovery code</button>
+                <button className="btn-primary w-full" type="submit" disabled={delivery.status === 'sending'}>
+                  {delivery.status === 'sending' ? 'Sending code…' : 'Email me a recovery code'}
+                </button>
               </form>
               <div className="text-center text-sm text-earth-500 dark:text-earth-400 mt-6">
-                This app can send email if the backend is configured. When it isn't, the recovery code is shown locally for testing.
-              </div>
-              <div className="text-center text-sm text-earth-500 dark:text-earth-400 mt-3">
                 Remembered it?{' '}
                 <Link to="/login" className="text-brand-700 dark:text-brand-300 font-medium hover:underline">Back to sign in</Link>
               </div>
