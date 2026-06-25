@@ -47,6 +47,8 @@ export default function About() {
           </div>
         </Link>
         <div className="flex items-center gap-3">
+          <Link to="/about" className="btn-ghost">About</Link>
+          <Link to="/contact" className="btn-ghost">Contact</Link>
           <Link to="/login" className="btn-ghost">Sign in</Link>
           <Link to="/register" className="btn-primary">Get started</Link>
         </div>
