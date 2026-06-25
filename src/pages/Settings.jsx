@@ -173,7 +173,7 @@ export default function Settings() {
               Save PIN
             </button>
             <div className="text-xs text-earth-400">
-              Forgot your PIN? <a href="/reset-pin" className="text-brand-700 hover:underline">Reset PIN via email</a>.
+              Forgot your PIN? <Link to="/reset-pin" className="text-brand-700 hover:underline">Reset PIN via email</Link>.
             </div>
             {pinSaved && <div className="text-sm text-emerald-300">PIN saved. Use it on the login screen.</div>}
           </div>
@@ -235,7 +235,7 @@ export default function Settings() {
         <Card className="lg:col-span-2">
           <h3 className="font-display font-semibold mb-3 flex items-center gap-2"><Info className="w-4 h-4 text-brand-600" /> About</h3>
           <p className="text-sm text-earth-500 dark:text-earth-400">
-            VolunTrack is built by Noothen's Workspace. Visit the <a href="/about" className="text-brand-700 dark:text-brand-300 hover:underline">About page</a> or <a href="/contact" className="text-brand-700 dark:text-brand-300 hover:underline">get in touch</a>.
+            VolunTrack is built by Noothen's Workspace. Visit the <Link to="/about" className="text-brand-700 dark:text-brand-300 hover:underline">About page</Link> or <Link to="/contact" className="text-brand-700 dark:text-brand-300 hover:underline">get in touch</Link>.
           </p>
         </Card>
 
