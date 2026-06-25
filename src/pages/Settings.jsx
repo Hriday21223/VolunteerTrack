@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Moon, Sun, Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield } from 'lucide-react'
+import { Moon, Sun, Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, School, Send } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { useTheme } from '@/hooks/useTheme.js'
 import { hashPin } from '@/api/index.js'
+import { findPartnerByCode } from '@/lib/partners.js'
+import { sendSchoolReport } from '@/lib/schoolReport.js'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -12,7 +14,7 @@ import Toast from '@/components/Toast.jsx'
 export default function Settings() {
   const { theme, setTheme, toggle } = useTheme()
   const { user, logout, deleteAccount, updateProfile } = useAuth()
-  const { goals, saveGoal, removeGoal } = useData()
+  const { goals, saveGoal, removeGoal, logs } = useData()
   const nav = useNavigate()
   const [newGoal, setNewGoal] = useState({ title: '', targetHours: 50, primary: false })
   const [toast, setToast] = useState(false)
@@ -22,6 +24,48 @@ export default function Settings() {
 
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('')
+
+  const [schoolCode, setSchoolCode] = useState('')
+  const [schoolErr, setSchoolErr] = useState('')
+  const [reportBusy, setReportBusy] = useState(false)
+  const [reportMsg, setReportMsg] = useState('')
+  const partner = findPartnerByCode(user?.schoolCode)
+
+  const linkSchool = () => {
+    setSchoolErr('')
+    const match = findPartnerByCode(schoolCode)
+    if (!match) { setSchoolErr('That PIN does not match a partner school.'); return }
+    updateProfile({ schoolCode: match.code })
+    setSchoolCode('')
+    setToast(true)
+  }
+
+  const unlinkSchool = () => {
+    updateProfile({ schoolCode: null })
+    setReportMsg('')
+  }
+
+  const sendReport = async () => {
+    if (!partner) return
+    setReportBusy(true)
+    setReportMsg('')
+    const totalHours = logs.reduce((s, l) => s + (Number(l.hours) || 0), 0)
+    const entries = logs.map((l) => ({
+      date: l.date, activity: l.activity, category: l.category, hours: Number(l.hours) || 0,
+    }))
+    const res = await sendSchoolReport({
+      to: partner.email, school: partner.name, student: user?.name || user?.email,
+      totalHours, entries,
+    })
+    setReportBusy(false)
+    if (res.ok) {
+      setReportMsg(`Sent ${totalHours}h to ${partner.name}.`)
+    } else if (!res.backendAvailable) {
+      setReportMsg('Email server is unavailable on this site, so the report could not be sent.')
+    } else {
+      setReportMsg(res.reason || 'Could not send the report.')
+    }
+  }
 
   const addGoal = (e) => {
     e.preventDefault()
@@ -123,6 +167,39 @@ export default function Settings() {
           <p className="text-sm text-earth-500 dark:text-earth-400">
             Reminder scheduling is coming soon. In the meantime, log your hours right after each session — it's the easiest habit to keep.
           </p>
+        </Card>
+
+        <Card>
+          <h3 className="font-display font-semibold mb-3 flex items-center gap-2"><School className="w-4 h-4 text-brand-600" /> School partnership</h3>
+          {partner ? (
+            <>
+              <p className="text-sm text-earth-500 dark:text-earth-400 mb-3">
+                Linked to <span className="font-medium text-earth-800 dark:text-earth-100">{partner.name}</span>. Send your volunteer hours straight to them.
+              </p>
+              <button onClick={sendReport} disabled={reportBusy} className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed">
+                {reportBusy ? 'Sending…' : <>Send my hours now <Send className="w-4 h-4" /></>}
+              </button>
+              <button onClick={unlinkSchool} className="btn-ghost w-full mt-2">Unlink school</button>
+              {reportMsg && <div className="text-sm text-earth-600 dark:text-earth-300 mt-3">{reportMsg}</div>}
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-earth-500 dark:text-earth-400 mb-4">
+                Enter the PIN your school or organization gave you. Once linked, you can send your logged hours to them — they don't have to ask.
+              </p>
+              <label className="label">School PIN</label>
+              <input
+                className="input w-full"
+                value={schoolCode}
+                onChange={(e) => setSchoolCode(e.target.value)}
+                placeholder="e.g. DEMO123"
+              />
+              {schoolErr && <div className="text-sm text-red-600 dark:text-red-300 mt-2">{schoolErr}</div>}
+              <button onClick={linkSchool} disabled={!schoolCode.trim()} className="btn-primary w-full mt-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                Link school
+              </button>
+            </>
+          )}
         </Card>
 
         <Card>
