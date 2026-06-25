@@ -4,6 +4,10 @@ import dotenv from 'dotenv'
 import nodemailer from 'nodemailer'
 import { fileURLToPath } from 'url'
 import path from 'path'
+import { initSchema, hasDatabase, query } from './server/db.js'
+import { authenticate, hashPassword } from './server/auth.js'
+import { uid } from './server/ids.js'
+import authRoutes from './server/routes/auth.js'
 
 dotenv.config()
 
@@ -14,6 +18,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 app.use(cors())
 app.use(express.json())
+app.use(authenticate)
+
+// Server-backed accounts & (later) school dashboards.
+app.use('/api/auth', authRoutes)
 
 const distPath = path.join(__dirname, 'dist')
 app.use(express.static(distPath))
@@ -160,6 +168,39 @@ app.get('*', (_req, res) => {
   res.sendFile(path.join(distPath, 'index.html'))
 })
 
-app.listen(port, () => {
-  console.log(`Backend email server listening at http://localhost:${port}`)
-})
+// Creates an admin account on boot from env so there is always a way in.
+// No-op when the DB or admin env vars are missing, or the admin already exists.
+async function seedAdmin() {
+  const email = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase()
+  const password = String(process.env.ADMIN_PASSWORD || '')
+  if (!hasDatabase() || !email || !password) return
+  const existing = await query('SELECT 1 FROM users WHERE email = $1', [email])
+  if (existing.rowCount > 0) return
+  const hash = await hashPassword(password)
+  await query(
+    `INSERT INTO users (id, role, name, email, password_hash)
+     VALUES ($1, 'admin', $2, $3, $4)`,
+    [uid('usr'), 'Admin', email, hash],
+  )
+  console.log(`Seeded admin account: ${email}`)
+}
+
+async function start() {
+  if (hasDatabase()) {
+    try {
+      await initSchema()
+      await seedAdmin()
+      console.log('Database ready.')
+    } catch (error) {
+      console.error('Database init failed:', error)
+    }
+  } else {
+    console.log('DATABASE_URL not set — running in email-only mode (no accounts API).')
+  }
+
+  app.listen(port, () => {
+    console.log(`Backend server listening at http://localhost:${port}`)
+  })
+}
+
+start()
