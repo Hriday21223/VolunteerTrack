@@ -1,7 +1,6 @@
 # VolunTrack
 
 [![CI](https://github.com/Hriday21223/VolunteerTrack/actions/workflows/ci.yml/badge.svg)](https://github.com/Hriday21223/VolunteerTrack/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/Hriday21223/VolunteerTrack/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Hriday21223/VolunteerTrack/actions/workflows/codeql-analysis.yml)
 [![Deploy](https://github.com/Hriday21223/VolunteerTrack/actions/workflows/deploy.yml/badge.svg)](https://github.com/Hriday21223/VolunteerTrack/actions/workflows/deploy.yml)
 [![Dependabot](https://github.com/Hriday21223/VolunteerTrack/security/dependabot)](https://github.com/Hriday21223/VolunteerTrack/security/dependabot)
 
@@ -14,14 +13,15 @@ A warm, focused volunteer hour tracker. Log hours, set goals, earn achievements,
 - **React 18** + **Vite 5**
 - **React Router 6**
 - **Tailwind CSS 3** (custom `brand` greens + `earth` warm neutrals)
-- **localStorage** persistence (no backend needed)
+- **localStorage** persistence (client-side) + **PostgreSQL** (server-side accounts)
+- **Express** backend with **bcrypt** + **JWT** authentication
 - **jsPDF** + **jspdf-autotable** for report exports
 - **lucide-react** for icons
 - **date-fns** for date math
 
 ## Features
 
-- 🔐 Auth (local-only): login, register, password reset, PIN reset
+- 🔐 **Dual Auth**: Local auth (client-side) + Server auth (PostgreSQL + bcrypt + JWT)
 - 📊 Dashboard with total/monthly hours, weekly chart, progress ring, recent activity
 - ⏰ Log hours with drag-and-drop proof upload, supervisor verification fields
 - 📅 Calendar view with session indicators per day
@@ -30,36 +30,51 @@ A warm, focused volunteer hour tracker. Log hours, set goals, earn achievements,
 - 👤 Profile with avatar, school/grade, quick stats
 - ⚙️ Settings: dark mode, goal management, account
 - 🌐 Public About + Contact pages
+- 🔒 **Security**: Rate limiting, input validation, parameterized queries
 
 ## Run it
 
 ```bash
 npm install
-npm run dev       # http://localhost:5173
-npm run backend   # optional: enable real recovery emails (see below)
+npm run dev       # http://localhost:5173 (client-only mode)
+npm run backend   # optional: full backend with Postgres + auth
 npm run build     # production build to /dist
 npm run preview   # preview the build
 ```
 
-### Recovery emails (optional)
+### Backend + Database (for school management features)
 
-The recovery backend lives in `server.js` and is wired to `POST /api/send-reset-email`,
-which Vite proxies to `http://localhost:5174` for you. By default no SMTP credentials
-are set, so `ResetPin` and `ForgotPassword` show the recovery code locally and skip
-the email step.
+The backend requires PostgreSQL and environment variables. It can run in two modes:
 
-To deliver real emails, copy `.env.example` to `.env` and fill in your SMTP details,
-then run `npm run backend` in a second terminal:
+1. **Email-only mode** (default): No database required. Only handles email sending for recovery flows.
+2. **Full mode**: With `DATABASE_URL` set, provides user accounts, JWT auth, and school management.
+
+To run the full backend:
 
 ```bash
 cp .env.example .env
-# edit .env, then:
+# Edit .env and set:
+# - DATABASE_URL=postgres://user:password@host:5432/dbname
+# - JWT_SECRET=your-secret-key
+# - (Optional) ADMIN_EMAIL and ADMIN_PASSWORD to seed an admin account
 npm run backend
 ```
 
+### Recovery emails (optional)
+
+The backend handles `POST /api/send-reset-email` for password/PIN recovery. Without SMTP
+credentials, the UI shows the recovery code locally. To deliver real emails, set SMTP
+variables in `.env`:
+
+```bash
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@example.com
+EMAIL_PASSWORD=your-app-password
+EMAIL_FROM=volunteertrack@example.com
+```
+
 Any SMTP provider works (Resend, SendGrid, Mailgun, Gmail app passwords, etc.).
-The backend returns 503 when SMTP isn't configured, and the UI gracefully falls back
-to "code on screen" so you never get a dead-end.
 
 ## Data model
 
@@ -75,6 +90,18 @@ All state lives in `localStorage` under the `voluntrack:` namespace:
 
 See `src/lib/storage.js` and `src/lib/achievements.js` for the rules.
 
+### Server-side (PostgreSQL)
+When `DATABASE_URL` is configured, the backend stores:
+
+| Table      | Purpose                                     |
+|------------|---------------------------------------------|
+| `users`    | User accounts with roles (admin/school/student) |
+| `schools`  | School information and PINs                 |
+| `logs`     | Volunteer hours (future sync from localStorage) |
+| `goals`    | User goals (future sync from localStorage)  |
+
+See `server/db.js` for the schema definition.
+
 ## Project layout
 
 ```
@@ -85,10 +112,18 @@ src/
   lib/         # pure utilities (achievements, date math, export)
   pages/       # route-level pages
   utils/       # small helpers (cn, format, etc.)
+server/
+  auth.js      # JWT token signing, password hashing, auth middleware
+  db.js        # PostgreSQL connection and schema initialization
+  routes/      # API route handlers (auth, schools, etc.)
+  ids.js       # ID generation utilities
+server.js      # Express server entry point
 ```
 
 ## Notes
 
-- This is a single-user demo: signing in is local and doesn't talk to a server.
+- **Dual mode**: The app works in client-only mode (localStorage) for immediate use, and with the backend for school management features.
+- **Gradual migration**: Users can start with local storage and optionally sync to the backend when schools implement the dashboard.
 - Drag-and-drop proof uploads read files via `FileReader` and store as base64 — convenient, but it does inflate `localStorage`. Keep proof files under ~1 MB.
 - Dark mode is opt-in per device; the choice is persisted in `voluntrack:theme`.
+- **Security**: Backend includes rate limiting, input validation, and parameterized queries. See SECURITY.md for details.

@@ -1,11 +1,61 @@
 import express from 'express'
+import rateLimit from 'express-rate-limit'
+import validator from 'validator'
 import { query, hasDatabase } from '../db.js'
 import { uid } from '../ids.js'
 import { hashPassword, verifyPassword, signToken, requireAuth } from '../auth.js'
 
 const router = express.Router()
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// Rate limit auth endpoints to prevent brute force attacks
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many authentication attempts. Please try again later.' },
+})
+
+// Input validation helpers
+function validateEmail(email) {
+  const trimmed = email.trim().toLowerCase()
+  if (!validator.isEmail(trimmed)) {
+    return null
+  }
+  // Additional length check to prevent excessively long emails
+  if (trimmed.length > 254) {
+    return null
+  }
+  return trimmed
+}
+
+function validateName(name) {
+  const trimmed = name.trim()
+  // Allow letters, spaces, hyphens, apostrophes - common in names
+  if (!validator.isLength(trimmed, { min: 1, max: 100 })) {
+    return null
+  }
+  if (!/^[\p{L}\s\-''.]+$/u.test(trimmed)) {
+    return null
+  }
+  return trimmed
+}
+
+function validatePassword(password) {
+  if (!validator.isLength(password, { min: 8, max: 128 })) {
+    return null
+  }
+  return password
+}
+
+function validateGrade(grade) {
+  if (!grade) return null
+  const trimmed = grade.trim()
+  if (!validator.isLength(trimmed, { max: 20 })) {
+    return null
+  }
+  return trimmed
+}
 
 function publicUser(row) {
   return {
@@ -28,19 +78,19 @@ function requireDb(_req, res, next) {
 
 // Public self-registration always creates a student account. School and admin
 // accounts are provisioned by an admin (later phases).
-router.post('/register', requireDb, async (req, res) => {
-  const name = String(req.body.name || '').trim()
-  const email = String(req.body.email || '').trim().toLowerCase()
-  const password = String(req.body.password || '')
-  const grade = String(req.body.grade || '').trim()
+router.post('/register', authLimiter, requireDb, async (req, res) => {
+  const name = validateName(req.body.name || '')
+  const email = validateEmail(req.body.email || '')
+  const password = validatePassword(req.body.password || '')
+  const grade = validateGrade(req.body.grade || '')
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: 'Name, email, and password are required.' })
+  if (!name) {
+    return res.status(400).json({ error: 'Name is required and must be valid.' })
   }
-  if (!EMAIL_RE.test(email)) {
+  if (!email) {
     return res.status(400).json({ error: 'Enter a valid email address.' })
   }
-  if (password.length < 8) {
+  if (!password) {
     return res.status(400).json({ error: 'Password must be at least 8 characters.' })
   }
 
@@ -65,11 +115,15 @@ router.post('/register', requireDb, async (req, res) => {
   }
 })
 
-router.post('/login', requireDb, async (req, res) => {
-  const email = String(req.body.email || '').trim().toLowerCase()
-  const password = String(req.body.password || '')
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required.' })
+router.post('/login', authLimiter, requireDb, async (req, res) => {
+  const email = validateEmail(req.body.email || '')
+  const password = validatePassword(req.body.password || '')
+  
+  if (!email) {
+    return res.status(400).json({ error: 'Enter a valid email address.' })
+  }
+  if (!password) {
+    return res.status(400).json({ error: 'Password is required.' })
   }
 
   try {

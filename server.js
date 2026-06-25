@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
 import nodemailer from 'nodemailer'
 import { fileURLToPath } from 'url'
@@ -14,10 +15,28 @@ dotenv.config()
 const app = express()
 const port = process.env.BACKEND_PORT || 5174
 
+// General rate limiting for API endpoints
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please try again later.' },
+})
+
+// Stricter rate limiting for email endpoints
+const emailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // 10 emails per hour
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many email requests. Please try again later.' },
+})
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 app.use(cors())
-app.use(express.json())
+app.use(express.json({ limit: '1mb' })) // Limit request body size
 app.use(authenticate)
 
 // Server-backed accounts & (later) school dashboards.
@@ -81,14 +100,22 @@ app.get('/api/recovery-status', (_req, res) => {
   })
 })
 
-app.post('/api/send-reset-email', async (req, res) => {
+app.post('/api/send-reset-email', emailLimiter, async (req, res) => {
   const { email, code, type } = req.body
-  if (!email || !code || !type) {
-    return res.status(400).json({ error: 'Missing email, code, or type.' })
+  
+  // Basic input validation
+  if (!email || typeof email !== 'string' || !email.includes('@') || email.length > 254) {
+    return res.status(400).json({ error: 'Invalid email.' })
+  }
+  if (!code || typeof code !== 'string' || code.length > 20) {
+    return res.status(400).json({ error: 'Invalid code.' })
+  }
+  if (!type || typeof type !== 'string' || (type !== 'pin' && type !== 'password')) {
+    return res.status(400).json({ error: 'Invalid type.' })
   }
 
   const { transport, missing } = transporter()
-  logDevCode({ email, code, type, at: new Date().toISOString() })
+  logDevCode({ email: email.trim(), code, type, at: new Date().toISOString() })
 
   if (!transport) {
     return res.status(503).json({
@@ -130,10 +157,21 @@ app.get('/api/dev-recovery-code', (req, res) => {
   return res.json({ code: hit.code, type: hit.type, at: hit.at })
 })
 
-app.post('/api/contact', async (req, res) => {
+app.post('/api/contact', emailLimiter, async (req, res) => {
   const { name, email, subject, message } = req.body
-  if (!name || !email || !message) {
-    return res.status(400).json({ error: 'Missing name, email, or message.' })
+  
+  // Basic input validation
+  if (!name || typeof name !== 'string' || name.trim().length === 0 || name.length > 100) {
+    return res.status(400).json({ error: 'Invalid name.' })
+  }
+  if (!email || typeof email !== 'string' || !email.includes('@') || email.length > 254) {
+    return res.status(400).json({ error: 'Invalid email.' })
+  }
+  if (!message || typeof message !== 'string' || message.trim().length === 0 || message.length > 5000) {
+    return res.status(400).json({ error: 'Invalid message.' })
+  }
+  if (subject && (typeof subject !== 'string' || subject.length > 200)) {
+    return res.status(400).json({ error: 'Invalid subject.' })
   }
 
   const { transport, missing } = transporter()
@@ -145,7 +183,9 @@ app.post('/api/contact', async (req, res) => {
   }
 
   const to = process.env.EMAIL_FROM || process.env.EMAIL_USER
-  const body = `New contact message from ${name} <${email}>\nSubject: ${subject || 'General question'}\n\n${message}`
+  const sanitizedMessage = message.trim()
+  const sanitizedSubject = subject ? subject.trim() : 'General question'
+  const body = `New contact message from ${name.trim()} <${email.trim()}>\nSubject: ${sanitizedSubject}\n\n${sanitizedMessage}`
 
   try {
     await transport.sendMail({
