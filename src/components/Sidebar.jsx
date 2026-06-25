@@ -1,5 +1,5 @@
 import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell } from 'lucide-react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, Link } from 'react-router-dom'
 import { cn } from '@/utils/cn.js'
 
 const ITEMS = [
@@ -18,7 +18,7 @@ export default function Sidebar() {
     <aside className="hidden md:flex md:flex-col w-72 shrink-0 border-r border-earth-900/80 bg-[#06141a] text-earth-200 sticky top-0 h-screen">
       <div className="px-6 py-6">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="VolunTrack" className="w-11 h-11 object-contain" />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="VolunTrack" className="w-11 h-11 object-contain" />
           <div>
             <div className="font-display font-bold text-lg leading-none">VolunTrack</div>
             <div className="text-xs text-earth-400 mt-0.5">Volunteer hour tracker</div>
@@ -52,8 +52,8 @@ export default function Sidebar() {
           Private local storage only. No upload required.
         </div>
         <div className="mt-4 flex gap-3">
-          <a href="/about" className="text-earth-300 hover:text-white">About</a>
-          <a href="/contact" className="text-earth-300 hover:text-white">Contact</a>
+          <Link to="/about" className="text-earth-300 hover:text-white">About</Link>
+          <Link to="/contact" className="text-earth-300 hover:text-white">Contact</Link>
         </div>
         <div className="mt-4 text-earth-500">© {new Date().getFullYear()}</div>
       </div>
