@@ -1,6 +1,9 @@
 import { NavLink, useLocation, Link } from 'react-router-dom'
-import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell, Plus } from 'lucide-react'
+import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell, Plus, Shield } from 'lucide-react'
 import { cn } from '@/utils/cn.js'
+import { useMemo } from 'react'
+
+const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
 
 const ITEMS = [
   { to: '/',             label: 'Home',     icon: Home },
@@ -12,13 +15,20 @@ const ITEMS = [
   { to: '/settings',     label: 'Settings', icon: Settings },
 ]
 
+const ADMIN_ITEM = { to: '/admin', label: 'Admin', icon: Shield }
+
 export default function MobileTabBar() {
   const { pathname } = useLocation()
+  const user = useMemo(() => JSON.parse(localStorage.getItem('voluntrack:user') || '{}'), [])
+  const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()
+  
+  const allItems = isAdmin ? [...ITEMS, ADMIN_ITEM] : ITEMS
+
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-30">
       <div className="mx-4 mb-4 rounded-[1.5rem] bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-xl border border-earth-200/50 dark:border-white/10 shadow-2xl shadow-black/5 dark:shadow-black/20">
-        <ul className="grid grid-cols-7 px-1 pt-1">
-          {ITEMS.map(({ to, label, icon: Icon }) => {
+        <ul className={`grid px-1 pt-1 ${isAdmin ? 'grid-cols-8' : 'grid-cols-7'}`}>
+          {allItems.map(({ to, label, icon: Icon }) => {
             const active = to === '/' ? pathname === '/' : pathname.startsWith(to)
             return (
               <li key={to}>

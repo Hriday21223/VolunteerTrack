@@ -1,16 +1,29 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, Lock } from 'lucide-react'
+import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, Lock, XCircle } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 
-const ADMIN_PASSWORD = 'ADMIN2026'
+const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
+const ADMIN_PASSWORD = '122410'
 
 export default function Admin() {
   const nav = useNavigate()
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('voluntrack:admin-unlocked') === '1')
   const [password, setPassword] = useState('')
   const [err, setErr] = useState('')
+  const [isAuthorized, setIsAuthorized] = useState(false)
+
+  const user = useMemo(() => JSON.parse(localStorage.getItem('voluntrack:user') || '{}'), [])
+
+  useEffect(() => {
+    // Check if user is authorized by email
+    if (user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+      setIsAuthorized(true)
+    } else {
+      setIsAuthorized(false)
+    }
+  }, [user.email])
 
   const contacts = useMemo(() =>
     JSON.parse(localStorage.getItem('voluntrack:contacts') || '[]').sort((a, b) => b.sentAt - a.sentAt)
@@ -25,6 +38,28 @@ export default function Admin() {
     } else {
       setErr('Incorrect password')
     }
+  }
+
+  // Show access denied if user is not authorized
+  if (!isAuthorized) {
+    return (
+      <AppLayout title="Admin" subtitle="Access denied">
+        <Card>
+          <div className="text-center py-12">
+            <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 grid place-items-center text-red-600 mx-auto mb-4">
+              <XCircle className="w-8 h-8" />
+            </div>
+            <h2 className="text-xl font-semibold text-earth-900 dark:text-earth-100 mb-2">Access Denied</h2>
+            <p className="text-earth-600 dark:text-earth-400 mb-6">
+              You don't have permission to access this area.
+            </p>
+            <button onClick={() => nav(-1)} className="btn-primary">
+              Go Back
+            </button>
+          </div>
+        </Card>
+      </AppLayout>
+    )
   }
 
   if (!unlocked) {

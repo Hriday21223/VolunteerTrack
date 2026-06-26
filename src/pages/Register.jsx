@@ -63,6 +63,11 @@ export default function Register() {
             Already have an account?{' '}
             <Link to="/login" className="text-brand-700 dark:text-brand-300 font-medium hover:underline">Sign in</Link>
           </div>
+
+          <div className="text-center text-sm text-earth-500 dark:text-earth-400 mt-2">
+            Syncing from web?{' '}
+            <Link to="/sync-login" className="text-brand-700 dark:text-brand-300 font-medium hover:underline">Use sync PIN</Link>
+          </div>
         </Card>
       </div>
 

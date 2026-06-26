@@ -11,6 +11,7 @@ import Register from '@/pages/Register.jsx'
 import ForgotPassword from '@/pages/ForgotPassword.jsx'
 import ResetPassword from '@/pages/ResetPassword.jsx'
 import ResetPin from '@/pages/ResetPin.jsx'
+import SyncLogin from '@/pages/SyncLogin.jsx'
 import About from '@/pages/About.jsx'
 import Contact from '@/pages/Contact.jsx'
 import Dashboard from '@/pages/Dashboard.jsx'
@@ -23,6 +24,8 @@ import Settings from '@/pages/Settings.jsx'
 import Reminders from '@/pages/Reminders.jsx'
 import Admin from '@/pages/Admin.jsx'
 
+const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
+
 function Protected({ children }) {
   const { user } = useAuth()
   const loc = useLocation()
@@ -33,6 +36,16 @@ function Protected({ children }) {
 function PublicOnly({ children }) {
   const { user } = useAuth()
   if (user) return <Navigate to="/" replace />
+  return children
+}
+
+function AdminProtected({ children }) {
+  const { user } = useAuth()
+  const loc = useLocation()
+  if (!user) return <Navigate to="/login" state={{ from: loc }} replace />
+  if (user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    return <Navigate to="/" replace />
+  }
   return children
 }
 
@@ -51,6 +64,7 @@ function Shell() {
         <Route path="/forgot-password" element={<PublicOnly><ForgotPassword /></PublicOnly>} />
         <Route path="/reset-password"  element={<PublicOnly><ResetPassword /></PublicOnly>} />
         <Route path="/reset-pin"       element={<PublicOnly><ResetPin /></PublicOnly>} />
+        <Route path="/sync-login"      element={<PublicOnly><SyncLogin /></PublicOnly>} />
         <Route path="/about"           element={<About />} />
         <Route path="/contact"         element={<Contact />} />
 
@@ -62,7 +76,7 @@ function Shell() {
         <Route path="/reports"      element={<Protected><Reports /></Protected>} />
         <Route path="/profile"      element={<Protected><Profile /></Protected>} />
         <Route path="/settings"     element={<Protected><Settings /></Protected>} />
-        <Route path="/admin"         element={<Protected><Admin /></Protected>} />
+        <Route path="/admin"        element={<AdminProtected><Admin /></AdminProtected>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

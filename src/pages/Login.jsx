@@ -143,6 +143,11 @@ export default function Login() {
                 New to VolunTrack?{' '}
                 <Link to="/register" className="text-sky-200 font-semibold hover:text-white">Create an account</Link>
               </div>
+
+              <div className="mt-4 text-center text-sm text-slate-400">
+                Syncing from web?{' '}
+                <Link to="/sync-login" className="text-sky-200 font-semibold hover:text-white">Use sync PIN</Link>
+              </div>
             </div>
           </Card>
 

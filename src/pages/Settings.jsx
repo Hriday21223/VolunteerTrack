@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Moon, Sun, Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield } from 'lucide-react'
+import { Moon, Sun, Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, Copy } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { useTheme } from '@/hooks/useTheme.js'
@@ -11,14 +11,25 @@ import Toast from '@/components/Toast.jsx'
 
 export default function Settings() {
   const { theme, setTheme, toggle } = useTheme()
-  const { user, logout, deleteAccount, updateProfile } = useAuth()
+  const { user, logout, deleteAccount, updateProfile, setSyncPin: setSyncPinAuth } = useAuth()
   const { goals, saveGoal, removeGoal } = useData()
   const nav = useNavigate()
   const [newGoal, setNewGoal] = useState({ title: '', targetHours: 50, primary: false })
   const [toast, setToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
   const [pin, setPin] = useState('')
   const [pinConfirm, setPinConfirm] = useState('')
   const [pinSaved, setPinSaved] = useState(false)
+  const [displaySyncPin, setDisplaySyncPin] = useState('')
+  const [showSyncPin, setShowSyncPin] = useState(false)
+
+  // Load sync PIN from user profile on mount
+  useEffect(() => {
+    if (user?.syncPin) {
+      setDisplaySyncPin(user.syncPin)
+      setShowSyncPin(true)
+    }
+  }, [user?.syncPin])
 
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('')
@@ -28,6 +39,7 @@ export default function Settings() {
     if (!newGoal.title.trim()) return
     saveGoal({ ...newGoal, title: newGoal.title.trim(), targetHours: Number(newGoal.targetHours) || 0 })
     setNewGoal({ title: '', targetHours: 50, primary: false })
+    setToastMessage('Goal added')
     setToast(true)
   }
 
@@ -45,11 +57,32 @@ export default function Settings() {
     setPin('')
     setPinConfirm('')
     setPinSaved(true)
+    setToastMessage('PIN saved')
     setToast(true)
   }
 
   const makePrimary = (id) => {
     goals.forEach((g) => saveGoal({ ...g, primary: g.id === id }))
+  }
+
+  const generateSyncPin = async () => {
+    try {
+      const newPin = Math.floor(10000 + Math.random() * 90000).toString()
+      await setSyncPinAuth(newPin)
+      setDisplaySyncPin(newPin)
+      setShowSyncPin(true)
+      setToastMessage('Sync PIN generated')
+      setToast(true)
+    } catch (error) {
+      setToastMessage(error.message || 'Failed to generate sync PIN')
+      setToast(true)
+    }
+  }
+
+  const copySyncPin = () => {
+    navigator.clipboard.writeText(displaySyncPin)
+    setToastMessage('PIN copied to clipboard')
+    setToast(true)
   }
 
   return (
@@ -179,6 +212,43 @@ export default function Settings() {
           </div>
         </Card>
 
+        <Card>
+          <div className="flex items-center gap-2 mb-3">
+            <Shield className="w-4 h-4 text-brand-600" />
+            <h3 className="font-display font-semibold">Mobile sync PIN</h3>
+          </div>
+          <p className="text-sm text-earth-500 dark:text-earth-400 mb-4">
+            Generate a 5-digit PIN to sync your account with the mobile app. Share this PIN with your mobile device to access your data.
+          </p>
+          {!showSyncPin ? (
+            <button
+              onClick={generateSyncPin}
+              className="btn-primary w-full"
+            >
+              Generate sync PIN
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <div className="p-4 bg-slate-900/80 rounded-xl border border-white/10">
+                <div className="text-xs text-earth-400 mb-1">Your sync PIN</div>
+                <div className="text-2xl font-mono font-bold text-white tracking-wider">{displaySyncPin}</div>
+              </div>
+              <button
+                onClick={copySyncPin}
+                className="btn-secondary w-full"
+              >
+                <Copy className="w-4 h-4 mr-2" /> Copy PIN
+              </button>
+              <button
+                onClick={generateSyncPin}
+                className="btn-ghost w-full text-sm"
+              >
+                Generate new PIN
+              </button>
+            </div>
+          )}
+        </Card>
+
         <Card className="border-red-500/30 bg-red-950/10">
           <div className="inline-flex items-center gap-3 rounded-3xl border border-red-500/40 bg-red-600/10 px-4 py-3 text-sm font-semibold text-red-100 shadow-sm shadow-red-500/10 mb-4">
             <span className="inline-flex h-3 w-3 rounded-full bg-red-400 shadow-red-500/30 shadow-md" />
@@ -235,7 +305,7 @@ export default function Settings() {
         <Card className="lg:col-span-2">
           <h3 className="font-display font-semibold mb-3 flex items-center gap-2"><Info className="w-4 h-4 text-brand-600" /> About</h3>
           <p className="text-sm text-earth-500 dark:text-earth-400">
-            VolunTrack is built by Noothen's Workspace. Visit the <Link to="/about" className="text-brand-700 dark:text-brand-300 hover:underline">About page</Link> or <Link to="/contact" className="text-brand-700 dark:text-brand-300 hover:underline">get in touch</Link>.
+            VolunTrack co. Visit the <Link to="/about" className="text-brand-700 dark:text-brand-300 hover:underline">About page</Link> or <Link to="/contact" className="text-brand-700 dark:text-brand-300 hover:underline">get in touch</Link>.
           </p>
         </Card>
 
@@ -249,7 +319,7 @@ export default function Settings() {
         </Card>
       </div>
 
-      <Toast open={toast} onClose={() => setToast(false)}>Goal added</Toast>
+      <Toast open={toast} onClose={() => setToast(false)}>{toastMessage}</Toast>
     </AppLayout>
   )
 }

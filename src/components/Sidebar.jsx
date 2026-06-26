@@ -1,6 +1,9 @@
-import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell } from 'lucide-react'
+import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell, Shield } from 'lucide-react'
 import { NavLink, Link } from 'react-router-dom'
 import { cn } from '@/utils/cn.js'
+import { useMemo } from 'react'
+
+const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
 
 const ITEMS = [
   { to: '/',           label: 'Dashboard',   icon: Home },
@@ -13,7 +16,12 @@ const ITEMS = [
   { to: '/settings',   label: 'Settings',    icon: Settings },
 ]
 
+const ADMIN_ITEM = { to: '/admin', label: 'Admin', icon: Shield }
+
 export default function Sidebar() {
+  const user = useMemo(() => JSON.parse(localStorage.getItem('voluntrack:user') || '{}'), [])
+  const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()
+
   return (
     <aside className="hidden md:flex md:flex-col w-72 shrink-0 border-r border-earth-900/80 bg-[#06141a] text-earth-200 sticky top-0 h-screen">
       <div className="px-6 py-6">
@@ -45,6 +53,22 @@ export default function Sidebar() {
             {label}
           </NavLink>
         ))}
+        {isAdmin && (
+          <NavLink
+            to={ADMIN_ITEM.to}
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition',
+                isActive
+                  ? 'bg-brand-700/10 text-white shadow-sm shadow-brand-500/10'
+                  : 'text-earth-300 hover:bg-white/5 hover:text-white',
+              )
+            }
+          >
+            <ADMIN_ITEM.icon className="w-4 h-4" />
+            {ADMIN_ITEM.label}
+          </NavLink>
+        )}
       </nav>
 
       <div className="px-5 pb-6 pt-4 text-xs text-earth-400 border-t border-earth-900/80">
@@ -55,7 +79,7 @@ export default function Sidebar() {
           <Link to="/about" className="text-earth-300 hover:text-white">About</Link>
           <Link to="/contact" className="text-earth-300 hover:text-white">Contact</Link>
         </div>
-        <div className="mt-4 text-earth-500">© {new Date().getFullYear()}</div>
+        <div className="mt-4 text-earth-500">© VolunTrack 2026</div>
       </div>
     </aside>
   )

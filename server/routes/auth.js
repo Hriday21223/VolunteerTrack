@@ -57,6 +57,15 @@ function validateGrade(grade) {
   return trimmed
 }
 
+function validateSyncPin(pin) {
+  if (!pin) return null
+  const trimmed = pin.trim()
+  if (!/^\d{5}$/.test(trimmed)) {
+    return null
+  }
+  return trimmed
+}
+
 function publicUser(row) {
   return {
     id: row.id,
@@ -149,6 +158,54 @@ router.get('/me', requireDb, requireAuth(), async (req, res) => {
   } catch (error) {
     console.error('me failed:', error)
     return res.status(500).json({ error: 'Could not load account.' })
+  }
+})
+
+// Set or update sync PIN
+router.put('/sync-pin', requireDb, requireAuth(), async (req, res) => {
+  const syncPin = validateSyncPin(req.body.syncPin || '')
+  
+  if (!syncPin) {
+    return res.status(400).json({ error: 'Sync PIN must be exactly 5 digits.' })
+  }
+
+  try {
+    // Check if PIN is already taken by another user
+    const existing = await query('SELECT 1 FROM users WHERE sync_pin = $1 AND id != $2', [syncPin, req.auth.sub])
+    if (existing.rowCount > 0) {
+      return res.status(409).json({ error: 'This sync PIN is already in use.' })
+    }
+
+    const { rows } = await query(
+      'UPDATE users SET sync_pin = $1 WHERE id = $2 RETURNING *',
+      [syncPin, req.auth.sub]
+    )
+    if (rows.length === 0) return res.status(404).json({ error: 'Account not found.' })
+    return res.json({ user: publicUser(rows[0]) })
+  } catch (error) {
+    console.error('sync-pin update failed:', error)
+    return res.status(500).json({ error: 'Could not update sync PIN.' })
+  }
+})
+
+// Login with sync PIN (for mobile app sync)
+router.post('/sync-login', authLimiter, requireDb, async (req, res) => {
+  const syncPin = validateSyncPin(req.body.syncPin || '')
+  
+  if (!syncPin) {
+    return res.status(400).json({ error: 'Sync PIN must be exactly 5 digits.' })
+  }
+
+  try {
+    const { rows } = await query('SELECT * FROM users WHERE sync_pin = $1', [syncPin])
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid sync PIN.' })
+    }
+    const user = publicUser(rows[0])
+    return res.json({ token: signToken(user), user })
+  } catch (error) {
+    console.error('sync-login failed:', error)
+    return res.status(500).json({ error: 'Could not sign in with sync PIN.' })
   }
 })
 

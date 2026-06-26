@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   school_id     TEXT REFERENCES schools(id) ON DELETE SET NULL,
   grade         TEXT,
+  sync_pin      TEXT UNIQUE,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
