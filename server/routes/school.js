@@ -214,12 +214,20 @@ router.patch('/pdf/:id/review', limiter, requireDb, requireAuth('school'), async
   }
 })
 
-// Get school info
+// Get school info by pin or id
 router.get('/info', limiter, requireDb, async (req, res) => {
   const pin = String(req.query.pin || '').trim().toLowerCase()
-  if (!pin) return res.status(400).json({ error: 'School code required.' })
+  const id = String(req.query.id || '').trim()
+  if (!pin && !id) return res.status(400).json({ error: 'School code or id required.' })
   try {
-    const { rows } = await query('SELECT id, name, pin FROM schools WHERE pin = $1', [pin])
+    let rows
+    if (pin) {
+      const r = await query('SELECT id, name, pin FROM schools WHERE pin = $1', [pin])
+      rows = r.rows
+    } else {
+      const r = await query('SELECT id, name, pin FROM schools WHERE id = $1', [id])
+      rows = r.rows
+    }
     if (rows.length === 0) return res.status(404).json({ error: 'No school found.' })
     return res.json({ school: { id: rows[0].id, name: rows[0].name, pin: rows[0].pin } })
   } catch (error) {

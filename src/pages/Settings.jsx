@@ -32,6 +32,7 @@ export default function Settings() {
   const [schoolBusy, setSchoolBusy] = useState(false)
   const [pdfs, setPdfs] = useState([])
   const [showSchool, setShowSchool] = useState(false)
+  const [schoolInfo, setSchoolInfo] = useState(null)
   const [showQR, setShowQR] = useState(false)
   const qrCanvasRef = useRef(null)
 
@@ -78,6 +79,18 @@ export default function Settings() {
     deleteAccount()
     nav('/login')
   }
+
+  useEffect(() => {
+    if (!user?.schoolId) return
+    ;(async () => {
+      try {
+        const res = await fetch(`${apiUrl}/school/info?id=${user.schoolId}`)
+        if (!res.ok) return
+        const data = await res.json()
+        if (data.school) setSchoolInfo(data.school)
+      } catch {}
+    })()
+  }, [user?.schoolId])
 
   const savePin = () => {
     if (!user) return
@@ -437,7 +450,13 @@ export default function Settings() {
             </div>
             {user.schoolId ? (
               <div className="space-y-3">
-                <p className="text-sm text-earth-500 dark:text-earth-400">Linked to a school. Upload verification PDFs for approval.</p>
+                {schoolInfo && (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
+                    <p className="font-medium">{schoolInfo.name}</p>
+                    <p className="text-earth-400">Code: <span className="font-mono">{schoolInfo.pin}</span></p>
+                  </div>
+                )}
+                <p className="text-sm text-earth-500 dark:text-earth-400">Upload verification PDFs for approval.</p>
                 <Link to="/school/dashboard" className="btn-secondary w-full flex items-center justify-center">
                   <Upload className="w-4 h-4 mr-2" /> Upload & view PDFs
                 </Link>
