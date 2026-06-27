@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X } from 'lucide-react'
+import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X, School } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { useLocalStorage } from '@/hooks/useLocalStorage.js'
@@ -12,11 +12,14 @@ import { categoryColor } from '@/lib/categories.js'
 import { fmtDate, fmtHours, fromNow } from '@/utils/date.js'
 import { format, startOfWeek, startOfMonth, addDays, parseISO, isSameMonth } from 'date-fns'
 
+const apiUrl = import.meta.env.VITE_API_URL || '/api'
+
 export default function Dashboard() {
   const { user } = useAuth()
   const { logs, goals, earned } = useData()
   const [hasSeenTour, setHasSeenTour] = useLocalStorage('voluntrack:dashboard-tour', false)
   const [showTour, setShowTour] = useState(!hasSeenTour)
+  const [schoolInfo, setSchoolInfo] = useState(null)
 
   const total = useMemo(() => logs.reduce((s, l) => s + (Number(l.hours) || 0), 0), [logs])
 
@@ -46,6 +49,18 @@ export default function Dashboard() {
       return { label: format(day, 'EEE')[0], value }
     })
   }, [logs])
+
+  useEffect(() => {
+    if (!user?.schoolId) return
+    ;(async () => {
+      try {
+        const res = await fetch(`${apiUrl}/school/info?id=${user.schoolId}`)
+        if (!res.ok) return
+        const data = await res.json()
+        if (data.school) setSchoolInfo(data.school)
+      } catch {}
+    })()
+  }, [user?.schoolId])
 
   const recent = useMemo(() => logs.slice(0, 5), [logs])
 
@@ -106,6 +121,19 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {schoolInfo && (
+        <Card className="mb-5">
+          <div className="flex items-center gap-3">
+            <School className="w-5 h-5 text-brand-600" />
+            <div>
+              <p className="font-medium text-sm">{schoolInfo.name}</p>
+              <p className="text-xs text-earth-400">Code: <span className="font-mono">{schoolInfo.pin}</span></p>
+            </div>
+            <Link to="/school/dashboard" className="btn-secondary ml-auto text-sm">Dashboard</Link>
+          </div>
+        </Card>
       )}
 
       {/* Mobile-first summary cards */}
