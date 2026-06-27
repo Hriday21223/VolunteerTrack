@@ -29,7 +29,7 @@ router.post('/register', limiter, requireDb, async (req, res) => {
   if (!name || name.length > 100) return res.status(400).json({ error: 'School name is required.' })
   if (!email || !validator.isEmail(email) || email.length > 254) return res.status(400).json({ error: 'Valid email required.' })
   if (!password || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' })
-  if (!pin || !/^[a-z]+\d{3,5}$/.test(pin)) return res.status(400).json({ error: 'School code must be letters followed by digits (e.g. cisd-12345).' })
+  if (!pin || !/^[a-z]+-?\d{3,5}$/.test(pin)) return res.status(400).json({ error: 'School code must be letters followed by digits (e.g. cisd-12345).' })
 
   try {
     const existing = await query('SELECT 1 FROM schools WHERE pin = $1', [pin])
