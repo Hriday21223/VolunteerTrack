@@ -210,8 +210,11 @@ async function seedAdmin() {
   const hash = await hashPassword(password)
   const existing = await query('SELECT 1 FROM users WHERE email = $1', [email])
   if (existing.rowCount > 0) {
-    await query('UPDATE users SET password_hash = $1 WHERE email = $2', [hash, email])
-    console.log(`Updated admin password: ${email}`)
+    await query(
+      'UPDATE users SET role = $1, name = $2, password_hash = $3 WHERE email = $4',
+      ['admin', 'Admin', hash, email],
+    )
+    console.log(`Updated admin account: ${email}`)
     return
   }
   await query(
