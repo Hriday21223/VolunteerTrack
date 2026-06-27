@@ -30,6 +30,8 @@ jobs:
 
       - name: Build production bundle
         run: npm run build
+        env:
+          VITE_API_URL: https://voluntrack-backend-np6z.onrender.com
 
       - name: Add SPA fallback for client-side routing
         run: cp dist/index.html dist/404.html
