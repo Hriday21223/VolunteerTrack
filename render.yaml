@@ -7,8 +7,7 @@ services:
     name: voluntrack-backend
     runtime: node
     plan: free
-    nodeVersion: 18
-    buildCommand: npm install
+    buildCommand: npm ci
     startCommand: node server.js
     healthCheckPath: /api/recovery-status
     envVars:
