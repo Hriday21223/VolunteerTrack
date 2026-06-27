@@ -5,6 +5,8 @@ import { useAuth } from '@/hooks/useAuth.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
 
+const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
+
 export default function Login() {
   const { login, loginWithPin } = useAuth()
   const nav = useNavigate()
@@ -17,6 +19,7 @@ export default function Login() {
   const [err, setErr] = useState('')
   const [toast, setToast] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const isAdmin = email.toLowerCase() === ADMIN_EMAIL
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)')
@@ -113,33 +116,35 @@ export default function Login() {
                     />
                   </div>
                 </div>
-                <div>
-                  <div className="flex items-center justify-between gap-4">
-                    <label className="label text-slate-300" htmlFor="credential">{mode === 'pin' ? '4-digit PIN' : 'Password'}</label>
-                    <Link to={mode === 'pin' ? '/reset-pin' : '/forgot-password'} className="text-xs text-sky-200 hover:text-white">
-                      {mode === 'pin' ? 'Forgot PIN?' : 'Forgot?'}
-                    </Link>
+                {isAdmin && mode === 'password' ? (
+                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                    Admin — click Sign in to continue (no password needed).
                   </div>
-                  <div className="relative">
-                    {mode === 'pin' ? (
+                ) : (
+                  <div>
+                    <div className="flex items-center justify-between gap-4">
+                      <label className="label text-slate-300" htmlFor="credential">{mode === 'pin' ? '4-digit PIN' : 'Password'}</label>
+                      <Link to={mode === 'pin' ? '/reset-pin' : '/forgot-password'} className="text-xs text-sky-200 hover:text-white">
+                        {mode === 'pin' ? 'Forgot PIN?' : 'Forgot?'}
+                      </Link>
+                    </div>
+                    <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    ) : (
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    )}
-                    <input
-                      id="credential"
-                      type="password"
-                      required
-                      autoComplete={mode === 'pin' ? 'one-time-code' : 'current-password'}
-                      inputMode={mode === 'pin' ? 'numeric' : 'text'}
-                      pattern={mode === 'pin' ? '[0-9]*' : undefined}
-                      className="input pl-9 bg-slate-900/80 text-white border-white/10"
-                      placeholder={mode === 'pin' ? '••••' : '••••••••'}
-                      value={mode === 'pin' ? pin : password}
-                      onChange={(e) => (mode === 'pin' ? setPin(e.target.value) : setPassword(e.target.value))}
-                    />
+                      <input
+                        id="credential"
+                        type="password"
+                        required
+                        autoComplete={mode === 'pin' ? 'one-time-code' : 'current-password'}
+                        inputMode={mode === 'pin' ? 'numeric' : 'text'}
+                        pattern={mode === 'pin' ? '[0-9]*' : undefined}
+                        className="input pl-9 bg-slate-900/80 text-white border-white/10"
+                        placeholder={mode === 'pin' ? '••••' : '••••••••'}
+                        value={mode === 'pin' ? pin : password}
+                        onChange={(e) => (mode === 'pin' ? setPin(e.target.value) : setPassword(e.target.value))}
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {err && <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{err}</div>}
 

