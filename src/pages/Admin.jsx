@@ -1,12 +1,52 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, Lock, XCircle } from 'lucide-react'
+import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, Lock, XCircle, Sparkles } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import { useAuth } from '@/hooks/useAuth.jsx'
 
 const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
 const ADMIN_PASSWORD = '122410'
+
+function generateDraft(contact) {
+  const subject = contact.subject || 'General question'
+  const name = contact.name || 'there'
+
+  const intros = [
+    `Hi ${name},`,
+    `Hello ${name},`,
+    `Thanks for reaching out, ${name}.`,
+  ]
+  const intro = intros[contact.sentAt ? contact.sentAt.length % intros.length : 0]
+
+  const closings = [
+    '\n\nBest,\nThe VolunteerTrack Team',
+    '\n\nCheers,\nThe VolunteerTrack Team',
+    '\n\nThanks,\nThe VolunteerTrack Team',
+  ]
+  const closing = closings[contact.sentAt ? contact.sentAt.length % closings.length : 0]
+
+  const bodies = {
+    'General question': (
+      `Thanks for your interest in VolunteerTrack!\n\nVolunteerTrack is a free, open-source PWA that lets students log service hours, set goals, earn badges, and export PDF reports — all without an account server. Everything stays on your device (privacy-first).\n\nIt runs on React 18 with Vite and works offline after the first visit. You can try it live at https://hriday21223.github.io/VolunteerTrack\n\nIf you have specific questions, feel free to reply to this email or open an issue on GitHub: https://github.com/Hriday21223/VolunteerTrack/issues`
+    ),
+    'Bug report': (
+      `Thanks for reporting this! We appreciate your help making VolunteerTrack better.\n\nCould you share a few more details so we can look into it?\n- What browser and device are you using?\n- What steps did you take before the issue appeared?\n- Any error messages or screenshots?\n\nYou can also file an issue directly on GitHub: https://github.com/Hriday21223/VolunteerTrack/issues\n\nWe typically respond within a couple of days.`
+    ),
+    'Feature request': (
+      `Thanks for the suggestion! We're always looking for ways to improve VolunteerTrack.\n\nHere's what's currently on our roadmap:\n- Phase 1 (shipped): Core logging, badges, reminders, reports\n- Phase 2 (shipped): Printable certificates, email-based PIN/password reset\n- Phase 3 (in progress): School & organization plans, verified supervisor flow, bulk CSV import\n\nYour idea sounds like it could fit well. Want to open a feature request on GitHub so we can track it? https://github.com/Hriday21223/VolunteerTrack/issues`
+    ),
+    'School or organization partnership': (
+      `Thanks for your interest in partnering with VolunteerTrack!\n\nWe're actively building Phase 3, which includes:\n- School & organization plans\n- Verified supervisor flow\n- Bulk CSV import\n\nThis will make it easy for schools to adopt VolunteerTrack across their entire student body. We'd love to hear more about your needs.\n\nIn the meantime, the current version is free and open-source — you can try it at https://hriday21223.github.io/VolunteerTrack\n\nLet's continue the conversation on GitHub: https://github.com/Hriday21223/VolunteerTrack/issues`
+    ),
+  }
+
+  const body = bodies[subject] || (
+    `Thanks for your message! VolunteerTrack is a privacy-first volunteer hour tracker built for students and clubs. It's free, open-source, and works entirely in the browser.\n\nTry it: https://hriday21223.github.io/VolunteerTrack\n\nLet us know if you have any other questions!`
+  )
+
+  return intro + '\n\n' + body + closing
+}
 
 export default function Admin() {
   const nav = useNavigate()
@@ -92,6 +132,20 @@ export default function Admin() {
     )
   }
 
+  const [drafts, setDrafts] = useState({})
+
+  const toggleDraft = (idx) => {
+    setDrafts((prev) => {
+      const next = { ...prev }
+      if (next[idx]) {
+        delete next[idx]
+      } else {
+        next[idx] = generateDraft(contacts[idx])
+      }
+      return next
+    })
+  }
+
   const remove = (idx) => {
     const next = contacts.filter((_, i) => i !== idx)
     localStorage.setItem('voluntrack:contacts', JSON.stringify(next))
@@ -153,14 +207,29 @@ export default function Admin() {
                   </div>
                   <div className="mt-1 text-xs font-medium uppercase tracking-wide text-earth-600 dark:text-earth-300">{c.subject || 'General question'}</div>
                   <p className="mt-2 text-sm text-earth-800 dark:text-earth-200 whitespace-pre-wrap">{c.message}</p>
+                  {drafts[idx] && (
+                    <div className="mt-3 p-3 rounded-xl bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800">
+                      <div className="text-xs font-semibold text-brand-700 dark:text-brand-300 mb-1">AI draft</div>
+                      <p className="text-sm text-earth-700 dark:text-earth-300 whitespace-pre-wrap">{drafts[idx]}</p>
+                    </div>
+                  )}
                 </div>
-                <button
-                  onClick={() => remove(idx)}
-                  className="p-2 rounded-lg text-earth-500 hover:text-red-600 hover:bg-red-500/10 self-start"
-                  title="Delete"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={() => toggleDraft(idx)}
+                    className="p-2 rounded-lg text-earth-500 hover:text-brand-700 hover:bg-brand-500/10 self-start"
+                    title={drafts[idx] ? 'Hide draft' : 'Generate draft reply'}
+                  >
+                    <Sparkles className={`w-4 h-4 ${drafts[idx] ? 'text-brand-600' : ''}`} />
+                  </button>
+                  <button
+                    onClick={() => remove(idx)}
+                    className="p-2 rounded-lg text-earth-500 hover:text-red-600 hover:bg-red-500/10 self-start"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </Card>
           ))}
