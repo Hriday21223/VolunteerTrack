@@ -143,6 +143,12 @@ router.post('/login', authLimiter, requireDb, async (req, res) => {
     if (!ok) {
       return res.status(401).json({ error: 'Invalid email or password.' })
     }
+    // Auto-promote the configured admin email to admin role on login
+    const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase()
+    if (row.email === adminEmail && row.role !== 'admin') {
+      await query('UPDATE users SET role = $1 WHERE id = $2', ['admin', row.id])
+      row.role = 'admin'
+    }
     const user = publicUser(row)
     return res.json({ token: signToken(user), user })
   } catch (error) {
