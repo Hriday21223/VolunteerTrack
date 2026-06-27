@@ -21,7 +21,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: DATABASE_URL
-        value: postgresql://neondb_owner:npg_7uZriwmaDz1p@ep-misty-recipe-adiolyhv-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=verify-full&channel_binding=require
+        value: postgresql://neondb_owner:npg_7uZriwmaDz1p@ep-misty-recipe-adiolyhv-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       - key: EMAIL_HOST
         value: smtp.gmail.com
       - key: EMAIL_PORT
