@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Moon, Sun, Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, Copy, Eye, EyeOff } from 'lucide-react'
+import { Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, Copy, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
-import { useTheme } from '@/hooks/useTheme.js'
 import { hashPin, sendPasswordResetCode, clearPasswordResetCode } from '@/api/index.js'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
 
 export default function Settings() {
-  const { theme, setTheme, toggle } = useTheme()
+
   const { user, logout, deleteAccount, updateProfile, setSyncPin: setSyncPinAuth } = useAuth()
   const { goals, saveGoal, removeGoal } = useData()
   const nav = useNavigate()
@@ -224,25 +223,7 @@ export default function Settings() {
           </form>
         </Card>
 
-        <Card>
-          <h3 className="font-display font-semibold mb-3">Appearance</h3>
-          <p className="text-sm text-earth-500 dark:text-earth-400 mb-4">Switch between light and dark mode. Your choice is remembered on this device.</p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTheme('light')}
-              className={`btn flex-1 ${theme === 'light' ? 'bg-brand-600 text-white' : 'btn-secondary'}`}
-            >
-              <Sun className="w-4 h-4" /> Light
-            </button>
-            <button
-              onClick={() => setTheme('dark')}
-              className={`btn flex-1 ${theme === 'dark' ? 'bg-brand-600 text-white' : 'btn-secondary'}`}
-            >
-              <Moon className="w-4 h-4" /> Dark
-            </button>
-          </div>
-          <button onClick={toggle} className="btn-ghost mt-3 w-full">Toggle automatically</button>
-        </Card>
+
 
         <Card>
           <h3 className="font-display font-semibold mb-3 flex items-center gap-2"><Bell className="w-4 h-4 text-brand-600" /> Reminders</h3>
