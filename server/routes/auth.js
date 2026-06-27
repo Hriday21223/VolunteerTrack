@@ -219,6 +219,39 @@ router.put('/sync-pin', requireDb, requireAuth(), async (req, res) => {
   }
 })
 
+// Set sync PIN using email + password (no JWT required — for users whose
+// browser session doesn't have a token due to localStorage-only login).
+router.post('/sync-pin-auth', authLimiter, requireDb, async (req, res) => {
+  const email = validateEmail(req.body.email || '')
+  const password = req.body.password
+  const syncPin = validateSyncPin(req.body.syncPin || '')
+
+  if (!email) return res.status(400).json({ error: 'Enter a valid email address.' })
+  if (!password) return res.status(400).json({ error: 'Password is required.' })
+  if (!syncPin) return res.status(400).json({ error: 'Sync PIN must be exactly 5 digits.' })
+
+  try {
+    const { rows } = await query('SELECT * FROM users WHERE email = $1', [email])
+    if (rows.length === 0) return res.status(404).json({ error: 'Account not found.' })
+
+    const ok = await verifyPassword(password, rows[0].password_hash)
+    if (!ok) return res.status(403).json({ error: 'Password is incorrect.' })
+
+    const existing = await query('SELECT 1 FROM users WHERE sync_pin = $1 AND id != $2', [syncPin, rows[0].id])
+    if (existing.rowCount > 0) return res.status(409).json({ error: 'This sync PIN is already in use.' })
+
+    const { rows: updated } = await query(
+      'UPDATE users SET sync_pin = $1 WHERE id = $2 RETURNING *',
+      [syncPin, rows[0].id]
+    )
+    const user = publicUser(updated[0])
+    return res.json({ token: signToken(user), user })
+  } catch (error) {
+    console.error('sync-pin-auth failed:', error)
+    return res.status(500).json({ error: 'Could not update sync PIN.' })
+  }
+})
+
 // Login with sync PIN (for mobile app sync)
 router.post('/sync-login', authLimiter, requireDb, async (req, res) => {
   const syncPin = validateSyncPin(req.body.syncPin || '')

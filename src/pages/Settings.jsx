@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Moon, Sun, Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, Copy } from 'lucide-react'
+import { Moon, Sun, Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, Copy, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { useTheme } from '@/hooks/useTheme.js'
@@ -23,6 +23,10 @@ export default function Settings() {
   const [displaySyncPin, setDisplaySyncPin] = useState('')
   const [showSyncPin, setShowSyncPin] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [syncPassword, setSyncPassword] = useState('')
+  const [showSyncPasswordPrompt, setShowSyncPasswordPrompt] = useState(false)
+  const [showPwText, setShowPwText] = useState(false)
+  const [syncPasswordBusy, setSyncPasswordBusy] = useState(false)
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)')
@@ -77,6 +81,15 @@ export default function Settings() {
   const generateSyncPin = async () => {
     try {
       const newPin = Math.floor(10000 + Math.random() * 90000).toString()
+
+      const token = localStorage.getItem('voluntrack:auth_token')
+      if (!token) {
+        setSyncPassword('')
+        setShowSyncPasswordPrompt(true)
+        setDisplaySyncPin(newPin)
+        return
+      }
+
       await setSyncPinAuth(newPin)
       setDisplaySyncPin(newPin)
       setShowSyncPin(true)
@@ -85,6 +98,34 @@ export default function Settings() {
     } catch (error) {
       setToastMessage(error.message || 'Failed to generate sync PIN')
       setToast(true)
+    }
+  }
+
+  const confirmSyncPin = async () => {
+    if (!syncPassword) return
+    if (!displaySyncPin) return
+    setSyncPasswordBusy(true)
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${apiUrl}/auth/sync-pin-auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, password: syncPassword, syncPin: displaySyncPin }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Failed to link account')
+
+      localStorage.setItem('voluntrack:auth_token', data.token)
+      setShowSyncPin(true)
+      setShowSyncPasswordPrompt(false)
+      setSyncPassword('')
+      setToastMessage('Account linked! Sync PIN generated.')
+      setToast(true)
+    } catch (error) {
+      setToastMessage(error.message || 'Failed to link account')
+      setToast(true)
+    } finally {
+      setSyncPasswordBusy(false)
     }
   }
 
@@ -233,7 +274,45 @@ export default function Settings() {
               ? 'Generate a 5-digit PIN to sync your account with your laptop. Share this PIN with your computer to access your data.'
               : 'Generate a 5-digit PIN to sync your account with the mobile app. Share this PIN with your mobile device to access your data.'}
           </p>
-          {!showSyncPin ? (
+          {showSyncPasswordPrompt ? (
+            <div className="space-y-3">
+              <div className="p-4 bg-slate-900/80 rounded-xl border border-amber-500/30">
+                <p className="text-xs text-amber-300 mb-2">
+                  To enable cross-device sync, enter your account password to link this device to the server.
+                </p>
+                <div className="relative">
+                  <input
+                    type={showPwText ? 'text' : 'password'}
+                    value={syncPassword}
+                    onChange={(e) => setSyncPassword(e.target.value)}
+                    placeholder="Your password"
+                    className="input w-full bg-slate-900/80 text-white border-white/10 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPwText(!showPwText)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400 hover:text-white"
+                    tabIndex={-1}
+                  >
+                    {showPwText ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={confirmSyncPin}
+                disabled={!syncPassword || syncPasswordBusy}
+                className="btn-primary w-full"
+              >
+                {syncPasswordBusy ? 'Linking…' : 'Link account & generate PIN'}
+              </button>
+              <button
+                onClick={() => { setShowSyncPasswordPrompt(false); setSyncPassword('') }}
+                className="btn-ghost w-full text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : !showSyncPin ? (
             <button
               onClick={generateSyncPin}
               className="btn-primary w-full"
