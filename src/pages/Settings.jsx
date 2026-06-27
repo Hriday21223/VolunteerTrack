@@ -35,7 +35,7 @@ export default function Settings() {
       QRCode.toCanvas(qrCanvasRef.current, displaySyncPin, {
         width: 200,
         margin: 2,
-        color: { dark: '#ffffff', light: '#00000000' },
+        color: { dark: '#111827', light: '#ffffff' },
       })
     }
   }, [showQR, displaySyncPin])
