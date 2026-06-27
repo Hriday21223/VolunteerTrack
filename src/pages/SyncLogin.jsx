@@ -53,6 +53,12 @@ export default function SyncLogin() {
     setScanning(true)
     setErr('')
     try {
+      const cameras = await Html5Qrcode.getCameras()
+      if (cameras.length === 0) {
+        setScanning(false)
+        setErr('No camera found. Upload a QR code screenshot instead.')
+        return
+      }
       const scanner = new Html5Qrcode('qr-reader')
       scannerInstance.current = scanner
       await scanner.start(
@@ -84,7 +90,35 @@ export default function SyncLogin() {
       )
     } catch (e) {
       setScanning(false)
-      setErr('Could not access camera. Allow camera permission and try again.')
+      setErr('Could not access camera. Try uploading a screenshot of the QR code instead.')
+    }
+  }
+
+  const scanFromFile = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setErr('')
+    setBusy(true)
+    try {
+      const scanner = new Html5Qrcode('qr-reader-file')
+      scannerInstance.current = scanner
+      const decodedText = await scanner.scanFile(file, false)
+      const pin = decodedText.replace(/[^0-9]/g, '').slice(0, 5)
+      if (pin.length === 5) {
+        setSyncPin(pin)
+        scannerInstance.current = null
+        await loginWithSyncPin(pin)
+        setToast(true)
+        setTimeout(() => nav('/', { replace: true }), 600)
+      } else {
+        setErr('Invalid QR code — no 5-digit PIN found.')
+        setBusy(false)
+        scannerInstance.current = null
+      }
+    } catch (e) {
+      setErr('Could not read QR code from the image. Try a clearer screenshot.')
+      setBusy(false)
+      scannerInstance.current = null
     }
   }
 
@@ -116,11 +150,19 @@ export default function SyncLogin() {
               <Shield className="w-12 h-12 text-brand-400" />
             </div>
 
+            <div id="qr-reader-file" className="hidden" />
             {scanning ? (
               <div className="space-y-4">
                 <div id="qr-reader" ref={scannerRef} className="w-full overflow-hidden rounded-xl" />
+                <div className="border-t border-white/10 pt-4">
+                  <p className="text-xs text-slate-400 mb-2 text-center">Or upload a screenshot</p>
+                  <label className="btn-secondary w-full flex items-center justify-center cursor-pointer">
+                    <Camera className="w-4 h-4 mr-2" /> Choose QR image
+                    <input type="file" accept="image/*" className="hidden" onChange={scanFromFile} />
+                  </label>
+                </div>
                 <button onClick={stopScanning} className="btn-ghost w-full text-sm">
-                  <CameraOff className="w-4 h-4 mr-2" /> Cancel scanning
+                  <CameraOff className="w-4 h-4 mr-2" /> Cancel
                 </button>
               </div>
             ) : (
