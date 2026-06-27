@@ -68,7 +68,7 @@ export function AuthProvider({ children }) {
     const account = findUserByEmail(email)
     if (!account) throw new Error('No account with that email.')
     if (!verifyPin(account, pin)) throw new Error('Incorrect PIN.')
-    const { passwordHash, pinHash, resetPinCode, resetPinCodeExpiresAt, syncPin, ...safe } = account
+    const { passwordHash, pinHash, resetPinCode, resetPinCodeExpiresAt, ...safe } = account
     write(SESSION_KEY, safe)
     setUser(safe)
     return safe
@@ -109,7 +109,7 @@ export function AuthProvider({ children }) {
       const account = findUserBySyncPin(syncPin)
       console.log('Found account:', account ? account.email : 'none')
       if (!account) throw new Error('Invalid sync PIN.')
-      const { passwordHash, pinHash, resetPinCode, resetPinCodeExpiresAt, syncPin: _, ...safe } = account
+      const { passwordHash, pinHash, resetPinCode, resetPinCodeExpiresAt, ...safe } = account
       write(SESSION_KEY, safe)
       setUser(safe)
       return safe
@@ -147,7 +147,7 @@ export function AuthProvider({ children }) {
       console.log('Backend registration failed, falling back to local storage:', error.message)
       // Fallback to local storage for demo mode
       const account = createUser(data)
-      const { passwordHash, pinHash, resetPinCode, resetPinCodeExpiresAt, syncPin, ...safe } = account
+      const { passwordHash, pinHash, resetPinCode, resetPinCodeExpiresAt, ...safe } = account
       write(SESSION_KEY, safe)
       setUser(safe)
       return safe
@@ -172,7 +172,7 @@ export function AuthProvider({ children }) {
     if (!user) return null
     const updated = persistUser(user.id, patch)
     if (!updated) return null
-    const { passwordHash, pinHash, resetPinCode, resetPinCodeExpiresAt, syncPin, ...safe } = updated
+    const { passwordHash, pinHash, resetPinCode, resetPinCodeExpiresAt, ...safe } = updated
     write(SESSION_KEY, safe)
     setUser(safe)
     return safe

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Mail, Lock, User as UserIcon, ArrowRight, School, GraduationCap } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import Card from '@/components/Card.jsx'
@@ -12,6 +12,15 @@ export default function Register() {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const [toast, setToast] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    setIsMobile(mq.matches)
+    const handler = (e) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   const onChange = (k) => (e) => setForm({ ...form, [k]: e.target.value })
 
@@ -65,7 +74,7 @@ export default function Register() {
           </div>
 
           <div className="text-center text-sm text-earth-500 dark:text-earth-400 mt-2">
-            Syncing from web?{' '}
+            {isMobile ? 'Syncing from laptop?' : 'Syncing from mobile?'}{' '}
             <Link to="/sync-login" className="text-brand-700 dark:text-brand-300 font-medium hover:underline">Use sync PIN</Link>
           </div>
         </Card>

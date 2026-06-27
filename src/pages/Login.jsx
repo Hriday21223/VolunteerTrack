@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Mail, Lock, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import Card from '@/components/Card.jsx'
@@ -16,6 +16,15 @@ export default function Login() {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const [toast, setToast] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    setIsMobile(mq.matches)
+    const handler = (e) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -145,7 +154,7 @@ export default function Login() {
               </div>
 
               <div className="mt-4 text-center text-sm text-slate-400">
-                Syncing from web?{' '}
+                {isMobile ? 'Syncing from laptop?' : 'Syncing from mobile?'}{' '}
                 <Link to="/sync-login" className="text-sky-200 font-semibold hover:text-white">Use sync PIN</Link>
               </div>
             </div>
