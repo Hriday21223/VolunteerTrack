@@ -86,11 +86,7 @@ export default function Admin() {
             <button type="submit" className="btn-primary w-full">Unlock</button>
             <button type="button" onClick={() => nav(-1)} className="btn-ghost w-full">Back</button>
           </form>
-          <div className="mt-4 text-center">
-            <a href="https://groups.google.com/g/volunteertrack" target="_blank" rel="noreferrer" className="text-xs text-brand-700 dark:text-brand-300 hover:underline">
-              Join our Google Group
-            </a>
-          </div>
+
         </Card>
       </AppLayout>
     )
@@ -127,6 +123,14 @@ export default function Admin() {
         </div>
       }
     >
+      <Card className="mb-4">
+        <div className="text-center py-3">
+          <a href="https://groups.google.com/g/volunteertrack" target="_blank" rel="noreferrer" className="text-sm text-brand-700 dark:text-brand-300 hover:underline font-medium">
+            VolunteerTrack Google Group →
+          </a>
+        </div>
+      </Card>
+
       {contacts.length === 0 ? (
         <Card>
           <div className="text-center py-12 text-earth-500">
