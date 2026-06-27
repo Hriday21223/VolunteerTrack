@@ -24,6 +24,22 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('storage', onStorage)
   }, [])
 
+  // Refresh user from backend on mount (syncs schoolId, role, etc.)
+  useEffect(() => {
+    const token = localStorage.getItem('voluntrack:auth_token')
+    if (!token) return
+    const apiUrl = import.meta.env.VITE_API_URL || '/api'
+    fetch(`${apiUrl}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.user) {
+          write(SESSION_KEY, data.user)
+          setUser(data.user)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   const login = useCallback(async (email, password) => {
     // Try backend API first
     try {
