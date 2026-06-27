@@ -3,9 +3,6 @@ import cors from 'cors'
 import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
 import nodemailer from 'nodemailer'
-import { fileURLToPath } from 'url'
-import path from 'path'
-import fs from 'fs'
 import { initSchema, hasDatabase, query } from './server/db.js'
 import { authenticate, hashPassword } from './server/auth.js'
 import { uid } from './server/ids.js'
@@ -14,7 +11,7 @@ import authRoutes from './server/routes/auth.js'
 dotenv.config()
 
 const app = express()
-const port = process.env.BACKEND_PORT || 5174
+const port = process.env.PORT || 10000
 
 // General rate limiting for API endpoints
 const apiLimiter = rateLimit({
@@ -34,22 +31,12 @@ const emailLimiter = rateLimit({
   message: { error: 'Too many email requests. Please try again later.' },
 })
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-// Only serve static files if dist folder exists (for local development)
-const distPath = path.join(__dirname, 'dist')
-
 app.use(cors())
 app.use(express.json({ limit: '1mb' })) // Limit request body size
 app.use(authenticate)
 
 // Server-backed accounts & (later) school dashboards.
 app.use('/api/auth', authRoutes)
-
-// Only serve static files if dist folder exists (for local development)
-if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath, { fallthrough: false }))
-}
 
 // In-memory dev ring buffer of the most recent codes we tried to send. Useful
 // when the user is on the GitHub Pages demo and SMTP isn't configured: the
@@ -209,14 +196,9 @@ app.post('/api/contact', emailLimiter, async (req, res) => {
   }
 })
 
-// SPA fallback: serve index.html for any non-API route so React Router handles it.
-app.get('*', (_req, res) => {
-  try {
-    res.sendFile(path.join(distPath, 'index.html'))
-  } catch (error) {
-    // If dist folder doesn't exist, return 404
-    res.status(404).json({ error: 'Not found' })
-  }
+// 404 handler for unknown routes
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Not found' })
 })
 
 // Creates an admin account on boot from env so there is always a way in.
