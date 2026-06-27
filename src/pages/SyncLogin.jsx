@@ -53,10 +53,9 @@ export default function SyncLogin() {
     setScanning(true)
     setErr('')
     try {
-      const cameras = await Html5Qrcode.getCameras()
+      const cameras = await Html5Qrcode.getCameras().catch(() => [])
       if (cameras.length === 0) {
-        setScanning(false)
-        setErr('No camera found. Upload a QR code screenshot instead.')
+        setErr('No camera found. Upload a QR code screenshot below.')
         return
       }
       const scanner = new Html5Qrcode('qr-reader')
@@ -89,8 +88,7 @@ export default function SyncLogin() {
         () => {},
       )
     } catch (e) {
-      setScanning(false)
-      setErr('Could not access camera. Try uploading a screenshot of the QR code instead.')
+      setErr('Camera unavailable. Upload a QR code screenshot below.')
     }
   }
 
@@ -155,7 +153,7 @@ export default function SyncLogin() {
               <div className="space-y-4">
                 <div id="qr-reader" ref={scannerRef} className="w-full overflow-hidden rounded-xl" />
                 <div className="border-t border-white/10 pt-4">
-                  <p className="text-xs text-slate-400 mb-2 text-center">Or upload a screenshot</p>
+                  <p className="text-xs text-slate-400 mb-2 text-center">Upload a QR code screenshot</p>
                   <label className="btn-secondary w-full flex items-center justify-center cursor-pointer">
                     <Camera className="w-4 h-4 mr-2" /> Choose QR image
                     <input type="file" accept="image/*" className="hidden" onChange={scanFromFile} />
