@@ -67,7 +67,7 @@ function Shell() {
         <Route path="/reset-password"  element={<PublicOnly><ResetPassword /></PublicOnly>} />
         <Route path="/reset-pin"       element={<PublicOnly><ResetPin /></PublicOnly>} />
         <Route path="/sync-login"      element={<PublicOnly><SyncLogin /></PublicOnly>} />
-        <Route path="/school/register" element={<PublicOnly><SchoolRegister /></PublicOnly>} />
+        <Route path="/school/register" element={<SchoolRegister />} />
         <Route path="/about"           element={<About />} />
         <Route path="/contact"         element={<Contact />} />
 
