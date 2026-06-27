@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Shield, ArrowRight, Smartphone } from 'lucide-react'
+import { Shield, ArrowRight, Smartphone, Monitor } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -12,6 +12,15 @@ export default function SyncLogin() {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const [toast, setToast] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    setIsMobile(mq.matches)
+    const handler = (e) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -33,8 +42,8 @@ export default function SyncLogin() {
       <div className="mx-auto max-w-md">
         <div className="mb-8 text-center">
           <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-slate-900/60 px-4 py-2 text-sm text-brand-100 shadow-soft backdrop-blur">
-            <Smartphone className="w-4 h-4" />
-            Mobile sync
+            {isMobile ? <Monitor className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
+            {isMobile ? 'Laptop sync' : 'Mobile sync'}
           </div>
         </div>
 
@@ -48,9 +57,11 @@ export default function SyncLogin() {
               <Shield className="w-12 h-12 text-brand-400" />
             </div>
 
-            <p className="text-sm text-slate-300 mb-6">
-              Enter the 5-digit sync PIN from your web settings to access your account on this device.
-            </p>
+              <p className="text-sm text-slate-300 mb-6">
+                {isMobile
+                  ? 'Enter the 5-digit sync PIN from your laptop settings to access your account on this device.'
+                  : 'Enter the 5-digit sync PIN from your mobile device to access your account here.'}
+              </p>
 
             <form onSubmit={onSubmit} className="space-y-5">
               <div>
@@ -77,10 +88,12 @@ export default function SyncLogin() {
             </form>
 
             <div className="mt-6 text-center text-sm text-slate-400">
-              Don't have a sync PIN?{' '}
-              <a href="https://github.com/hriday21223/VolunteerTrack" target="_blank" rel="noopener noreferrer" className="text-sky-200 font-semibold hover:text-white">
-                Get VolunTrack web
-              </a>
+              {isMobile ? 'Open on your laptop to generate a PIN.' : "Don't have the mobile app?"}{' '}
+              {!isMobile && (
+                <a href="https://github.com/hriday21223/VolunteerTrack" target="_blank" rel="noopener noreferrer" className="text-sky-200 font-semibold hover:text-white">
+                  Get VolunTrack mobile
+                </a>
+              )}
             </div>
           </div>
         </Card>

@@ -22,6 +22,15 @@ export default function Settings() {
   const [pinSaved, setPinSaved] = useState(false)
   const [displaySyncPin, setDisplaySyncPin] = useState('')
   const [showSyncPin, setShowSyncPin] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    setIsMobile(mq.matches)
+    const handler = (e) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   // Load sync PIN from user profile on mount
   useEffect(() => {
@@ -215,17 +224,21 @@ export default function Settings() {
         <Card>
           <div className="flex items-center gap-2 mb-3">
             <Shield className="w-4 h-4 text-brand-600" />
-            <h3 className="font-display font-semibold">Mobile sync PIN</h3>
+            <h3 className="font-display font-semibold">
+              {isMobile ? 'Laptop sync PIN' : 'Mobile sync PIN'}
+            </h3>
           </div>
           <p className="text-sm text-earth-500 dark:text-earth-400 mb-4">
-            Generate a 5-digit PIN to sync your account with the mobile app. Share this PIN with your mobile device to access your data.
+            {isMobile
+              ? 'Generate a 5-digit PIN to sync your account with your laptop. Share this PIN with your computer to access your data.'
+              : 'Generate a 5-digit PIN to sync your account with the mobile app. Share this PIN with your mobile device to access your data.'}
           </p>
           {!showSyncPin ? (
             <button
               onClick={generateSyncPin}
               className="btn-primary w-full"
             >
-              Generate sync PIN
+              Generate {isMobile ? 'laptop' : 'mobile'} sync PIN
             </button>
           ) : (
             <div className="space-y-3">
