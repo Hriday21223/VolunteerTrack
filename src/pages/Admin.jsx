@@ -123,6 +123,10 @@ export default function Admin() {
     } catch { return [] }
   }, [])
 
+  useEffect(() => {
+    if (unlocked) loadSchools()
+  }, [unlocked, loadSchools])
+
   const unlock = (e) => {
     e.preventDefault()
     if (password === ADMIN_PASSWORD) {
@@ -215,10 +219,6 @@ export default function Admin() {
     setUnlocked(false)
     setPassword('')
   }
-
-  useEffect(() => {
-    if (unlocked) loadSchools()
-  }, [unlocked, loadSchools])
 
   return (
     <AppLayout
