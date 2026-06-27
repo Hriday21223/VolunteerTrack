@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, Copy, Eye, EyeOff, QrCode } from 'lucide-react'
+import { Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, Copy, Eye, EyeOff, QrCode, School, Upload } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { hashPin, sendPasswordResetCode, clearPasswordResetCode } from '@/api/index.js'
@@ -27,6 +27,11 @@ export default function Settings() {
   const [showSyncPasswordPrompt, setShowSyncPasswordPrompt] = useState(false)
   const [showPwText, setShowPwText] = useState(false)
   const [syncPasswordBusy, setSyncPasswordBusy] = useState(false)
+  const [schoolCode, setSchoolCode] = useState('')
+  const [schoolName, setSchoolName] = useState('')
+  const [schoolBusy, setSchoolBusy] = useState(false)
+  const [pdfs, setPdfs] = useState([])
+  const [showSchool, setShowSchool] = useState(false)
   const [showQR, setShowQR] = useState(false)
   const qrCanvasRef = useRef(null)
 
@@ -423,6 +428,77 @@ export default function Settings() {
             </button>
           )}
         </Card>
+
+        {user?.role === 'student' && (
+          <Card>
+            <div className="flex items-center gap-2 mb-3">
+              <School className="w-4 h-4 text-brand-600" />
+              <h3 className="font-display font-semibold">School</h3>
+            </div>
+            {user.schoolId ? (
+              <div className="space-y-3">
+                <p className="text-sm text-earth-500 dark:text-earth-400">Linked to a school. Upload verification PDFs for approval.</p>
+                <Link to="/school/dashboard" className="btn-secondary w-full flex items-center justify-center">
+                  <Upload className="w-4 h-4 mr-2" /> Upload & view PDFs
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-earth-500 dark:text-earth-400">Enter your school code to link your account.</p>
+                <input
+                  type="text"
+                  value={schoolCode}
+                  onChange={(e) => setSchoolCode(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  placeholder="cisd-12345"
+                  className="input w-full"
+                />
+                <button
+                  onClick={async () => {
+                    if (!schoolCode) return
+                    setSchoolBusy(true)
+                    try {
+                      const token = localStorage.getItem('voluntrack:auth_token')
+                      const apiUrl = import.meta.env.VITE_API_URL || '/api'
+                      const res = await fetch(`${apiUrl}/school/join`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ pin: schoolCode }),
+                      })
+                      const data = await res.json()
+                      if (!res.ok) throw new Error(data.error || 'Failed to join')
+                      setToastMessage('School linked!')
+                      setToast(true)
+                      setSchoolCode('')
+                      window.location.reload()
+                    } catch (e) {
+                      setToastMessage(e.message)
+                      setToast(true)
+                    } finally {
+                      setSchoolBusy(false)
+                    }
+                  }}
+                  disabled={!schoolCode || schoolBusy}
+                  className="btn-primary w-full"
+                >
+                  {schoolBusy ? 'Joining…' : 'Join school'}
+                </button>
+              </div>
+            )}
+          </Card>
+        )}
+
+        {user?.role === 'school' && (
+          <Card>
+            <div className="flex items-center gap-2 mb-3">
+              <School className="w-4 h-4 text-brand-600" />
+              <h3 className="font-display font-semibold">School dashboard</h3>
+            </div>
+            <p className="text-sm text-earth-500 dark:text-earth-400 mb-4">View students, review uploaded PDFs, and manage approvals.</p>
+            <Link to="/school/dashboard" className="btn-primary w-full flex items-center justify-center">
+              Open school dashboard
+            </Link>
+          </Card>
+        )}
 
         {user?.role === 'admin' && (
           <Card className="lg:col-span-2">

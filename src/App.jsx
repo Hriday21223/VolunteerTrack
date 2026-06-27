@@ -23,6 +23,8 @@ import Profile from '@/pages/Profile.jsx'
 import Settings from '@/pages/Settings.jsx'
 import Reminders from '@/pages/Reminders.jsx'
 import Admin from '@/pages/Admin.jsx'
+import SchoolDashboard from '@/pages/SchoolDashboard.jsx'
+import SchoolRegister from '@/pages/SchoolRegister.jsx'
 
 const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
 
@@ -65,6 +67,7 @@ function Shell() {
         <Route path="/reset-password"  element={<PublicOnly><ResetPassword /></PublicOnly>} />
         <Route path="/reset-pin"       element={<PublicOnly><ResetPin /></PublicOnly>} />
         <Route path="/sync-login"      element={<PublicOnly><SyncLogin /></PublicOnly>} />
+        <Route path="/school/register" element={<PublicOnly><SchoolRegister /></PublicOnly>} />
         <Route path="/about"           element={<About />} />
         <Route path="/contact"         element={<Contact />} />
 
@@ -77,6 +80,7 @@ function Shell() {
         <Route path="/profile"      element={<Protected><Profile /></Protected>} />
         <Route path="/settings"     element={<Protected><Settings /></Protected>} />
         <Route path="/admin"        element={<AdminProtected><Admin /></AdminProtected>} />
+        <Route path="/school/dashboard" element={<Protected><SchoolDashboard /></Protected>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

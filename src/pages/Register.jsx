@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Mail, Lock, User as UserIcon, ArrowRight, School, GraduationCap } from 'lucide-react'
+import { Mail, Lock, User as UserIcon, ArrowRight, School, GraduationCap, Hash } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -8,7 +8,8 @@ import Toast from '@/components/Toast.jsx'
 export default function Register() {
   const { register } = useAuth()
   const nav = useNavigate()
-  const [form, setForm] = useState({ name: '', email: '', password: '', pin: '', school: '', grade: '' })
+  const apiUrl = import.meta.env.VITE_API_URL || '/api'
+  const [form, setForm] = useState({ name: '', email: '', password: '', pin: '', school: '', grade: '', schoolCode: '' })
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const [toast, setToast] = useState(false)
@@ -31,7 +32,17 @@ export default function Register() {
     if (form.pin && !/^[0-9]{4}$/.test(form.pin)) { setErr('PIN must be exactly 4 digits.'); return }
     setBusy(true)
     try {
-      await register(form)
+      const user = await register(form)
+      if (form.schoolCode && user) {
+        const token = localStorage.getItem('voluntrack:auth_token')
+        if (token) {
+          await fetch(`${apiUrl}/school/join`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ pin: form.schoolCode }),
+          })
+        }
+      }
       setToast(true)
       setTimeout(() => nav('/', { replace: true }), 600)
     } catch (e) {
@@ -59,6 +70,7 @@ export default function Register() {
             <Field icon={Lock}            label="Password"            type="password"      value={form.password} onChange={onChange('password')} placeholder="6+ characters" autoComplete="new-password" required />
             <Field icon={Lock}            label="Optional PIN"        type="password"      value={form.pin}      onChange={onChange('pin')}      placeholder="4-digit PIN" autoComplete="one-time-code" />
             <Field icon={School}          label="School / Organization" value={form.school} onChange={onChange('school')} placeholder="Lincoln High School" />
+            <Field icon={Hash}            label="School code (optional)" value={form.schoolCode} onChange={onChange('schoolCode')} placeholder="cisd-12345" />
             <Field icon={GraduationCap}   label="Grade or Role"       value={form.grade}   onChange={onChange('grade')}   placeholder="11th grade / Volunteer lead" />
 
             {err && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-300 px-3 py-2 rounded-lg">{err}</div>}

@@ -7,6 +7,7 @@ import { initSchema, hasDatabase, query } from './server/db.js'
 import { authenticate, hashPassword } from './server/auth.js'
 import { uid } from './server/ids.js'
 import authRoutes from './server/routes/auth.js'
+import schoolRoutes from './server/routes/school.js'
 
 dotenv.config()
 
@@ -25,7 +26,7 @@ const apiLimiter = rateLimit({
 // Stricter rate limiting for email endpoints
 const emailLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // 10 emails per hour
+  max: 20, // 20 emails per hour
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many email requests. Please try again later.' },
@@ -39,6 +40,7 @@ app.use(authenticate)
 
 // Server-backed accounts & (later) school dashboards.
 app.use('/api/auth', apiLimiter, authRoutes)
+app.use('/api/school', apiLimiter, schoolRoutes)
 
 // In-memory ring buffer of the most recently generated recovery codes. In
 // production these are also emailed to the user; the buffer allows the

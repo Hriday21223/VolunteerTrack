@@ -70,9 +70,25 @@ CREATE TABLE IF NOT EXISTS goals (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS pdf_uploads (
+  id            TEXT PRIMARY KEY,
+  user_id       TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  school_id     TEXT REFERENCES schools(id) ON DELETE SET NULL,
+  filename      TEXT NOT NULL,
+  file_data     TEXT NOT NULL,
+  file_type     TEXT NOT NULL DEFAULT 'application/pdf',
+  status        TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
+  notes         TEXT,
+  reviewed_by   TEXT REFERENCES users(id) ON DELETE SET NULL,
+  reviewed_at   TIMESTAMPTZ,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_school_id ON users(school_id);
 CREATE INDEX IF NOT EXISTS idx_logs_user_id    ON logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_goals_user_id   ON goals(user_id);
+CREATE INDEX IF NOT EXISTS idx_pdf_user_id     ON pdf_uploads(user_id);
+CREATE INDEX IF NOT EXISTS idx_pdf_school_id   ON pdf_uploads(school_id);
 `
 
 // Idempotent: safe to run on every boot. Creates tables if missing.
