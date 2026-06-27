@@ -7,10 +7,13 @@ services:
     name: voluntrack-backend
     runtime: node
     plan: free
+    nodeVersion: 20
     buildCommand: npm ci
     startCommand: node server.js
     healthCheckPath: /api/recovery-status
     envVars:
+      - key: RENDER_FORCE_RUNTIME
+        value: node
       - key: NODE_ENV
         value: production
       - key: PORT
