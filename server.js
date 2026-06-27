@@ -31,6 +31,7 @@ const emailLimiter = rateLimit({
   message: { error: 'Too many email requests. Please try again later.' },
 })
 
+app.set('trust proxy', 1)
 app.use(cors())
 app.use(express.json({ limit: '1mb' })) // Limit request body size
 app.use(authenticate)
