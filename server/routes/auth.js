@@ -266,6 +266,8 @@ router.post('/sync-login', authLimiter, requireDb, async (req, res) => {
       return res.status(401).json({ error: 'Invalid sync PIN.' })
     }
     const user = publicUser(rows[0])
+    // Clear the sync PIN so it can't be reused
+    await query('UPDATE users SET sync_pin = NULL WHERE id = $1', [rows[0].id])
     return res.json({ token: signToken(user), user })
   } catch (error) {
     console.error('sync-login failed:', error)
