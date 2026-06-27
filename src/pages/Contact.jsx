@@ -25,6 +25,8 @@ export default function Contact() {
     localStorage.setItem('voluntrack:contacts', JSON.stringify(list))
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '/api'
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 5000)
       await fetch(`${apiUrl}/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -34,7 +36,9 @@ export default function Contact() {
           subject: form.subject,
           message: form.message,
         }),
+        signal: controller.signal,
       })
+      clearTimeout(timeout)
     } catch {
       // Backend email delivery is optional; message is saved locally.
     }
