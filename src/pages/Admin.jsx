@@ -3,27 +3,27 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, Lock, XCircle } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
+import { useAuth } from '@/hooks/useAuth.jsx'
 
 const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
 const ADMIN_PASSWORD = '122410'
 
 export default function Admin() {
   const nav = useNavigate()
+  const { user } = useAuth()
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('voluntrack:admin-unlocked') === '1')
   const [password, setPassword] = useState('')
   const [err, setErr] = useState('')
   const [isAuthorized, setIsAuthorized] = useState(false)
 
-  const user = useMemo(() => JSON.parse(localStorage.getItem('voluntrack:user') || '{}'), [])
-
   useEffect(() => {
     // Check if user is authorized by email
-    if (user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+    if (user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
       setIsAuthorized(true)
     } else {
       setIsAuthorized(false)
     }
-  }, [user.email])
+  }, [user?.email])
 
   const contacts = useMemo(() =>
     JSON.parse(localStorage.getItem('voluntrack:contacts') || '[]').sort((a, b) => b.sentAt - a.sentAt)
