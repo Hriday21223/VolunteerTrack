@@ -1,9 +1,11 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, Lock, XCircle, Sparkles } from 'lucide-react'
+import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, Lock, XCircle, Sparkles, School, Users } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import { useAuth } from '@/hooks/useAuth.jsx'
+
+const apiUrl = import.meta.env.VITE_API_URL || '/api'
 
 const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
 const ADMIN_PASSWORD = '122410'
@@ -56,15 +58,64 @@ export default function Admin() {
   const [err, setErr] = useState('')
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [drafts, setDrafts] = useState({})
+  const [tab, setTab] = useState('inbox')
+  const [schools, setSchools] = useState([])
+  const [loadingSchools, setLoadingSchools] = useState(false)
+  const [granting, setGranting] = useState(false)
 
   useEffect(() => {
-    // Check if user is authorized by email
     if (user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
       setIsAuthorized(true)
     } else {
       setIsAuthorized(false)
     }
   }, [user?.email])
+
+  const grantAdmin = async () => {
+    setGranting(true)
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      if (!token) return
+      const res = await fetch(`${apiUrl}/auth/grant-admin`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) { alert('Failed to grant admin. Are you logged in?'); return }
+      const data = await res.json()
+      localStorage.setItem('voluntrack:auth_token', data.token)
+      window.location.reload()
+    } catch { alert('Error contacting server.') } finally { setGranting(false) }
+  }
+
+  const loadSchools = useCallback(async () => {
+    setLoadingSchools(true)
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      if (!token) return
+      const res = await fetch(`${apiUrl}/school/admin/list`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.status === 403) { setLoadingSchools(false); return }
+      if (!res.ok) return
+      const data = await res.json()
+      setSchools(data.schools || [])
+    } catch {} finally {
+      setLoadingSchools(false)
+    }
+  }, [])
+
+  const deleteSchool = async (id, name) => {
+    if (!confirm(`Delete "${name}" and unlink all its students?`)) return
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const res = await fetch(`${apiUrl}/school/admin/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error('Failed')
+      loadSchools()
+    } catch {}
+  }
 
   const contacts = useMemo(() =>
     JSON.parse(localStorage.getItem('voluntrack:contacts') || '[]').sort((a, b) => b.sentAt - a.sentAt)
@@ -163,14 +214,26 @@ export default function Admin() {
     setPassword('')
   }
 
+  useEffect(() => {
+    if (unlocked) loadSchools()
+  }, [unlocked, loadSchools])
+
   return (
     <AppLayout
-      title="Contact inbox"
-      subtitle={`${contacts.length} message${contacts.length === 1 ? '' : 's'} received`}
+      title={tab === 'inbox' ? 'Contact inbox' : 'Manage schools'}
+      subtitle={tab === 'inbox' ? `${contacts.length} message${contacts.length === 1 ? '' : 's'} received` : `${schools.length} school${schools.length === 1 ? '' : 's'} registered`}
       action={
         <div className="flex gap-2">
-          {contacts.length ? (
-            <button onClick={clearAll} className="btn-ghost text-red-600">Clear all</button>
+          <button onClick={() => setTab('inbox')} className={`btn-sm ${tab === 'inbox' ? 'btn-primary' : 'btn-ghost'}`}>
+            <MessageSquare className="w-3.5 h-3.5 mr-1" /> Inbox
+          </button>
+          <button onClick={() => { setTab('schools'); loadSchools() }} className={`btn-sm ${tab === 'schools' ? 'btn-primary' : 'btn-ghost'}`}>
+            <School className="w-3.5 h-3.5 mr-1" /> Schools
+          </button>
+          {user?.role !== 'admin' ? (
+            <button onClick={grantAdmin} disabled={granting} className="btn-ghost text-yellow-500">
+              {granting ? 'Granting…' : 'Grant admin'}
+            </button>
           ) : null}
           <button onClick={logout} className="btn-ghost">Lock</button>
         </div>
@@ -184,7 +247,47 @@ export default function Admin() {
         </div>
       </Card>
 
-      {contacts.length === 0 ? (
+      {tab === 'schools' ? (
+        loadingSchools ? (
+          <Card><p className="text-center text-earth-400 py-8">Loading schools…</p></Card>
+        ) : schools.length === 0 ? (
+          <Card>
+            <div className="text-center py-12 text-earth-500">
+              <School className="w-10 h-10 mx-auto mb-3 opacity-50" />
+              <p className="font-medium text-earth-900 dark:text-earth-100">No schools registered</p>
+              <p className="text-sm mt-1">Schools will appear here when they register.</p>
+              <Link to="/school/register" className="btn-primary inline-flex mt-4">Register a school</Link>
+            </div>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {schools.map((s) => (
+              <Card key={s.id} padded={false} className="p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <School className="w-8 h-8 text-brand-600 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm">{s.name}</p>
+                      <p className="text-xs text-earth-400">
+                        Code: <span className="font-mono">{s.pin}</span>
+                        {s.contact_email && ` · ${s.contact_email}`}
+                      </p>
+                      <p className="text-xs text-earth-500">
+                        <Users className="w-3 h-3 inline mr-1" />
+                        {s.student_count} student{s.student_count === 1 ? '' : 's'} ·
+                        Joined {new Date(s.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <button onClick={() => deleteSchool(s.id, s.name)} className="text-red-400 hover:text-red-300 p-2" title="Delete school">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )
+      ) : contacts.length === 0 ? (
         <Card>
           <div className="text-center py-12 text-earth-500">
             <MessageSquare className="w-10 h-10 mx-auto mb-3 opacity-50" />
@@ -214,18 +317,11 @@ export default function Admin() {
                   )}
                 </div>
                 <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() => toggleDraft(idx)}
-                    className="p-2 rounded-lg text-earth-500 hover:text-brand-700 hover:bg-brand-500/10 self-start"
-                    title={drafts[idx] ? 'Hide draft' : 'Generate draft reply'}
-                  >
+                  <button onClick={() => toggleDraft(idx)} className="p-2 rounded-lg text-earth-500 hover:text-brand-700 hover:bg-brand-500/10 self-start"
+                    title={drafts[idx] ? 'Hide draft' : 'Generate draft reply'}>
                     <Sparkles className={`w-4 h-4 ${drafts[idx] ? 'text-brand-600' : ''}`} />
                   </button>
-                  <button
-                    onClick={() => remove(idx)}
-                    className="p-2 rounded-lg text-earth-500 hover:text-red-600 hover:bg-red-500/10 self-start"
-                    title="Delete"
-                  >
+                  <button onClick={() => remove(idx)} className="p-2 rounded-lg text-earth-500 hover:text-red-600 hover:bg-red-500/10 self-start" title="Delete">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>

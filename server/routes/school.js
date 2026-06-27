@@ -205,4 +205,33 @@ router.get('/info', limiter, requireDb, async (req, res) => {
   }
 })
 
+// --- Admin endpoints ---
+
+// List all schools (admin only)
+router.get('/admin/list', limiter, requireDb, requireAuth('admin'), async (req, res) => {
+  try {
+    const { rows } = await query(
+      `SELECT s.id, s.name, s.pin, s.contact_email, s.created_at,
+        (SELECT COUNT(*) FROM users WHERE school_id = s.id AND role = 'student') AS student_count
+       FROM schools s ORDER BY s.created_at DESC`,
+    )
+    return res.json({ schools: rows })
+  } catch (error) {
+    console.error('admin schools list failed:', error)
+    return res.status(500).json({ error: 'Could not fetch schools.' })
+  }
+})
+
+// Delete a school and unlink its students (admin only)
+router.delete('/admin/:id', limiter, requireDb, requireAuth('admin'), async (req, res) => {
+  try {
+    await query('UPDATE users SET school_id = NULL WHERE school_id = $1', [req.params.id])
+    await query('DELETE FROM schools WHERE id = $1', [req.params.id])
+    return res.json({ ok: true })
+  } catch (error) {
+    console.error('admin delete school failed:', error)
+    return res.status(500).json({ error: 'Could not delete school.' })
+  }
+})
+
 export default router
