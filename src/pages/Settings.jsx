@@ -4,7 +4,7 @@ import { Moon, Sun, Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, S
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { useTheme } from '@/hooks/useTheme.js'
-import { hashPin } from '@/api/index.js'
+import { hashPin, sendPasswordResetCode, clearPasswordResetCode } from '@/api/index.js'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -105,8 +105,8 @@ export default function Settings() {
     if (!syncPassword) return
     if (!displaySyncPin) return
     setSyncPasswordBusy(true)
+    const apiUrl = import.meta.env.VITE_API_URL || '/api'
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '/api'
       const response = await fetch(`${apiUrl}/auth/sync-pin-auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -121,7 +121,50 @@ export default function Settings() {
       setSyncPassword('')
       setToastMessage('Account linked! Sync PIN generated.')
       setToast(true)
+      return
     } catch (error) {
+      // If password is incorrect, try to sync the database password
+      // using a locally-generated recovery code
+      if (error.message === 'Password is incorrect.') {
+        try {
+          const updated = sendPasswordResetCode(user.email)
+          if (updated && updated.resetPasswordCode) {
+            const code = updated.resetPasswordCode
+            const sendRes = await fetch(`${apiUrl}/send-reset-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: user.email, code, type: 'password' }),
+            })
+            if (sendRes.ok || sendRes.status === 500 || sendRes.status === 503) {
+              const resetRes = await fetch(`${apiUrl}/auth/reset-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: user.email, code, newPassword: syncPassword }),
+              })
+              if (resetRes.ok) {
+                clearPasswordResetCode(user.email)
+                const retryRes = await fetch(`${apiUrl}/auth/sync-pin-auth`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email: user.email, password: syncPassword, syncPin: displaySyncPin }),
+                })
+                const retryData = await retryRes.json()
+                if (retryRes.ok) {
+                  localStorage.setItem('voluntrack:auth_token', retryData.token)
+                  setShowSyncPin(true)
+                  setShowSyncPasswordPrompt(false)
+                  setSyncPassword('')
+                  setToastMessage('Password synced! Sync PIN generated.')
+                  setToast(true)
+                  return
+                }
+              }
+            }
+          }
+        } catch {
+          // fall through to error message below
+        }
+      }
       setToastMessage(error.message || 'Failed to link account')
       setToast(true)
     } finally {
