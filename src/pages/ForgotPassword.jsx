@@ -76,6 +76,12 @@ export default function ForgotPassword() {
         </Link>
 
         <Card padded={false} className="p-7">
+          {code && !delivered && (
+            <div className="mb-6 rounded-2xl border border-brand-500/20 bg-brand-500/10 p-3 text-sm text-brand-900 dark:text-brand-100">
+              Recovery code: <span className="font-semibold">{code}</span>
+            </div>
+          )}
+
           {delivered ? (
             <div>
               <div className="w-12 h-12 rounded-full bg-brand-100 dark:bg-brand-900/30 grid place-items-center text-brand-700 mx-auto">
@@ -177,7 +183,7 @@ export default function ForgotPassword() {
                 {err && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-300 px-3 py-2 rounded-lg">{err}</div>}
 
                 <button className="btn-primary w-full" type="submit" disabled={delivery.status === 'sending'}>
-                  {delivery.status === 'sending' ? 'Sending code…' : 'Email me a recovery code'}
+                  {delivery.status === 'sending' ? 'Sending email… code below' : 'Email me a recovery code'}
                 </button>
               </form>
               <div className="text-center text-sm text-earth-500 dark:text-earth-400 mt-6">
