@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Shield, ArrowRight, Smartphone, Monitor } from 'lucide-react'
+import { Shield, ArrowRight, Smartphone, Monitor, Scan, Camera, CameraOff } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
+import { Html5Qrcode } from 'html5-qrcode'
 
 export default function SyncLogin() {
   const { loginWithSyncPin } = useAuth()
@@ -13,6 +14,9 @@ export default function SyncLogin() {
   const [err, setErr] = useState('')
   const [toast, setToast] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [scanning, setScanning] = useState(false)
+  const scannerRef = useRef(null)
+  const scannerInstance = useRef(null)
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)')
@@ -20,6 +24,14 @@ export default function SyncLogin() {
     const handler = (e) => setIsMobile(e.matches)
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (scannerInstance.current) {
+        scannerInstance.current.stop().catch(() => {})
+      }
+    }
   }, [])
 
   const onSubmit = async (e) => {
@@ -37,8 +49,55 @@ export default function SyncLogin() {
     }
   }
 
+  const startScanning = async () => {
+    setScanning(true)
+    setErr('')
+    try {
+      const scanner = new Html5Qrcode('qr-reader')
+      scannerInstance.current = scanner
+      await scanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          scanner.stop().catch(() => {})
+          scannerInstance.current = null
+          setScanning(false)
+          const pin = decodedText.replace(/[^0-9]/g, '').slice(0, 5)
+          if (pin.length === 5) {
+            setSyncPin(pin)
+            setBusy(true)
+            loginWithSyncPin(pin)
+              .then(() => {
+                setToast(true)
+                setTimeout(() => nav('/', { replace: true }), 600)
+              })
+              .catch((e) => {
+                setErr(e.message)
+                setBusy(false)
+              })
+          } else {
+            setErr('Invalid QR code — no 5-digit PIN found.')
+            setBusy(false)
+          }
+        },
+        () => {},
+      )
+    } catch (e) {
+      setScanning(false)
+      setErr('Could not access camera. Allow camera permission and try again.')
+    }
+  }
+
+  const stopScanning = () => {
+    if (scannerInstance.current) {
+      scannerInstance.current.stop().catch(() => {})
+      scannerInstance.current = null
+    }
+    setScanning(false)
+  }
+
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.18),transparent_24%),radial-gradient(circle_at_top_right,rgba(34,197,94,0.18),transparent_18%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.16),transparent_18%),linear-gradient(180deg,#08161b_0%,#0b1c24_45%,#0f1e16_100%)] text-white px-4 py-8">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.18),transparent_24%),radial-gradient(circle_at_top_right,rgba(34,197,95,0.18),transparent_18%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.16),transparent_18%),linear-gradient(180deg,#08161b_0%,#0b1c24_45%,#0f1e16_100%)] text-white px-4 py-8">
       <div className="mx-auto max-w-md">
         <div className="mb-8 text-center">
           <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-slate-900/60 px-4 py-2 text-sm text-brand-100 shadow-soft backdrop-blur">
@@ -57,44 +116,60 @@ export default function SyncLogin() {
               <Shield className="w-12 h-12 text-brand-400" />
             </div>
 
-              <p className="text-sm text-slate-300 mb-6">
-                {isMobile
-                  ? 'Enter the 5-digit sync PIN from your laptop settings to access your account on this device.'
-                  : 'Enter the 5-digit sync PIN from your mobile device to access your account here.'}
-              </p>
-
-            <form onSubmit={onSubmit} className="space-y-5">
-              <div>
-                <label className="label text-slate-300" htmlFor="syncPin">5-digit sync PIN</label>
-                <input
-                  id="syncPin"
-                  type="text"
-                  required
-                  inputMode="numeric"
-                  pattern="[0-9]{5}"
-                  maxLength={5}
-                  className="input bg-slate-900/80 text-white border-white/10 text-center text-2xl tracking-widest font-mono"
-                  placeholder="12345"
-                  value={syncPin}
-                  onChange={(e) => setSyncPin(e.target.value.replace(/[^0-9]/g, '').slice(0, 5))}
-                />
+            {scanning ? (
+              <div className="space-y-4">
+                <div id="qr-reader" ref={scannerRef} className="w-full overflow-hidden rounded-xl" />
+                <button onClick={stopScanning} className="btn-ghost w-full text-sm">
+                  <CameraOff className="w-4 h-4 mr-2" /> Cancel scanning
+                </button>
               </div>
+            ) : (
+              <>
+                <p className="text-sm text-slate-300 mb-6">
+                  {isMobile
+                    ? 'Enter the 5-digit sync PIN from your laptop settings or scan the QR code.'
+                    : 'Enter the 5-digit sync PIN from your mobile device or scan the QR code.'}
+                </p>
 
-              {err && <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{err}</div>}
+                <form onSubmit={onSubmit} className="space-y-5">
+                  <div>
+                    <label className="label text-slate-300" htmlFor="syncPin">5-digit sync PIN</label>
+                    <input
+                      id="syncPin"
+                      type="text"
+                      required
+                      inputMode="numeric"
+                      pattern="[0-9]{5}"
+                      maxLength={5}
+                      className="input bg-slate-900/80 text-white border-white/10 text-center text-2xl tracking-widest font-mono"
+                      placeholder="12345"
+                      value={syncPin}
+                      onChange={(e) => setSyncPin(e.target.value.replace(/[^0-9]/g, '').slice(0, 5))}
+                    />
+                  </div>
 
-              <button type="submit" className="btn-primary w-full py-3 text-sm font-semibold" disabled={busy}>
-                {busy ? 'Syncing…' : <>Sync account <ArrowRight className="w-4 h-4" /></>}
-              </button>
-            </form>
+                  <div className="flex gap-2">
+                    <button type="submit" className="btn-primary flex-1 py-3 text-sm font-semibold" disabled={busy}>
+                      {busy ? 'Syncing…' : <>Sync account <ArrowRight className="w-4 h-4" /></>}
+                    </button>
+                    <button type="button" onClick={startScanning} className="btn-secondary px-4">
+                      <Scan className="w-5 h-5" />
+                    </button>
+                  </div>
+                </form>
 
-            <div className="mt-6 text-center text-sm text-slate-400">
-              {isMobile ? 'Open on your laptop to generate a PIN.' : "Don't have the mobile app?"}{' '}
-              {!isMobile && (
-                <a href="https://github.com/hriday21223/VolunteerTrack" target="_blank" rel="noopener noreferrer" className="text-sky-200 font-semibold hover:text-white">
-                  Get VolunTrack mobile
-                </a>
-              )}
-            </div>
+                {err && <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{err}</div>}
+
+                <div className="mt-6 text-center text-sm text-slate-400">
+                  {isMobile ? 'Open on your laptop to generate a PIN.' : "Don't have the mobile app?"}{' '}
+                  {!isMobile && (
+                    <a href="https://github.com/hriday21223/VolunteerTrack" target="_blank" rel="noopener noreferrer" className="text-sky-200 font-semibold hover:text-white">
+                      Get VolunTrack mobile
+                    </a>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </Card>
       </div>

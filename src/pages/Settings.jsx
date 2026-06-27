@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, Copy, Eye, EyeOff } from 'lucide-react'
+import { Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, Copy, Eye, EyeOff, QrCode } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { hashPin, sendPasswordResetCode, clearPasswordResetCode } from '@/api/index.js'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
+import QRCode from 'qrcode'
 
 export default function Settings() {
 
@@ -26,6 +27,18 @@ export default function Settings() {
   const [showSyncPasswordPrompt, setShowSyncPasswordPrompt] = useState(false)
   const [showPwText, setShowPwText] = useState(false)
   const [syncPasswordBusy, setSyncPasswordBusy] = useState(false)
+  const [showQR, setShowQR] = useState(false)
+  const qrCanvasRef = useRef(null)
+
+  useEffect(() => {
+    if (showQR && displaySyncPin && qrCanvasRef.current) {
+      QRCode.toCanvas(qrCanvasRef.current, displaySyncPin, {
+        width: 200,
+        margin: 2,
+        color: { dark: '#ffffff', light: '#00000000' },
+      })
+    }
+  }, [showQR, displaySyncPin])
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)')
@@ -349,16 +362,19 @@ export default function Settings() {
                 <div className="text-xs text-earth-400 mb-1">Your sync PIN</div>
                 <div className="text-2xl font-mono font-bold text-white tracking-wider">{displaySyncPin}</div>
               </div>
-              <button
-                onClick={copySyncPin}
-                className="btn-secondary w-full"
-              >
+              {showQR ? (
+                <div className="flex justify-center p-4 bg-white rounded-xl">
+                  <canvas ref={qrCanvasRef} />
+                </div>
+              ) : (
+                <button onClick={() => setShowQR(true)} className="btn-secondary w-full">
+                  <QrCode className="w-4 h-4 mr-2" /> Show QR code
+                </button>
+              )}
+              <button onClick={copySyncPin} className="btn-secondary w-full">
                 <Copy className="w-4 h-4 mr-2" /> Copy PIN
               </button>
-              <button
-                onClick={generateSyncPin}
-                className="btn-ghost w-full text-sm"
-              >
+              <button onClick={generateSyncPin} className="btn-ghost w-full text-sm">
                 Generate new PIN
               </button>
             </div>
