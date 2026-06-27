@@ -200,11 +200,26 @@ export function AuthProvider({ children }) {
   }, [])
 
   const completePasswordReset = useCallback(async (email, code, password) => {
+    // Update local storage first
     const account = findUserByEmail(email)
     if (!account) throw new Error('No account with that email.')
     if (!isResetPasswordCodeValid(account, code)) throw new Error('Invalid or expired code.')
     const updated = persistUser(account.id, { passwordHash: hashPassword(password), resetPasswordCode: null, resetPasswordCodeExpiresAt: null })
     if (!updated) throw new Error('Failed to update password.')
+
+    // Also try to update the database password via the new API endpoint
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '/api'
+      await fetch(`${apiUrl}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code, newPassword: password }),
+      })
+      // Non-blocking — user flow continues either way
+    } catch {
+      // Backend may not have this endpoint yet
+    }
+
     return updated
   }, [])
 

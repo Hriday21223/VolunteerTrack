@@ -162,6 +162,36 @@ router.get('/me', requireDb, requireAuth(), async (req, res) => {
   }
 })
 
+// Change password (requires current password for verification)
+router.put('/password', requireDb, requireAuth(), async (req, res) => {
+  const currentPassword = req.body.currentPassword
+  const newPassword = validatePassword(req.body.newPassword || '')
+
+  if (!currentPassword) {
+    return res.status(400).json({ error: 'Current password is required.' })
+  }
+  if (!newPassword) {
+    return res.status(400).json({ error: 'New password must be at least 8 characters.' })
+  }
+
+  try {
+    const { rows } = await query('SELECT * FROM users WHERE id = $1', [req.auth.sub])
+    if (rows.length === 0) return res.status(404).json({ error: 'Account not found.' })
+
+    const ok = await verifyPassword(currentPassword, rows[0].password_hash)
+    if (!ok) return res.status(403).json({ error: 'Current password is incorrect.' })
+
+    const hash = await hashPassword(newPassword)
+    await query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, req.auth.sub])
+
+    const user = publicUser({ ...rows[0], password_hash: hash })
+    return res.json({ ok: true, user })
+  } catch (error) {
+    console.error('password change failed:', error)
+    return res.status(500).json({ error: 'Could not update password.' })
+  }
+})
+
 // Set or update sync PIN
 router.put('/sync-pin', requireDb, requireAuth(), async (req, res) => {
   const syncPin = validateSyncPin(req.body.syncPin || '')

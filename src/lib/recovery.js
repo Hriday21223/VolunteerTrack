@@ -35,11 +35,15 @@ export async function sendRecoveryEmail({ email, code, type }) {
     return { ok: false, reason: 'Missing recovery details.', backendAvailable: false }
   }
   try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 8000)
     const response = await fetch(`${apiUrl}/send-reset-email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, code, type }),
+      signal: controller.signal,
     })
+    clearTimeout(timer)
     if (response.ok) return { ok: true, backendAvailable: true }
 
     let reason = `Email backend returned ${response.status}.`
@@ -56,11 +60,9 @@ export async function sendRecoveryEmail({ email, code, type }) {
     const backendAvailable = response.status !== 404 && !reasonLooksLikeMissingBackend(reason)
     return { ok: false, reason, missingVars, backendAvailable }
   } catch (err) {
-    return {
-      ok: false,
-      reason: err?.message || 'Could not reach the email server.',
-      backendAvailable: false,
-    }
+    const isTimeout = err?.name === 'AbortError'
+    const reason = isTimeout ? 'Email timed out.' : err?.message || 'Could not reach the email server.'
+    return { ok: false, reason, backendAvailable: !isTimeout }
   }
 }
 
