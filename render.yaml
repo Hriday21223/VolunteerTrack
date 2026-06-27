@@ -19,17 +19,17 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: DATABASE_URL
-        sync: false
+        value: postgresql://neondb_owner:npg_7uZriwmaDz1p@ep-misty-recipe-adiolyhv-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=verify-full&channel_binding=require
       - key: EMAIL_HOST
-        sync: false
+        value: smtp.gmail.com
       - key: EMAIL_PORT
-        sync: false
+        value: 587
       - key: EMAIL_USER
-        sync: false
+        value: karnatamhriday@gmail.com
       - key: EMAIL_PASSWORD
-        sync: false
+        value: kulo nteg plkx obdo
       - key: EMAIL_FROM
-        sync: false
+        value: volunteertrack@googlegroups.com
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD
