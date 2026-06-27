@@ -97,6 +97,28 @@ router.get('/students', limiter, requireDb, requireAuth('school'), async (req, r
   }
 })
 
+// Add a student to the school by email (school admin only)
+router.post('/add-student', limiter, requireDb, requireAuth('school'), async (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase()
+  if (!email || !validator.isEmail(email)) return res.status(400).json({ error: 'Valid email required.' })
+
+  try {
+    const { rows: userRows } = await query('SELECT school_id FROM users WHERE id = $1', [req.auth.sub])
+    if (userRows.length === 0 || !userRows[0].school_id) return res.status(404).json({ error: 'School not found.' })
+
+    const { rows: target } = await query('SELECT id, school_id, role FROM users WHERE email = $1', [email])
+    if (target.length === 0) return res.status(404).json({ error: 'No user found with that email.' })
+    if (target[0].school_id) return res.status(409).json({ error: 'This student is already linked to a school.' })
+    if (target[0].role !== 'student') return res.status(400).json({ error: 'That user is not a student.' })
+
+    await query('UPDATE users SET school_id = $1 WHERE id = $2', [userRows[0].school_id, target[0].id])
+    return res.json({ ok: true })
+  } catch (error) {
+    console.error('add-student failed:', error)
+    return res.status(500).json({ error: 'Could not add student.' })
+  }
+})
+
 // Upload a PDF (student)
 router.post('/upload', limiter, requireDb, requireAuth('student'), async (req, res) => {
   const { filename, fileData, fileType } = req.body

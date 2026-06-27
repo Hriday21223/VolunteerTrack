@@ -19,6 +19,10 @@ export default function SchoolDashboard() {
   const [toastMsg, setToastMsg] = useState('')
   const [uploading, setUploading] = useState(false)
   const [selectedPdf, setSelectedPdf] = useState(null)
+  const [addEmail, setAddEmail] = useState('')
+  const [adding, setAdding] = useState(false)
+  const [addErr, setAddErr] = useState('')
+  const [subTab, setSubTab] = useState('reports')
 
   useEffect(() => {
     if (!user) return
@@ -166,8 +170,8 @@ export default function SchoolDashboard() {
       action={
         user?.role === 'school' ? (
           <div className="flex gap-2">
-            <button onClick={() => setTab('pdfs')} className={`btn-sm ${tab === 'pdfs' ? 'btn-primary' : 'btn-ghost'}`}>PDFs</button>
-            <button onClick={() => setTab('students')} className={`btn-sm ${tab === 'students' ? 'btn-primary' : 'btn-ghost'}`}>Students</button>
+            <button onClick={() => setTab('pdfs')} className={`btn-sm ${tab === 'pdfs' ? 'btn-primary' : 'btn-ghost'}`}>Reports</button>
+            <button onClick={() => { setTab('students'); setSubTab('list') }} className={`btn-sm ${tab === 'students' ? 'btn-primary' : 'btn-ghost'}`}>Students</button>
           </div>
         ) : undefined
       }
@@ -185,24 +189,68 @@ export default function SchoolDashboard() {
         )}
 
         {tab === 'students' && user?.role === 'school' && (
-          <Card>
-            <h3 className="font-semibold mb-3 flex items-center gap-2"><Search className="w-4 h-4 text-brand-600" /> Students ({students.length})</h3>
-            {students.length === 0 ? (
-              <p className="text-sm text-earth-500">No students linked to your school yet.</p>
-            ) : (
-              <div className="divide-y divide-white/10">
-                {students.map((s) => (
-                  <div key={s.id} className="py-3 flex justify-between items-center">
-                    <div>
-                      <p className="font-medium text-sm">{s.name}</p>
-                      <p className="text-xs text-earth-400">{s.email}{s.grade ? ` · ${s.grade}` : ''}</p>
-                    </div>
-                    <span className="text-xs text-earth-500">{new Date(s.created_at).toLocaleDateString()}</span>
+          <>
+            <div className="flex gap-2 mb-4">
+              <button onClick={() => setSubTab('list')} className={`btn-sm ${subTab === 'list' ? 'btn-primary' : 'btn-ghost'}`}>
+                <Search className="w-3.5 h-3.5 mr-1" /> Student list ({students.length})
+              </button>
+              <button onClick={() => setSubTab('add')} className={`btn-sm ${subTab === 'add' ? 'btn-primary' : 'btn-ghost'}`}>
+                <Upload className="w-3.5 h-3.5 mr-1" /> Add student
+              </button>
+            </div>
+
+            {subTab === 'add' && (
+              <Card>
+                <h3 className="font-semibold mb-3">Add student by email</h3>
+                <form onSubmit={async (e) => {
+                  e.preventDefault()
+                  setAddErr('')
+                  setAdding(true)
+                  try {
+                    const token = localStorage.getItem('voluntrack:auth_token')
+                    const res = await fetch(`${apiUrl}/school/add-student`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ email: addEmail }),
+                    })
+                    const data = await res.json()
+                    if (!res.ok) throw new Error(data.error || 'Failed')
+                    setToastMsg('Student added!')
+                    setToast(true)
+                    setAddEmail('')
+                    loadData()
+                  } catch (e) { setAddErr(e.message) } finally { setAdding(false) }
+                }} className="space-y-3">
+                  <div className="flex gap-2">
+                    <input type="email" className="input flex-1" placeholder="student@school.edu" value={addEmail} onChange={(e) => setAddEmail(e.target.value)} required />
+                    <button type="submit" className="btn-primary" disabled={adding}>{adding ? 'Adding…' : 'Add'}</button>
                   </div>
-                ))}
-              </div>
+                  {addErr && <p className="text-sm text-red-500">{addErr}</p>}
+                </form>
+              </Card>
             )}
-          </Card>
+
+            {subTab === 'list' && (
+              <Card>
+                <h3 className="font-semibold mb-3 flex items-center gap-2"><Search className="w-4 h-4 text-brand-600" /> Students ({students.length})</h3>
+                {students.length === 0 ? (
+                  <p className="text-sm text-earth-500">No students linked to your school yet.</p>
+                ) : (
+                  <div className="divide-y divide-white/10">
+                    {students.map((s) => (
+                      <div key={s.id} className="py-3 flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-sm">{s.name}</p>
+                          <p className="text-xs text-earth-400">{s.email}{s.grade ? ` · ${s.grade}` : ''}</p>
+                        </div>
+                        <span className="text-xs text-earth-500">{new Date(s.created_at).toLocaleDateString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            )}
+          </>
         )}
 
         <div className="space-y-3">
