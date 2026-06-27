@@ -117,9 +117,11 @@ export default function Admin() {
     } catch {}
   }
 
-  const contacts = useMemo(() =>
-    JSON.parse(localStorage.getItem('voluntrack:contacts') || '[]').sort((a, b) => b.sentAt - a.sentAt)
-  , [])
+  const contacts = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('voluntrack:contacts') || '[]').sort((a, b) => b.sentAt - a.sentAt)
+    } catch { return [] }
+  }, [])
 
   const unlock = (e) => {
     e.preventDefault()
