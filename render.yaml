@@ -1,36 +1,27 @@
 # Render blueprint: one Node web service using external Neon database.
 # Deploy by connecting this repo in the Render dashboard (New > Blueprint).
-# After the first deploy, set DATABASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD (and optional SMTP
-# vars) in the service's Environment tab.
+# After the first deploy, set ADMIN_EMAIL and ADMIN_PASSWORD in the Environment tab.
 services:
   - type: web
     name: voluntrack-backend
     runtime: node
     plan: free
-    nodeVersion: 20
     buildCommand: npm ci
     startCommand: node server.js
-    healthCheckPath: /api/recovery-status
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
+      - key: DATABASE_URL
+        value: "postgresql://neondb_owner:npg_7uZriwmaDz1p@ep-misty-recipe-adiolyhv-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
       - key: JWT_SECRET
         generateValue: true
-      - key: DATABASE_URL
-        value: postgresql://neondb_owner:npg_7uZriwmaDz1p@ep-misty-recipe-adiolyhv-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       - key: EMAIL_HOST
         value: smtp.gmail.com
       - key: EMAIL_PORT
-        value: 587
+        value: "587"
       - key: EMAIL_USER
         value: karnatamhriday@gmail.com
       - key: EMAIL_PASSWORD
-        value: kulo nteg plkx obdo
+        value: "kulo nteg plkx obdo"
       - key: EMAIL_FROM
         value: volunteertrack@googlegroups.com
-      - key: ADMIN_EMAIL
-        sync: false
-      - key: ADMIN_PASSWORD
-        sync: false
