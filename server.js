@@ -34,6 +34,7 @@ const emailLimiter = rateLimit({
 app.set('trust proxy', 1)
 app.use(cors())
 app.use(express.json({ limit: '1mb' })) // Limit request body size
+app.use(apiLimiter)
 app.use(authenticate)
 
 // Server-backed accounts & (later) school dashboards.
