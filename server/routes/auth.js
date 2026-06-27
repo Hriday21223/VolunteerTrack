@@ -74,6 +74,7 @@ function publicUser(row) {
     email: row.email,
     schoolId: row.school_id,
     grade: row.grade,
+    syncPin: row.sync_pin,
     createdAt: row.created_at,
   }
 }

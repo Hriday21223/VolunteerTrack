@@ -235,6 +235,9 @@ export function AuthProvider({ children }) {
       
       const data = await response.json()
       console.log('Backend sync PIN updated:', data.user)
+      // Update the user session with the sync PIN
+      write(SESSION_KEY, data.user)
+      setUser(data.user)
       return data.user
     } catch (error) {
       console.log('Backend sync PIN failed, falling back to local storage:', error.message)
@@ -242,7 +245,7 @@ export function AuthProvider({ children }) {
       const updated = updateSyncPin(user.id, pin)
       console.log('Updated user with sync PIN:', updated?.syncPin)
       if (!updated) throw new Error('Failed to update sync PIN.')
-      const { passwordHash, pinHash, resetPinCode, resetPinCodeExpiresAt, syncPin: _, ...safe } = updated
+      const { passwordHash, pinHash, resetPinCode, resetPinCodeExpiresAt, ...safe } = updated
       write(SESSION_KEY, safe)
       setUser(safe)
       return safe
