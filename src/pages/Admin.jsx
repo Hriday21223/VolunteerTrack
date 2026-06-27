@@ -232,6 +232,11 @@ export default function Admin() {
           <button onClick={() => { setTab('schools'); loadSchools() }} className={`btn-sm ${tab === 'schools' ? 'btn-primary' : 'btn-ghost'}`}>
             <School className="w-3.5 h-3.5 mr-1" /> Schools
           </button>
+          {tab === 'schools' && (
+            <Link to="/school/register" className="btn-sm btn-primary">
+              <School className="w-3.5 h-3.5 mr-1" /> Add school
+            </Link>
+          )}
           {user?.role !== 'admin' ? (
             <button onClick={grantAdmin} disabled={granting} className="btn-ghost text-yellow-500">
               {granting ? 'Granting…' : 'Grant admin'}
