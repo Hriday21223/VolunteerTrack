@@ -119,15 +119,17 @@ router.post('/add-student', limiter, requireDb, requireAuth('school'), async (re
   }
 })
 
-// Upload a PDF (student)
-router.post('/upload', limiter, requireDb, requireAuth('student'), async (req, res) => {
+// Upload a PDF (student or admin)
+router.post('/upload', limiter, requireDb, requireAuth('student', 'admin'), async (req, res) => {
   const { filename, fileData, fileType } = req.body
 
   if (!filename || !fileData) return res.status(400).json({ error: 'Filename and file data required.' })
 
   try {
     const { rows: userRows } = await query('SELECT school_id FROM users WHERE id = $1', [req.auth.sub])
-    const schoolId = userRows[0]?.school_id
+    let schoolId = userRows[0]?.school_id
+    if (!schoolId && req.body.schoolId) schoolId = req.body.schoolId
+    if (!schoolId) return res.status(400).json({ error: 'No school linked to your account.' })
 
     const id = uid('pdf')
     await query(
@@ -249,6 +251,25 @@ router.get('/admin/list', limiter, requireDb, requireAuth('admin'), async (req, 
   } catch (error) {
     console.error('admin schools list failed:', error)
     return res.status(500).json({ error: 'Could not fetch schools.' })
+  }
+})
+
+// All submissions across all schools (admin only)
+router.get('/admin/submissions', limiter, requireDb, requireAuth('admin'), async (req, res) => {
+  try {
+    const { rows } = await query(
+      `SELECT p.id, p.filename, p.file_type, p.status, p.notes, p.created_at,
+              u.name AS user_name, u.email AS user_email,
+              s.name AS school_name, s.pin AS school_pin
+       FROM pdf_uploads p
+       JOIN users u ON p.user_id = u.id
+       JOIN schools s ON p.school_id = s.id
+       ORDER BY p.created_at DESC`,
+    )
+    return res.json({ submissions: rows })
+  } catch (error) {
+    console.error('admin submissions failed:', error)
+    return res.status(500).json({ error: 'Could not fetch submissions.' })
   }
 })
 
