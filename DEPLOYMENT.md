@@ -46,7 +46,7 @@ git push
 After creating the service, add these environment variables in Render:
 
 ### Required Variables:
-- `DATABASE_URL`: `postgresql://neondb_owner:npg_7uZriwmaDz1p@ep-misty-recipe-adiolyhv-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require`
+- `DATABASE_URL`: `postgresql://neondb_owner:npg_7uZriwmaDz1p@ep-misty-recipe-adiolyhv-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=verify-full&channel_binding=require`
 - `JWT_SECRET`: (Render will auto-generate this if using blueprint)
 - `NODE_ENV`: `production`
 
