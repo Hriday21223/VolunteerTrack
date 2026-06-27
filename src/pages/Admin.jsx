@@ -55,6 +55,7 @@ export default function Admin() {
   const [password, setPassword] = useState('')
   const [err, setErr] = useState('')
   const [isAuthorized, setIsAuthorized] = useState(false)
+  const [drafts, setDrafts] = useState({})
 
   useEffect(() => {
     // Check if user is authorized by email
@@ -131,8 +132,6 @@ export default function Admin() {
       </AppLayout>
     )
   }
-
-  const [drafts, setDrafts] = useState({})
 
   const toggleDraft = (idx) => {
     setDrafts((prev) => {
