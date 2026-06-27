@@ -442,7 +442,7 @@ export default function Settings() {
           )}
         </Card>
 
-        {user?.role === 'student' && (
+        {user?.role !== 'school' && user?.role !== 'admin' && (
           <Card>
             <div className="flex items-center gap-2 mb-3">
               <School className="w-4 h-4 text-brand-600" />
