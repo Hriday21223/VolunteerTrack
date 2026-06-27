@@ -37,7 +37,7 @@ app.use(express.json({ limit: '1mb' })) // Limit request body size
 app.use(authenticate)
 
 // Server-backed accounts & (later) school dashboards.
-app.use('/api/auth', authRoutes)
+app.use('/api/auth', apiLimiter, authRoutes)
 
 // In-memory dev ring buffer of the most recent codes we tried to send. Useful
 // when the user is on the GitHub Pages demo and SMTP isn't configured: the
