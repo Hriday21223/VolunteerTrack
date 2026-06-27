@@ -408,15 +408,17 @@ export default function Settings() {
           )}
         </Card>
 
-        <Card className="lg:col-span-2">
-          <Link to="/admin" className="block p-4 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition">
-            <div className="flex items-center gap-2 mb-1">
-              <ShieldCheck className="w-4 h-4 text-brand-600" />
-              <span className="font-semibold text-earth-900 dark:text-earth-100">Admin inbox</span>
-            </div>
-            <p className="text-sm text-earth-500 dark:text-earth-400">Review contact form submissions.</p>
-          </Link>
-        </Card>
+        {user?.role === 'admin' && (
+          <Card className="lg:col-span-2">
+            <Link to="/admin" className="block p-4 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition">
+              <div className="flex items-center gap-2 mb-1">
+                <ShieldCheck className="w-4 h-4 text-brand-600" />
+                <span className="font-semibold text-earth-900 dark:text-earth-100">Admin inbox</span>
+              </div>
+              <p className="text-sm text-earth-500 dark:text-earth-400">Review contact form submissions.</p>
+            </Link>
+          </Card>
+        )}
 
         <Card className="lg:col-span-2">
           <h3 className="font-display font-semibold mb-3 flex items-center gap-2"><Info className="w-4 h-4 text-brand-600" /> About</h3>
