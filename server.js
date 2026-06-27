@@ -207,9 +207,13 @@ async function seedAdmin() {
   const email = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase()
   const password = String(process.env.ADMIN_PASSWORD || '')
   if (!hasDatabase() || !email || !password) return
-  const existing = await query('SELECT 1 FROM users WHERE email = $1', [email])
-  if (existing.rowCount > 0) return
   const hash = await hashPassword(password)
+  const existing = await query('SELECT 1 FROM users WHERE email = $1', [email])
+  if (existing.rowCount > 0) {
+    await query('UPDATE users SET password_hash = $1 WHERE email = $2', [hash, email])
+    console.log(`Updated admin password: ${email}`)
+    return
+  }
   await query(
     `INSERT INTO users (id, role, name, email, password_hash)
      VALUES ($1, 'admin', $2, $3, $4)`,
