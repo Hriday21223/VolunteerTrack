@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X, School } from 'lucide-react'
+import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X, School, Users } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { useLocalStorage } from '@/hooks/useLocalStorage.js'
@@ -20,6 +20,7 @@ export default function Dashboard() {
   const [hasSeenTour, setHasSeenTour] = useLocalStorage('voluntrack:dashboard-tour', false)
   const [showTour, setShowTour] = useState(!hasSeenTour)
   const [schoolInfo, setSchoolInfo] = useState(null)
+  const [tasks, setTasks] = useState([])
 
   const total = useMemo(() => logs.reduce((s, l) => s + (Number(l.hours) || 0), 0), [logs])
 
@@ -54,10 +55,14 @@ export default function Dashboard() {
     if (!user?.schoolId) return
     ;(async () => {
       try {
-        const res = await fetch(`${apiUrl}/school/info?id=${user.schoolId}`)
-        if (!res.ok) return
-        const data = await res.json()
-        if (data.school) setSchoolInfo(data.school)
+        const [infoRes, taskRes] = await Promise.all([
+          fetch(`${apiUrl}/school/info?id=${user.schoolId}`),
+          fetch(`${apiUrl}/school/tasks`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('voluntrack:auth_token')}` },
+          }),
+        ])
+        if (infoRes.ok) { const d = await infoRes.json(); if (d.school) setSchoolInfo(d.school) }
+        if (taskRes.ok) { const d = await taskRes.json(); setTasks(d.tasks || []) }
       } catch {}
     })()
   }, [user?.schoolId])
@@ -124,16 +129,49 @@ export default function Dashboard() {
       )}
 
       {schoolInfo && (
-        <Card className="mb-5">
-          <div className="flex items-center gap-3">
-            <School className="w-5 h-5 text-brand-600" />
-            <div>
-              <p className="font-medium text-sm">{schoolInfo.name}</p>
-              <p className="text-xs text-earth-400">Code: <span className="font-mono">{schoolInfo.pin}</span></p>
+        <>
+          <Card className="mb-5">
+            <div className="flex items-center gap-3">
+              <School className="w-5 h-5 text-brand-600" />
+              <div>
+                <p className="font-medium text-sm">{schoolInfo.name}</p>
+                <p className="text-xs text-earth-400">Code: <span className="font-mono">{schoolInfo.pin}</span></p>
+              </div>
+              <Link to="/school/dashboard" className="btn-secondary ml-auto text-sm">Dashboard</Link>
             </div>
-            <Link to="/school/dashboard" className="btn-secondary ml-auto text-sm">Dashboard</Link>
-          </div>
-        </Card>
+          </Card>
+
+          {tasks.length > 0 && (
+            <Card className="mb-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="w-4 h-4 text-brand-600" />
+                <h3 className="font-display font-semibold">Volunteer tasks</h3>
+              </div>
+              <div className="space-y-3">
+                {tasks.filter((t) => t.status === 'open').slice(0, 5).map((t) => {
+                  const filled = Number(t.slots_filled)
+                  const total = Number(t.slots_total)
+                  return (
+                    <div key={t.id} className="flex items-start justify-between gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium">{t.title}</p>
+                        <p className="text-xs text-earth-400 mt-0.5">
+                          <MapPin className="w-3 h-3 inline mr-1" />{t.location}
+                          {' · '}<CalIcon className="w-3 h-3 inline mr-1" />{new Date(t.date).toLocaleDateString()}
+                        </p>
+                        <p className="text-xs text-earth-500 mt-0.5">{filled}/{total} filled</p>
+                      </div>
+                      <Link to="/school/dashboard" className="btn-ghost text-xs shrink-0">View</Link>
+                    </div>
+                  )
+                })}
+                {tasks.filter((t) => t.status === 'open').length > 5 && (
+                  <Link to="/school/dashboard" className="block text-xs text-brand-400 hover:underline">View all {tasks.filter((t) => t.status === 'open').length} tasks →</Link>
+                )}
+              </div>
+            </Card>
+          )}
+        </>
       )}
 
       {/* Mobile-first summary cards */}
