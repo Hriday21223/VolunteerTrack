@@ -69,10 +69,10 @@ export default function Login() {
             <FeatureCard title="Progress tracking" description="See goal completion, weekly activity, and earned badges in one clean view." />
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-soft backdrop-blur text-sm text-slate-300">
+          <Link to="/help" className="block rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-soft backdrop-blur text-sm text-slate-300 hover:bg-slate-800/60 transition">
             <div className="font-semibold text-white">Need help getting started?</div>
             <p className="mt-2 leading-6">Create an account, set your first goal, and log your first volunteer hours to earn a badge.</p>
-          </div>
+          </Link>
         </div>
 
         <div className="relative">

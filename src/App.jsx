@@ -25,6 +25,7 @@ import Reminders from '@/pages/Reminders.jsx'
 import Admin from '@/pages/Admin.jsx'
 import SchoolDashboard from '@/pages/SchoolDashboard.jsx'
 import SchoolRegister from '@/pages/SchoolRegister.jsx'
+import Help from '@/pages/Help.jsx'
 
 const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
 
@@ -79,6 +80,7 @@ function Shell() {
         <Route path="/reports"      element={<Protected><Reports /></Protected>} />
         <Route path="/profile"      element={<Protected><Profile /></Protected>} />
         <Route path="/settings"     element={<Protected><Settings /></Protected>} />
+        <Route path="/help"         element={<Protected><Help /></Protected>} />
         <Route path="/admin"        element={<AdminProtected><Admin /></AdminProtected>} />
         <Route path="/school/dashboard" element={<Protected><SchoolDashboard /></Protected>} />
 

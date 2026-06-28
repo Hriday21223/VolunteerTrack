@@ -1,5 +1,5 @@
 import { NavLink, useLocation, Link } from 'react-router-dom'
-import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell, Plus, Shield } from 'lucide-react'
+import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell, Plus, Shield, HelpCircle } from 'lucide-react'
 import { cn } from '@/utils/cn.js'
 import { useMemo } from 'react'
 
@@ -13,6 +13,7 @@ const ITEMS = [
   { to: '/reports',      label: 'Reports',  icon: FileText },
   { to: '/profile',      label: 'Profile',  icon: User },
   { to: '/settings',     label: 'Settings', icon: Settings },
+  { to: '/help',         label: 'Help',     icon: HelpCircle },
 ]
 
 const ADMIN_ITEM = { to: '/admin', label: 'Admin', icon: Shield }
@@ -27,7 +28,7 @@ export default function MobileTabBar() {
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-30">
       <div className="mx-4 mb-4 rounded-[1.5rem] bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-xl border border-earth-200/50 dark:border-white/10 shadow-2xl shadow-black/5 dark:shadow-black/20">
-        <ul className={`grid px-1 pt-1 ${isAdmin ? 'grid-cols-8' : 'grid-cols-7'}`}>
+        <ul className={`grid px-1 pt-1 ${isAdmin ? 'grid-cols-9' : 'grid-cols-8'}`}>
           {allItems.map(({ to, label, icon: Icon }) => {
             const active = to === '/' ? pathname === '/' : pathname.startsWith(to)
             return (

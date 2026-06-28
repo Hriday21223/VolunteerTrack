@@ -1,4 +1,4 @@
-import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell, Shield } from 'lucide-react'
+import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell, Shield, HelpCircle } from 'lucide-react'
 import { NavLink, Link } from 'react-router-dom'
 import { cn } from '@/utils/cn.js'
 import { useMemo } from 'react'
@@ -14,6 +14,7 @@ const ITEMS = [
   { to: '/reports',    label: 'Reports',     icon: FileText },
   { to: '/profile',    label: 'Profile',     icon: User },
   { to: '/settings',   label: 'Settings',    icon: Settings },
+  { to: '/help',       label: 'Help',        icon: HelpCircle },
 ]
 
 const ADMIN_ITEM = { to: '/admin', label: 'Admin', icon: Shield }
