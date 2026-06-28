@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { ChevronDown, ChevronUp, MapPin, Calendar as CalIcon, Users, Clock, Phone, CheckCircle, XCircle } from 'lucide-react'
+import { ChevronDown, ChevronUp, MapPin, Calendar as CalIcon, Users, Clock, Phone, CheckCircle, XCircle, Plus } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -17,6 +17,10 @@ export default function MyTasks() {
   const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState(false)
   const [toastMsg, setToastMsg] = useState('')
+  const [showPostTask, setShowPostTask] = useState(false)
+  const [taskForm, setTaskForm] = useState({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1, phone: '', latitude: null, longitude: null })
+  const [taskBusy, setTaskBusy] = useState(false)
+  const [gettingLocation, setGettingLocation] = useState(false)
 
   const loadTasks = useCallback(async () => {
     setLoading(true)
@@ -77,12 +81,80 @@ export default function MyTasks() {
     setShowLogForm(true)
   }
 
+  const getLocation = () => {
+    if (!navigator.geolocation) return
+    setGettingLocation(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setTaskForm((f) => ({ ...f, latitude: pos.coords.latitude, longitude: pos.coords.longitude }))
+        setGettingLocation(false)
+      },
+      () => setGettingLocation(false),
+      { enableHighAccuracy: true, timeout: 10000 },
+    )
+  }
+
+  const handlePostTask = async (e) => {
+    e.preventDefault(); setTaskBusy(true)
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const res = await fetch(`${apiUrl}/school/public-tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(taskForm),
+      })
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
+      setTaskForm({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1, phone: '', latitude: null, longitude: null })
+      setShowPostTask(false); loadTasks()
+      setToastMsg('Task posted!'); setToast(true)
+    } catch (e) { setToastMsg(e.message); setToast(true) } finally { setTaskBusy(false) }
+  }
+
+  const togglePostForm = () => {
+    if (!showPostTask) {
+      setShowPostTask(true)
+      getLocation()
+    } else {
+      setShowPostTask(false)
+    }
+  }
+
   return (
     <AppLayout
       title="My Tasks"
       subtitle="Needed Volunteers"
+      action={
+        <button onClick={togglePostForm} className="btn-primary">
+          <Plus className="w-4 h-4" /> {showPostTask ? 'Cancel' : 'Post a task'}
+        </button>
+      }
     >
       <div className="max-w-3xl mx-auto space-y-4">
+        {showPostTask && (
+          <Card>
+            <h3 className="font-semibold mb-3">Post a volunteer opportunity</h3>
+            <form onSubmit={handlePostTask} className="space-y-3">
+              <input className="input" placeholder="Task title" value={taskForm.title} onChange={(e) => setTaskForm({...taskForm, title: e.target.value})} required />
+              <textarea className="input" rows={2} placeholder="Description — what volunteers will do" value={taskForm.description} onChange={(e) => setTaskForm({...taskForm, description: e.target.value})} required />
+              <input className="input" placeholder="Location — where it happens" value={taskForm.location} onChange={(e) => setTaskForm({...taskForm, location: e.target.value})} required />
+              <input className="input" type="tel" placeholder="Phone number — shown to approved volunteers" value={taskForm.phone} onChange={(e) => setTaskForm({...taskForm, phone: e.target.value})} required />
+              <div className="grid grid-cols-3 gap-2">
+                <input type="date" className="input" value={taskForm.date} onChange={(e) => setTaskForm({...taskForm, date: e.target.value})} required />
+                <input type="time" className="input" value={taskForm.time} onChange={(e) => setTaskForm({...taskForm, time: e.target.value})} />
+                <input type="number" className="input" min={1} placeholder="Slots" value={taskForm.slotsTotal} onChange={(e) => setTaskForm({...taskForm, slotsTotal: e.target.value})} />
+              </div>
+              {taskForm.latitude && taskForm.longitude ? (
+                <p className="text-xs text-emerald-400">Location captured ✓</p>
+              ) : gettingLocation ? (
+                <p className="text-xs text-amber-400">Getting your location…</p>
+              ) : (
+                <p className="text-xs text-earth-500">Location not captured — tasks won't be sorted by distance</p>
+              )}
+              <button type="submit" className="btn-primary w-full" disabled={taskBusy}>{taskBusy ? 'Posting…' : 'Post task — no paperwork needed'}</button>
+            </form>
+          </Card>
+        )}
+
         {loading ? (
           <Card><p className="text-center text-earth-500 py-8">Loading…</p></Card>
         ) : tasks.length === 0 ? (

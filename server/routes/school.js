@@ -241,7 +241,7 @@ router.get('/info', limiter, requireDb, async (req, res) => {
 
 // Create a public task (phone required)
 router.post('/public-tasks', limiter, requireDb, requireAuth(), async (req, res) => {
-  const { title, description, location, date, time, slotsTotal, phone } = req.body
+  const { title, description, location, date, time, slotsTotal, phone, latitude, longitude } = req.body
   if (!title || !description || !location || !date) return res.status(400).json({ error: 'Title, description, location, and date required.' })
   if (!phone) return res.status(400).json({ error: 'Phone number is required so volunteers can reach you.' })
 
@@ -251,9 +251,9 @@ router.post('/public-tasks', limiter, requireDb, requireAuth(), async (req, res)
 
     const id = uid('ptask')
     await query(
-      `INSERT INTO public_tasks (id, title, description, location, date, time, slots_total, created_by, creator_name, creator_email, phone)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-      [id, title, description, location, date, time || null, Number(slotsTotal) || 1, req.auth.sub, rows[0].name, rows[0].email, phone],
+      `INSERT INTO public_tasks (id, title, description, location, date, time, slots_total, created_by, creator_name, creator_email, phone, latitude, longitude)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+      [id, title, description, location, date, time || null, Number(slotsTotal) || 1, req.auth.sub, rows[0].name, rows[0].email, phone, latitude || null, longitude || null],
     )
     return res.status(201).json({ ok: true, id })
   } catch (error) {
@@ -263,19 +263,36 @@ router.post('/public-tasks', limiter, requireDb, requireAuth(), async (req, res)
 })
 
 // List open public tasks. Phone hidden unless user is signed up and approved.
+// Accept optional lat/lng query params to sort by distance.
 router.get('/public-tasks', limiter, requireDb, authenticate, async (req, res) => {
   try {
     const userId = req.auth?.sub || null
+    const lat = req.query.lat ? Number(req.query.lat) : null
+    const lng = req.query.lng ? Number(req.query.lng) : null
+    const useDist = lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)
+
+    const params = userId ? [userId] : []
+
+    const distExpr = useDist
+      ? `CASE WHEN t.latitude IS NOT NULL AND t.longitude IS NOT NULL THEN
+           6371 * 2 * ASIN(SQRT(
+             POWER(SIN(RADIANS(t.latitude - $${params.length + 1}) / 2), 2) +
+             COS(RADIANS($${params.length + 1})) * COS(RADIANS(t.latitude)) *
+             POWER(SIN(RADIANS(t.longitude - $${params.length + 2}) / 2), 2)
+           ))
+         ELSE NULL END AS distance`
+      : 'NULL AS distance'
+
     const { rows } = await query(
       `SELECT t.id, t.title, t.description, t.location, t.date, t.time, t.slots_total, t.status,
-              t.creator_name, t.created_at,
+              t.creator_name, t.latitude, t.longitude, ${distExpr}, t.created_at,
               (SELECT COUNT(*) FROM public_task_signups WHERE task_id = t.id) AS slots_filled,
               ${userId ? `(SELECT status FROM public_task_signups WHERE task_id = t.id AND user_id = $1) AS my_signup_status` : 'NULL AS my_signup_status'},
               ${userId ? `CASE WHEN (SELECT status FROM public_task_signups WHERE task_id = t.id AND user_id = $1) = 'approved' THEN t.phone ELSE NULL END AS phone` : 'NULL AS phone'}
        FROM public_tasks t
        WHERE t.status = 'open'
-       ORDER BY t.date ASC, t.created_at DESC`,
-      userId ? [userId] : [],
+       ${useDist ? `ORDER BY distance ASC NULLS LAST, t.date ASC, t.created_at DESC` : 'ORDER BY t.date ASC, t.created_at DESC'}`,
+      useDist ? [...params, lat, lng] : params,
     )
     return res.json({ tasks: rows })
   } catch (error) {
@@ -348,7 +365,7 @@ router.post('/public-tasks/:id/reject/:userId', limiter, requireDb, requireAuth(
 router.get('/public-tasks/mine', limiter, requireDb, requireAuth(), async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT t.id, t.title, t.description, t.location, t.date, t.time, t.slots_total, t.status, t.phone, t.created_at,
+      `SELECT t.id, t.title, t.description, t.location, t.date, t.time, t.slots_total, t.status, t.phone, t.latitude, t.longitude, t.created_at,
               (SELECT COUNT(*) FROM public_task_signups WHERE task_id = t.id) AS slots_filled,
               (SELECT COALESCE(json_agg(json_build_object(
                 'id', u.id, 'name', u.name, 'email', u.email, 'status', s.status, 'signed_up_at', s.signed_up_at

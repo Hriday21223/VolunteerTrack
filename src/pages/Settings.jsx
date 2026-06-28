@@ -268,8 +268,9 @@ export default function Settings() {
           <p className="text-sm text-earth-500 dark:text-earth-400">
             Your data is stored only on this device. Nothing is uploaded to a server. Sign out below to clear your session.
           </p>
-          <div className="text-xs text-earth-500 dark:text-earth-400 mt-3">
-            Signed in as <span className="font-medium text-earth-800 dark:text-earth-100">{user?.email}</span>
+          <div className="text-xs text-earth-500 dark:text-earth-400 mt-3 space-y-1">
+            <div>Signed in as <span className="font-medium text-earth-800 dark:text-earth-100">{user?.email}</span></div>
+            <div>Role: <span className="font-medium text-earth-800 dark:text-earth-100 capitalize">{user?.role}</span></div>
           </div>
         </Card>
 

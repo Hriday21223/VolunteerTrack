@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X, School, Users, Hand, FileText, ClipboardList } from 'lucide-react'
+import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X, School, Users, Hand, FileText } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { useLocalStorage } from '@/hooks/useLocalStorage.js'
@@ -10,9 +10,16 @@ import ProgressRing from '@/components/ProgressRing.jsx'
 import BarChart from '@/components/BarChart.jsx'
 import { categoryColor } from '@/lib/categories.js'
 import { fmtDate, fmtHours, fromNow } from '@/utils/date.js'
-import { format, startOfWeek, startOfMonth, addDays, parseISO, isSameMonth } from 'date-fns'
+import { format, startOfWeek, startOfMonth, addDays, parseISO } from 'date-fns'
 
 const apiUrl = import.meta.env.VITE_API_URL || '/api'
+
+const fmtDist = (km) => {
+  if (km === null || km === undefined) return null
+  const n = Number(km)
+  if (n < 1) return `${Math.round(n * 1000)}m`
+  return `${n.toFixed(1)}km`
+}
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -22,9 +29,7 @@ export default function Dashboard() {
   const [schoolInfo, setSchoolInfo] = useState(null)
   const [publicTasks, setPublicTasks] = useState([])
   const [dashTab, setDashTab] = useState('home')
-  const [showPostTask, setShowPostTask] = useState(false)
-  const [taskForm, setTaskForm] = useState({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1, phone: '' })
-  const [taskBusy, setTaskBusy] = useState(false)
+  const [userLoc, setUserLoc] = useState(null)
 
   const total = useMemo(() => logs.reduce((s, l) => s + (Number(l.hours) || 0), 0), [logs])
 
@@ -65,14 +70,31 @@ export default function Dashboard() {
     })()
   }, [user?.schoolId])
 
-  const loadPublicTasks = useCallback(async () => {
+  const loadPublicTasks = useCallback(async (lat, lng) => {
     try {
-      const res = await fetch(`${apiUrl}/school/public-tasks`)
+      let url = `${apiUrl}/school/public-tasks`
+      if (lat != null && lng != null) url += `?lat=${lat}&lng=${lng}`
+      const res = await fetch(url)
       if (res.ok) { const d = await res.json(); setPublicTasks(d.tasks || []) }
     } catch {}
   }, [])
 
-  useEffect(() => { loadPublicTasks() }, [loadPublicTasks])
+  useEffect(() => {
+    // Get user location only for students
+    if (user?.role === 'student' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+          setUserLoc(loc)
+          loadPublicTasks(loc.lat, loc.lng)
+        },
+        () => loadPublicTasks(),
+        { enableHighAccuracy: true, timeout: 10000 },
+      )
+    } else {
+      loadPublicTasks()
+    }
+  }, [user?.role, loadPublicTasks])
 
   const recent = useMemo(() => logs.slice(0, 5), [logs])
 
@@ -87,14 +109,11 @@ export default function Dashboard() {
       subtitle={user?.school ? `${user.school} · ${user.grade || 'Volunteer'}` : 'Welcome back to VolunTrack.'}
       action={
         <div className="flex gap-2">
-          {dashTab === 'volunteer' && (
-            <button onClick={() => setShowPostTask(!showPostTask)} className="btn-ghost">
-              <Plus className="w-4 h-4" /> {showPostTask ? 'Cancel' : 'Post task'}
+          {user?.role === 'student' && (
+            <button onClick={() => setDashTab(dashTab === 'volunteer' ? 'home' : 'volunteer')} className={`btn-sm ${dashTab === 'volunteer' ? 'btn-primary' : 'btn-ghost'}`}>
+              <Hand className="w-3.5 h-3.5 mr-1" /> Volunteer
             </button>
           )}
-          <button onClick={() => setDashTab(dashTab === 'volunteer' ? 'home' : 'volunteer')} className={`btn-sm ${dashTab === 'volunteer' ? 'btn-primary' : 'btn-ghost'}`}>
-            <Hand className="w-3.5 h-3.5 mr-1" /> Volunteer
-          </button>
           {dashTab === 'home' && (
             <Link to="/log" className="btn-primary">
               <Plus className="w-4 h-4" /> Log hours
@@ -147,54 +166,12 @@ export default function Dashboard() {
         </div>
       )}
 
-      {dashTab === 'volunteer' ? (
+      {dashTab === 'volunteer' && user?.role === 'student' ? (
         <div className="max-w-2xl mx-auto space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold">Needed volunteers</h2>
-            <div className="flex gap-2">
-              <Link to="/my-tasks" className="btn-ghost text-sm">
-                <ClipboardList className="w-4 h-4" /> My Tasks
-              </Link>
-              <button onClick={() => setShowPostTask(!showPostTask)} className="btn-primary text-sm">
-                <Plus className="w-4 h-4" /> {showPostTask ? 'Cancel' : 'Post a task'}
-              </button>
-            </div>
-          </div>
-
-          {showPostTask && (
-            <Card>
-              <h3 className="font-semibold mb-3">Post a volunteer opportunity</h3>
-              <form onSubmit={async (e) => {
-                e.preventDefault(); setTaskBusy(true)
-                try {
-                  const token = localStorage.getItem('voluntrack:auth_token')
-                  const res = await fetch(`${apiUrl}/school/public-tasks`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                    body: JSON.stringify(taskForm),
-                  })
-                  if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
-                  setTaskForm({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1, phone: '' })
-                  setShowPostTask(false)
-                  loadPublicTasks()
-                } catch (e) { setToastMsg(e.message); setToast(true) } finally { setTaskBusy(false) }
-              }} className="space-y-3">
-                <input className="input" placeholder="Task title" value={taskForm.title} onChange={(e) => setTaskForm({...taskForm, title: e.target.value})} required />
-                <textarea className="input" rows={2} placeholder="Description — what volunteers will do" value={taskForm.description} onChange={(e) => setTaskForm({...taskForm, description: e.target.value})} required />
-                <input className="input" placeholder="Location — where it happens" value={taskForm.location} onChange={(e) => setTaskForm({...taskForm, location: e.target.value})} required />
-                <input className="input" type="tel" placeholder="Phone number — shown to approved volunteers" value={taskForm.phone} onChange={(e) => setTaskForm({...taskForm, phone: e.target.value})} required />
-                <div className="grid grid-cols-3 gap-2">
-                  <input type="date" className="input" value={taskForm.date} onChange={(e) => setTaskForm({...taskForm, date: e.target.value})} required />
-                  <input type="time" className="input" value={taskForm.time} onChange={(e) => setTaskForm({...taskForm, time: e.target.value})} />
-                  <input type="number" className="input" min={1} placeholder="Slots" value={taskForm.slotsTotal} onChange={(e) => setTaskForm({...taskForm, slotsTotal: e.target.value})} />
-                </div>
-                <button type="submit" className="btn-primary w-full" disabled={taskBusy}>{taskBusy ? 'Posting…' : 'Post task — no paperwork needed'}</button>
-              </form>
-            </Card>
-          )}
+          <h2 className="text-xl font-bold">Needed volunteers</h2>
 
           {publicTasks.length === 0 ? (
-            <Card><p className="text-center text-earth-500 py-8">No open volunteer opportunities yet. Post one!</p></Card>
+            <Card><p className="text-center text-earth-500 py-8">No volunteer opportunities available right now.</p></Card>
           ) : publicTasks.map((t) => {
             const filled = Number(t.slots_filled)
             const total = Number(t.slots_total)
@@ -210,6 +187,9 @@ export default function Dashboard() {
                       <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {t.location}</span>
                       <span className="flex items-center gap-1"><CalIcon className="w-3 h-3" /> {new Date(t.date).toLocaleDateString()}{t.time ? ` · ${t.time}` : ''}</span>
                       <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {filled}/{total} needed</span>
+                      {t.distance != null && (
+                        <span className="flex items-center gap-1 text-brand-400">{fmtDist(t.distance)} away</span>
+                      )}
                     </div>
                     <p className="text-xs text-earth-600 mt-1">Posted by {t.creator_name}</p>
                     {approved && t.phone && (
@@ -265,7 +245,7 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          {publicTasks.length > 0 && (
+          {user?.role === 'student' && publicTasks.length > 0 && (
             <Card className="mb-5">
               <div className="flex items-center gap-2 mb-3">
                 <Users className="w-4 h-4 text-brand-600" />
@@ -283,7 +263,7 @@ export default function Dashboard() {
                           <MapPin className="w-3 h-3 inline mr-1" />{t.location}
                           {' · '}<CalIcon className="w-3 h-3 inline mr-1" />{new Date(t.date).toLocaleDateString()}
                         </p>
-                        <p className="text-xs text-earth-500 mt-0.5">{filled}/{total} filled</p>
+                        <p className="text-xs text-earth-500 mt-0.5">{filled}/{total} filled{t.distance != null ? ` · ${fmtDist(t.distance)} away` : ''}</p>
                       </div>
                       <button onClick={() => setDashTab('volunteer')} className="btn-ghost text-xs shrink-0">View</button>
                     </div>
