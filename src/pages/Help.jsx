@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpen, School, Globe, Clock, Calendar, Trophy, FileText, User, Settings, MapPin, Users, CheckCircle, HelpCircle, ArrowRight, Mail, Shield } from 'lucide-react'
+import { BookOpen, School, Globe, Clock, Calendar, Trophy, FileText, User, Settings, MapPin, Users, CheckCircle, HelpCircle, ArrowRight, Mail, Shield, ClipboardList } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 
@@ -70,13 +70,23 @@ function StudentHandbook() {
         <p className="mt-2">School submissions are reviewed by your school admin — you'll see the status (pending, approved, or rejected) on the Reports page.</p>
       </Section>
 
-      <Section title="Volunteer Tasks">
-        <p>The Volunteer tab on your Dashboard shows open volunteer opportunities posted by other users or school admins. Each task has a title, description, location, date, and number of slots available.</p>
+      <Section title="Needed Volunteers">
+        <p>The Volunteer tab on your Dashboard shows open volunteer opportunities — it's a public community board, not tied to any school. Anyone with an account can post a task or sign up. No paperwork needed.</p>
         <div className="mt-3 space-y-2">
-          <Step icon={MapPin} label="Browse tasks" description="See all open tasks with location, date, and how many slots are filled." />
-          <Step icon={Users} label="Sign up" description="Click 'Sign up' to join a task. Your spot is confirmed immediately." />
-          <Step icon={HelpCircle} label="Post your own" description="Any user can post a volunteer opportunity — just fill in the details and submit." />
+          <Step icon={MapPin} label="Browse tasks" description="See what's needed — each post shows a description, location, date, and how many volunteers are needed." />
+          <Step icon={Users} label="Sign up" description="Click 'Sign up' to join. Your spot is confirmed immediately — just show up and help." />
+          <Step icon={ClipboardList} label="Post your own" description="Any registered user can post a task. Add a title, description, location, date, and how many people you need. No approval, no school required." />
         </div>
+      </Section>
+
+      <Section title="Organizer Dashboard (My Tasks)">
+        <p>When you post a task, you get access to the <strong>My Tasks</strong> page (linked in the sidebar or from the Volunteer tab). Here you can see everyone who signed up and log their volunteer hours directly — no approval needed.</p>
+        <div className="mt-3 space-y-2">
+          <Step icon={ClipboardList} label="View signups" description="Each task expands to show the name and email of everyone who signed up." />
+          <Step icon={Clock} label="Log hours" description="Click 'Log hours' next to a volunteer, enter the hours and date. The hours are saved to their account automatically." />
+          <Step icon={MapPin} label="Location & task included" description="When you log hours, the task title and location are recorded so the volunteer knows what the hours were for." />
+        </div>
+        <p className="mt-3 text-xs text-earth-500">This lets you (the organizer) verify and record hours for your volunteers without any approval workflow. Volunteers don't need to log anything themselves for your task.</p>
       </Section>
 
       <Section title="Joining a School">

@@ -51,14 +51,15 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS logs (
-  id         TEXT PRIMARY KEY,
-  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  date       DATE NOT NULL,
-  activity   TEXT,
-  category   TEXT,
-  hours      NUMERIC NOT NULL DEFAULT 0,
-  notes      TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  id          TEXT PRIMARY KEY,
+  user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date        DATE NOT NULL,
+  activity    TEXT,
+  category    TEXT,
+  hours       NUMERIC NOT NULL DEFAULT 0,
+  notes       TEXT,
+  verified_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS goals (

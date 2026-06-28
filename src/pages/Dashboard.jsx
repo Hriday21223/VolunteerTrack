@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X, School, Users, Hand, FileText } from 'lucide-react'
+import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X, School, Users, Hand, FileText, ClipboardList } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { useLocalStorage } from '@/hooks/useLocalStorage.js'
@@ -151,9 +151,14 @@ export default function Dashboard() {
         <div className="max-w-2xl mx-auto space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold">Needed volunteers</h2>
-            <button onClick={() => setShowPostTask(!showPostTask)} className="btn-primary text-sm">
-              <Plus className="w-4 h-4" /> {showPostTask ? 'Cancel' : 'Post a task'}
-            </button>
+            <div className="flex gap-2">
+              <Link to="/my-tasks" className="btn-ghost text-sm">
+                <ClipboardList className="w-4 h-4" /> My Tasks
+              </Link>
+              <button onClick={() => setShowPostTask(!showPostTask)} className="btn-primary text-sm">
+                <Plus className="w-4 h-4" /> {showPostTask ? 'Cancel' : 'Post a task'}
+              </button>
+            </div>
           </div>
 
           {showPostTask && (

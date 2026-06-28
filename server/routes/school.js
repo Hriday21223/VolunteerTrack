@@ -301,6 +301,88 @@ router.post('/public-tasks/:id/signup', limiter, requireDb, requireAuth(), async
   }
 })
 
+// --- Organizer endpoints (my tasks + log hours for volunteers) ---
+
+// List tasks I created, with signups
+router.get('/public-tasks/mine', limiter, requireDb, requireAuth(), async (req, res) => {
+  try {
+    const { rows } = await query(
+      `SELECT t.id, t.title, t.description, t.location, t.date, t.time, t.slots_total, t.status, t.created_at,
+              (SELECT COUNT(*) FROM public_task_signups WHERE task_id = t.id) AS slots_filled,
+              (SELECT COALESCE(json_agg(json_build_object(
+                'id', u.id, 'name', u.name, 'email', u.email, 'signed_up_at', s.signed_up_at
+              ) ORDER BY s.signed_up_at), '[]'::json)
+               FROM public_task_signups s JOIN users u ON u.id = s.user_id WHERE s.task_id = t.id) AS signups
+       FROM public_tasks t WHERE t.created_by = $1
+       ORDER BY t.date DESC, t.created_at DESC`,
+      [req.auth.sub],
+    )
+    return res.json({ tasks: rows })
+  } catch (error) {
+    console.error('my tasks failed:', error)
+    return res.status(500).json({ error: 'Could not fetch your tasks.' })
+  }
+})
+
+// Log hours for a volunteer on a task (task creator only, no approval needed)
+router.post('/public-tasks/:id/log-hours', limiter, requireDb, requireAuth(), async (req, res) => {
+  const { volunteerId, hours, date } = req.body
+  if (!volunteerId || !hours) return res.status(400).json({ error: 'volunteerId and hours required.' })
+
+  try {
+    const { rows: taskRows } = await query('SELECT * FROM public_tasks WHERE id = $1', [req.params.id])
+    if (taskRows.length === 0) return res.status(404).json({ error: 'Task not found.' })
+    if (taskRows[0].created_by !== req.auth.sub) return res.status(403).json({ error: 'Only the task creator can log hours.' })
+
+    const { rows: signupRows } = await query(
+      'SELECT 1 FROM public_task_signups WHERE task_id = $1 AND user_id = $2',
+      [req.params.id, volunteerId],
+    )
+    if (signupRows.length === 0) return res.status(400).json({ error: 'Volunteer is not signed up for this task.' })
+
+    const lid = uid('log')
+    await query(
+      `INSERT INTO logs (id, user_id, date, activity, category, hours, notes, verified_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        lid,
+        volunteerId,
+        date || taskRows[0].date,
+        taskRows[0].title,
+        'volunteer',
+        Number(hours),
+        `Logged by task organizer (${taskRows[0].title})`,
+        req.auth.sub,
+      ],
+    )
+    return res.status(201).json({ ok: true, id: lid })
+  } catch (error) {
+    console.error('log hours failed:', error)
+    return res.status(500).json({ error: 'Could not log hours.' })
+  }
+})
+
+// Get logs for a volunteer on a specific task (so the organizer can see what was already logged)
+router.get('/public-tasks/:id/logs', limiter, requireDb, requireAuth(), async (req, res) => {
+  try {
+    const { rows: taskRows } = await query('SELECT created_by FROM public_tasks WHERE id = $1', [req.params.id])
+    if (taskRows.length === 0) return res.status(404).json({ error: 'Task not found.' })
+    if (taskRows[0].created_by !== req.auth.sub) return res.status(403).json({ error: 'Only the task creator can view logs.' })
+
+    const { rows } = await query(
+      `SELECT id, user_id, hours, date, notes, created_at
+       FROM logs WHERE activity = (SELECT title FROM public_tasks WHERE id = $1) AND user_id IN
+         (SELECT user_id FROM public_task_signups WHERE task_id = $1)
+       ORDER BY created_at DESC`,
+      [req.params.id],
+    )
+    return res.json({ logs: rows })
+  } catch (error) {
+    console.error('task logs failed:', error)
+    return res.status(500).json({ error: 'Could not fetch logs.' })
+  }
+})
+
 // --- Admin endpoints ---
 
 // List all schools (admin only)
