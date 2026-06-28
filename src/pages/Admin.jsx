@@ -1,8 +1,9 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, FileText, CreditCard, Edit3 } from 'lucide-react'
+import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, FileText, CreditCard } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
+import Toast from '@/components/Toast.jsx'
 import { useAuth } from '@/hooks/useAuth.jsx'
 
 const apiUrl = import.meta.env.VITE_API_URL || '/api'
@@ -61,6 +62,8 @@ export default function Admin() {
   const [loadingSubs, setLoadingSubs] = useState(false)
   const [payModal, setPayModal] = useState(null) // school id
   const [payNotes, setPayNotes] = useState('')
+  const [toast, setToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
 
   useEffect(() => {
     if (user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
