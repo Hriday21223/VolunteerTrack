@@ -1,14 +1,12 @@
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Moon, Sun, Menu } from 'lucide-react'
+import { LogOut, Menu } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth.jsx'
-import { useTheme } from '@/hooks/useTheme.js'
 import { cn } from '@/utils/cn.js'
 import Sidebar from './Sidebar.jsx'
 
 export default function AppLayout({ children, title, subtitle, action }) {
   const { user, logout } = useAuth()
-  const { theme, toggle } = useTheme()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const navigate = useNavigate()
 
@@ -59,14 +57,6 @@ export default function AppLayout({ children, title, subtitle, action }) {
                 {subtitle && <p className="text-sm text-earth-400 truncate">{subtitle}</p>}
               </div>
               {action}
-              <button
-                onClick={toggle}
-                className="p-2 rounded-lg text-earth-200 hover:bg-white/10"
-                aria-label="Toggle theme"
-                title="Toggle theme"
-              >
-                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
               <div className="hidden sm:flex items-center gap-3 pl-2 border-l border-earth-900/80">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 grid place-items-center text-white text-sm font-bold">
                   {user?.name?.[0]?.toUpperCase() || 'V'}
