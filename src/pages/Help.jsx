@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpen, School, Globe, Clock, Calendar, Trophy, FileText, User, Settings, MapPin, Users, CheckCircle, HelpCircle, ArrowRight, Mail, Shield, ClipboardList, Phone, XCircle } from 'lucide-react'
+import { BookOpen, School, Globe, Clock, Calendar, Trophy, FileText, User, Settings, MapPin, Users, CheckCircle, HelpCircle, ArrowRight, Mail, Shield, ClipboardList, Phone, XCircle, Hand } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 
 const TABS = [
   { id: 'student', label: 'Student Handbook', icon: BookOpen },
+  { id: 'volunteer', label: 'Volunteer Handbook', icon: Hand },
   { id: 'school', label: 'School Handbook', icon: School },
   { id: 'guest', label: 'Guest Guide', icon: Globe },
 ]
@@ -142,6 +143,64 @@ function SchoolHandbook() {
   )
 }
 
+function VolunteerHandbook() {
+  return (
+    <div className="max-w-3xl mx-auto">
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-white mb-2">Volunteer Task Maker Handbook</h2>
+        <p className="text-sm text-earth-400">Post volunteer opportunities, manage signups, and log hours for your team.</p>
+      </div>
+
+      <Section title="Getting Started">
+        <p>When you create an account, choose <strong>"I'm a Volunteer Task Maker"</strong>. You'll skip the school-related fields and go straight to posting tasks.</p>
+        <div className="mt-3 space-y-2">
+          <Step icon={Hand} label="Sign up as a Task Maker" description="Select 'Volunteer Task Maker' on the register page. Only name, email, and password needed." />
+          <Step icon={ClipboardList} label="Post your first task" description="Go to the Volunteer tab, click 'Post a task', and fill in the details." />
+          <Step icon={Users} label="Manage signups" description="Use the My Tasks page to review, approve, and log hours for volunteers." />
+        </div>
+      </Section>
+
+      <Section title="Posting a Task">
+        <p>Click the Volunteer tab on your Dashboard, then <strong>Post a task</strong>. You'll need to fill in:</p>
+        <div className="mt-3 space-y-2">
+          <Step icon={FileText} label="Title & description" description="Name your task and explain what volunteers will be doing." />
+          <Step icon={MapPin} label="Location" description="Where the task takes place. Must be a real location so volunteers can find you." />
+          <Step icon={Phone} label="Phone number" description="Required. Your phone number is kept private — only shared with volunteers you approve." />
+          <Step icon={Calendar} label="Date, time & slots" description="When the task happens and how many volunteers you need." />
+        </div>
+        <p className="mt-2 text-xs text-earth-500">Once posted, your task appears on the public Needed Volunteers board for everyone to see.</p>
+      </Section>
+
+      <Section title="My Tasks Dashboard">
+        <p>The <strong>My Tasks</strong> page (linked in your sidebar) is your organizer hub. Here you can manage everything about your posted tasks.</p>
+        <div className="mt-3 space-y-2">
+          <Step icon={Users} label="Review signups" description="Each task expands to show who signed up. You'll see their name, email, and signup status (Pending)." />
+          <Step icon={CheckCircle} label="Approve volunteers" description="Click Approve to accept someone. This reveals your phone number to them so they can contact you." />
+          <Step icon={XCircle} label="Reject if needed" description="Click Reject to decline. The volunteer will see the rejection status on their end." />
+          <Step icon={Clock} label="Log hours" description="Once approved, click 'Log hours' next to a volunteer, enter the hours and date. The hours are saved to their account automatically — no approval needed." />
+        </div>
+      </Section>
+
+      <Section title="Phone Number Privacy">
+        <p>Your phone number is <strong>never shown</strong> on the public task board. It's only visible to you on the My Tasks page and to volunteers you specifically approve. This keeps your contact info private while still letting volunteers reach you.</p>
+      </Section>
+
+      <Section title="Tracking Your Own Hours">
+        <p>You can also log your own volunteer hours on the Log Hours page — fill in the date, activity, category, and hours. View them on your Calendar and export reports from the Reports page.</p>
+      </Section>
+
+      <Section title="Profile & Settings">
+        <p>In Settings you can:</p>
+        <ul className="list-disc list-inside space-y-1 mt-2">
+          <li>Change your name, email, or password</li>
+          <li>Toggle dark/light theme</li>
+          <li>Manage reminders</li>
+        </ul>
+      </Section>
+    </div>
+  )
+}
+
 function GuestGuide() {
   return (
     <div className="max-w-3xl mx-auto">
@@ -207,6 +266,7 @@ export default function Help() {
       }
     >
       {tab === 'student' && <StudentHandbook />}
+      {tab === 'volunteer' && <VolunteerHandbook />}
       {tab === 'school' && <SchoolHandbook />}
       {tab === 'guest' && <GuestGuide />}
     </AppLayout>
