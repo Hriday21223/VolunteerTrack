@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS public_tasks (
   created_by      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   creator_name    TEXT,
   creator_email   TEXT,
+  phone           TEXT,
   status          TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','closed')),
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -107,6 +108,7 @@ CREATE TABLE IF NOT EXISTS public_task_signups (
   id              TEXT PRIMARY KEY,
   task_id         TEXT NOT NULL REFERENCES public_tasks(id) ON DELETE CASCADE,
   user_id         TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status          TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
   signed_up_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE(task_id, user_id)
 );
@@ -120,5 +122,8 @@ CREATE INDEX IF NOT EXISTS idx_public_signups_user ON public_task_signups(user_i
 export async function initSchema() {
   if (!hasDatabase()) return false
   await query(SCHEMA)
+  // Migration: add columns that may not exist on older databases
+  try { await query(`ALTER TABLE public_tasks ADD COLUMN IF NOT EXISTS phone TEXT`) } catch {}
+  try { await query(`ALTER TABLE public_task_signups ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected'))`) } catch {}
   return true
 }

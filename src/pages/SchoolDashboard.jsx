@@ -278,14 +278,15 @@ export default function SchoolDashboard() {
                     body: JSON.stringify(taskForm),
                   })
                   if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
-                  setTaskForm({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1 })
+                  setTaskForm({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1, phone: '' })
                   setToastMsg('Task posted!'); setToast(true); loadData()
                 } catch (e) { setToastMsg(e.message); setToast(true) } finally { setTaskBusy(false) }
               }} className="space-y-3">
                 <input className="input" placeholder="Task title" value={taskForm.title} onChange={(e) => setTaskForm({...taskForm, title: e.target.value})} required />
                 <textarea className="input" rows={2} placeholder="Description" value={taskForm.description} onChange={(e) => setTaskForm({...taskForm, description: e.target.value})} required />
-                <input className="input" placeholder="Location" value={taskForm.location} onChange={(e) => setTaskForm({...taskForm, location: e.target.value})} required />
-                <div className="grid grid-cols-3 gap-2">
+                  <input className="input" placeholder="Location" value={taskForm.location} onChange={(e) => setTaskForm({...taskForm, location: e.target.value})} required />
+                  <input className="input" type="tel" placeholder="Phone number — shown to approved volunteers" value={taskForm.phone} onChange={(e) => setTaskForm({...taskForm, phone: e.target.value})} required />
+                  <div className="grid grid-cols-3 gap-2">
                   <input type="date" className="input" value={taskForm.date} onChange={(e) => setTaskForm({...taskForm, date: e.target.value})} required />
                   <input type="time" className="input" value={taskForm.time} onChange={(e) => setTaskForm({...taskForm, time: e.target.value})} />
                   <input type="number" className="input" min={1} placeholder="Slots" value={taskForm.slotsTotal} onChange={(e) => setTaskForm({...taskForm, slotsTotal: e.target.value})} />
@@ -300,6 +301,7 @@ export default function SchoolDashboard() {
               const filled = Number(t.slots_filled)
               const total = Number(t.slots_total)
               const full = filled >= total
+              const approved = t.my_signup_status === 'approved'
               return (
                 <Card key={t.id} padded={false} className="p-4">
                   <div className="flex items-start justify-between gap-4">
@@ -311,22 +313,39 @@ export default function SchoolDashboard() {
                         <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(t.date).toLocaleDateString()}{t.time ? ` · ${t.time}` : ''}</span>
                         <span>{filled}/{total} filled</span>
                       </div>
+                      {approved && t.phone && (
+                        <p className="text-xs text-emerald-400 mt-1 font-medium">Contact: {t.phone}</p>
+                      )}
+                      {t.my_signup_status === 'pending' && (
+                        <p className="text-xs text-amber-400 mt-1">Awaiting organizer approval</p>
+                      )}
+                      {t.my_signup_status === 'rejected' && (
+                        <p className="text-xs text-red-400 mt-1">Signup rejected</p>
+                      )}
                     </div>
-                    {!full && (
-                      <button onClick={async () => {
-                        try {
-                          const token = localStorage.getItem('voluntrack:auth_token')
-                          const res = await fetch(`${apiUrl}/school/public-tasks/${t.id}/signup`, {
-                            method: 'POST',
-                            headers: { Authorization: `Bearer ${token}` },
-                          })
-                          if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
-                          setToastMsg('Signed up!'); setToast(true); loadData()
-                        } catch (e) { setToastMsg(e.message); setToast(true) }
-                      }} className="btn-primary text-sm">Sign up</button>
-                    )}
-                    {t.signed_up && <span className="text-xs text-emerald-400 font-medium">Signed up</span>}
-                    {full && <span className="text-xs text-red-400 font-medium">Full</span>}
+                    <div className="shrink-0">
+                      {t.my_signup_status === 'approved' ? (
+                        <span className="text-xs text-emerald-400 font-medium">Approved</span>
+                      ) : t.my_signup_status === 'pending' ? (
+                        <span className="text-xs text-amber-400 font-medium">Pending</span>
+                      ) : t.my_signup_status === 'rejected' ? (
+                        <span className="text-xs text-red-400 font-medium">Rejected</span>
+                      ) : full ? (
+                        <span className="text-xs text-red-400 font-medium">Full</span>
+                      ) : (
+                        <button onClick={async () => {
+                          try {
+                            const token = localStorage.getItem('voluntrack:auth_token')
+                            const res = await fetch(`${apiUrl}/school/public-tasks/${t.id}/signup`, {
+                              method: 'POST',
+                              headers: { Authorization: `Bearer ${token}` },
+                            })
+                            if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
+                            setToastMsg('Signed up — awaiting organizer approval'); setToast(true); loadData()
+                          } catch (e) { setToastMsg(e.message); setToast(true) }
+                        }} className="btn-primary text-sm">Sign up</button>
+                      )}
+                    </div>
                   </div>
                 </Card>
               )

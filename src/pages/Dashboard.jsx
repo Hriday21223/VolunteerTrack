@@ -23,7 +23,7 @@ export default function Dashboard() {
   const [publicTasks, setPublicTasks] = useState([])
   const [dashTab, setDashTab] = useState('home')
   const [showPostTask, setShowPostTask] = useState(false)
-  const [taskForm, setTaskForm] = useState({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1 })
+  const [taskForm, setTaskForm] = useState({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1, phone: '' })
   const [taskBusy, setTaskBusy] = useState(false)
 
   const total = useMemo(() => logs.reduce((s, l) => s + (Number(l.hours) || 0), 0), [logs])
@@ -174,7 +174,7 @@ export default function Dashboard() {
                     body: JSON.stringify(taskForm),
                   })
                   if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
-                  setTaskForm({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1 })
+                  setTaskForm({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1, phone: '' })
                   setShowPostTask(false)
                   loadPublicTasks()
                 } catch (e) { setToastMsg(e.message); setToast(true) } finally { setTaskBusy(false) }
@@ -182,6 +182,7 @@ export default function Dashboard() {
                 <input className="input" placeholder="Task title" value={taskForm.title} onChange={(e) => setTaskForm({...taskForm, title: e.target.value})} required />
                 <textarea className="input" rows={2} placeholder="Description — what volunteers will do" value={taskForm.description} onChange={(e) => setTaskForm({...taskForm, description: e.target.value})} required />
                 <input className="input" placeholder="Location — where it happens" value={taskForm.location} onChange={(e) => setTaskForm({...taskForm, location: e.target.value})} required />
+                <input className="input" type="tel" placeholder="Phone number — shown to approved volunteers" value={taskForm.phone} onChange={(e) => setTaskForm({...taskForm, phone: e.target.value})} required />
                 <div className="grid grid-cols-3 gap-2">
                   <input type="date" className="input" value={taskForm.date} onChange={(e) => setTaskForm({...taskForm, date: e.target.value})} required />
                   <input type="time" className="input" value={taskForm.time} onChange={(e) => setTaskForm({...taskForm, time: e.target.value})} />
@@ -198,6 +199,7 @@ export default function Dashboard() {
             const filled = Number(t.slots_filled)
             const total = Number(t.slots_total)
             const full = filled >= total
+            const approved = t.my_signup_status === 'approved'
             return (
               <Card key={t.id} padded={false} className="p-4">
                 <div className="flex items-start justify-between gap-4">
@@ -210,9 +212,24 @@ export default function Dashboard() {
                       <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {filled}/{total} needed</span>
                     </div>
                     <p className="text-xs text-earth-600 mt-1">Posted by {t.creator_name}</p>
+                    {approved && t.phone && (
+                      <p className="text-xs text-emerald-400 mt-1 font-medium">Contact: {t.phone}</p>
+                    )}
+                    {t.my_signup_status === 'pending' && (
+                      <p className="text-xs text-amber-400 mt-1">Awaiting organizer approval</p>
+                    )}
+                    {t.my_signup_status === 'rejected' && (
+                      <p className="text-xs text-red-400 mt-1">Signup rejected</p>
+                    )}
                   </div>
                   <div className="shrink-0">
-                    {full ? (
+                    {t.my_signup_status === 'approved' ? (
+                      <span className="text-xs text-emerald-400 font-medium">Approved</span>
+                    ) : t.my_signup_status === 'pending' ? (
+                      <span className="text-xs text-amber-400 font-medium">Pending</span>
+                    ) : t.my_signup_status === 'rejected' ? (
+                      <span className="text-xs text-red-400 font-medium">Rejected</span>
+                    ) : full ? (
                       <span className="text-xs text-red-400 font-medium">Full</span>
                     ) : (
                       <button onClick={async () => {
@@ -223,7 +240,7 @@ export default function Dashboard() {
                             headers: { Authorization: `Bearer ${token}` },
                           })
                           if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
-                          setToastMsg('Signed up!'); setToast(true); loadPublicTasks()
+                          setToastMsg('Signed up — awaiting organizer approval'); setToast(true); loadPublicTasks()
                         } catch (e) { setToastMsg(e.message); setToast(true) }
                       }} className="btn-primary text-sm">Sign up</button>
                     )}

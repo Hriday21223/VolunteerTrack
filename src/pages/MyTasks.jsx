@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { ChevronDown, ChevronUp, MapPin, Calendar as CalIcon, Users, Clock, LogIn } from 'lucide-react'
+import { ChevronDown, ChevronUp, MapPin, Calendar as CalIcon, Users, Clock, Phone, CheckCircle, XCircle } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -48,6 +48,30 @@ export default function MyTasks() {
     } catch (e) { setToastMsg(e.message); setToast(true) } finally { setBusy(false) }
   }
 
+  const handleApprove = async (taskId, userId) => {
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const res = await fetch(`${apiUrl}/school/public-tasks/${taskId}/approve/${userId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
+      setToastMsg('Signup approved — phone number shared'); setToast(true); loadTasks()
+    } catch (e) { setToastMsg(e.message); setToast(true) }
+  }
+
+  const handleReject = async (taskId, userId) => {
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const res = await fetch(`${apiUrl}/school/public-tasks/${taskId}/reject/${userId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
+      setToastMsg('Signup rejected'); setToast(true); loadTasks()
+    } catch (e) { setToastMsg(e.message); setToast(true) }
+  }
+
   const openLogForm = (taskId, volunteerId, taskDate) => {
     setLogForm({ volunteerId, taskId, hours: '', date: taskDate || '' })
     setShowLogForm(true)
@@ -84,6 +108,9 @@ export default function MyTasks() {
                     <span className="flex items-center gap-1"><CalIcon className="w-3 h-3" /> {new Date(t.date).toLocaleDateString()}{t.time ? ` · ${t.time}` : ''}</span>
                     <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {filled}/{total} signed up</span>
                   </div>
+                  {t.phone && (
+                    <p className="text-xs text-earth-500 mt-1 flex items-center gap-1"><Phone className="w-3 h-3" /> {t.phone}</p>
+                  )}
                 </div>
                 <div className="shrink-0 flex items-center gap-2">
                   <span className={`text-xs px-2 py-0.5 rounded-full ${t.status === 'open' ? 'bg-emerald-500/10 text-emerald-300' : 'bg-earth-800 text-earth-400'}`}>
@@ -105,13 +132,36 @@ export default function MyTasks() {
                           <div>
                             <p className="text-sm font-medium">{s.name}</p>
                             <p className="text-xs text-earth-400">{s.email}</p>
+                            {s.status === 'approved' && (
+                              <p className="text-xs text-emerald-400 mt-0.5">Approved</p>
+                            )}
+                            {s.status === 'rejected' && (
+                              <p className="text-xs text-red-400 mt-0.5">Rejected</p>
+                            )}
+                            {s.status === 'pending' && (
+                              <p className="text-xs text-amber-400 mt-0.5">Pending approval</p>
+                            )}
                           </div>
-                          <button
-                            onClick={() => openLogForm(t.id, s.id, t.date)}
-                            className="btn-primary text-xs"
-                          >
-                            <Clock className="w-3 h-3 mr-1" /> Log hours
-                          </button>
+                          <div className="flex gap-1.5 shrink-0">
+                            {s.status === 'pending' && (
+                              <>
+                                <button onClick={() => handleApprove(t.id, s.id)} className="btn-sm text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-2 py-1">
+                                  <CheckCircle className="w-3 h-3 mr-1" /> Approve
+                                </button>
+                                <button onClick={() => handleReject(t.id, s.id)} className="btn-sm text-xs bg-red-600 hover:bg-red-500 text-white rounded-lg px-2 py-1">
+                                  <XCircle className="w-3 h-3 mr-1" /> Reject
+                                </button>
+                              </>
+                            )}
+                            {s.status === 'approved' && (
+                              <button
+                                onClick={() => openLogForm(t.id, s.id, t.date)}
+                                className="btn-primary text-xs"
+                              >
+                                <Clock className="w-3 h-3 mr-1" /> Log hours
+                              </button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>

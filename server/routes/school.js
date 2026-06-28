@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit'
 import validator from 'validator'
 import { query, hasDatabase } from '../db.js'
 import { uid } from '../ids.js'
-import { hashPassword, verifyPassword, signToken, requireAuth } from '../auth.js'
+import { hashPassword, verifyPassword, signToken, requireAuth, authenticate } from '../auth.js'
 
 const router = express.Router()
 
@@ -239,10 +239,11 @@ router.get('/info', limiter, requireDb, async (req, res) => {
 
 // --- Public volunteer tasks (any user can post, any user can sign up) ---
 
-// Create a public task
+// Create a public task (phone required)
 router.post('/public-tasks', limiter, requireDb, requireAuth(), async (req, res) => {
-  const { title, description, location, date, time, slotsTotal } = req.body
+  const { title, description, location, date, time, slotsTotal, phone } = req.body
   if (!title || !description || !location || !date) return res.status(400).json({ error: 'Title, description, location, and date required.' })
+  if (!phone) return res.status(400).json({ error: 'Phone number is required so volunteers can reach you.' })
 
   try {
     const { rows } = await query('SELECT name, email FROM users WHERE id = $1', [req.auth.sub])
@@ -250,9 +251,9 @@ router.post('/public-tasks', limiter, requireDb, requireAuth(), async (req, res)
 
     const id = uid('ptask')
     await query(
-      `INSERT INTO public_tasks (id, title, description, location, date, time, slots_total, created_by, creator_name, creator_email)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-      [id, title, description, location, date, time || null, Number(slotsTotal) || 1, req.auth.sub, rows[0].name, rows[0].email],
+      `INSERT INTO public_tasks (id, title, description, location, date, time, slots_total, created_by, creator_name, creator_email, phone)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      [id, title, description, location, date, time || null, Number(slotsTotal) || 1, req.auth.sub, rows[0].name, rows[0].email, phone],
     )
     return res.status(201).json({ ok: true, id })
   } catch (error) {
@@ -261,16 +262,20 @@ router.post('/public-tasks', limiter, requireDb, requireAuth(), async (req, res)
   }
 })
 
-// List open public tasks (anyone, no auth required for reading)
-router.get('/public-tasks', limiter, requireDb, async (_req, res) => {
+// List open public tasks. Phone hidden unless user is signed up and approved.
+router.get('/public-tasks', limiter, requireDb, authenticate, async (req, res) => {
   try {
+    const userId = req.auth?.sub || null
     const { rows } = await query(
-      `SELECT id, title, description, location, date, time, slots_total, status,
-              creator_name, created_at,
-              (SELECT COUNT(*) FROM public_task_signups WHERE task_id = t.id) AS slots_filled
+      `SELECT t.id, t.title, t.description, t.location, t.date, t.time, t.slots_total, t.status,
+              t.creator_name, t.created_at,
+              (SELECT COUNT(*) FROM public_task_signups WHERE task_id = t.id) AS slots_filled,
+              ${userId ? `(SELECT status FROM public_task_signups WHERE task_id = t.id AND user_id = $1) AS my_signup_status` : 'NULL AS my_signup_status'},
+              ${userId ? `CASE WHEN (SELECT status FROM public_task_signups WHERE task_id = t.id AND user_id = $1) = 'approved' THEN t.phone ELSE NULL END AS phone` : 'NULL AS phone'}
        FROM public_tasks t
-       WHERE status = 'open'
-       ORDER BY date ASC, created_at DESC`,
+       WHERE t.status = 'open'
+       ORDER BY t.date ASC, t.created_at DESC`,
+      userId ? [userId] : [],
     )
     return res.json({ tasks: rows })
   } catch (error) {
@@ -291,8 +296,8 @@ router.post('/public-tasks/:id/signup', limiter, requireDb, requireAuth(), async
 
     const sid = uid('psig')
     await query(
-      'INSERT INTO public_task_signups (id, task_id, user_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
-      [sid, req.params.id, req.auth.sub],
+      'INSERT INTO public_task_signups (id, task_id, user_id, status) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
+      [sid, req.params.id, req.auth.sub, 'pending'],
     )
     return res.json({ ok: true, id: sid })
   } catch (error) {
@@ -301,16 +306,52 @@ router.post('/public-tasks/:id/signup', limiter, requireDb, requireAuth(), async
   }
 })
 
+// Approve a signup (organizer only) — reveals phone number to volunteer
+router.post('/public-tasks/:id/approve/:userId', limiter, requireDb, requireAuth(), async (req, res) => {
+  try {
+    const { rows: taskRows } = await query('SELECT created_by FROM public_tasks WHERE id = $1', [req.params.id])
+    if (taskRows.length === 0) return res.status(404).json({ error: 'Task not found.' })
+    if (taskRows[0].created_by !== req.auth.sub) return res.status(403).json({ error: 'Only the task creator can approve signups.' })
+
+    await query(
+      "UPDATE public_task_signups SET status = 'approved' WHERE task_id = $1 AND user_id = $2",
+      [req.params.id, req.params.userId],
+    )
+    return res.json({ ok: true })
+  } catch (error) {
+    console.error('approve signup failed:', error)
+    return res.status(500).json({ error: 'Could not approve signup.' })
+  }
+})
+
+// Reject a signup (organizer only)
+router.post('/public-tasks/:id/reject/:userId', limiter, requireDb, requireAuth(), async (req, res) => {
+  try {
+    const { rows: taskRows } = await query('SELECT created_by FROM public_tasks WHERE id = $1', [req.params.id])
+    if (taskRows.length === 0) return res.status(404).json({ error: 'Task not found.' })
+    if (taskRows[0].created_by !== req.auth.sub) return res.status(403).json({ error: 'Only the task creator can reject signups.' })
+
+    await query(
+      "UPDATE public_task_signups SET status = 'rejected' WHERE task_id = $1 AND user_id = $2",
+      [req.params.id, req.params.userId],
+    )
+    return res.json({ ok: true })
+  } catch (error) {
+    console.error('reject signup failed:', error)
+    return res.status(500).json({ error: 'Could not reject signup.' })
+  }
+})
+
 // --- Organizer endpoints (my tasks + log hours for volunteers) ---
 
-// List tasks I created, with signups
+// List tasks I created, with signups (includes phone + signup status)
 router.get('/public-tasks/mine', limiter, requireDb, requireAuth(), async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT t.id, t.title, t.description, t.location, t.date, t.time, t.slots_total, t.status, t.created_at,
+      `SELECT t.id, t.title, t.description, t.location, t.date, t.time, t.slots_total, t.status, t.phone, t.created_at,
               (SELECT COUNT(*) FROM public_task_signups WHERE task_id = t.id) AS slots_filled,
               (SELECT COALESCE(json_agg(json_build_object(
-                'id', u.id, 'name', u.name, 'email', u.email, 'signed_up_at', s.signed_up_at
+                'id', u.id, 'name', u.name, 'email', u.email, 'status', s.status, 'signed_up_at', s.signed_up_at
               ) ORDER BY s.signed_up_at), '[]'::json)
                FROM public_task_signups s JOIN users u ON u.id = s.user_id WHERE s.task_id = t.id) AS signups
        FROM public_tasks t WHERE t.created_by = $1

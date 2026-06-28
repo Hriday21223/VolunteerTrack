@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpen, School, Globe, Clock, Calendar, Trophy, FileText, User, Settings, MapPin, Users, CheckCircle, HelpCircle, ArrowRight, Mail, Shield, ClipboardList } from 'lucide-react'
+import { BookOpen, School, Globe, Clock, Calendar, Trophy, FileText, User, Settings, MapPin, Users, CheckCircle, HelpCircle, ArrowRight, Mail, Shield, ClipboardList, Phone, XCircle } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 
@@ -74,19 +74,20 @@ function StudentHandbook() {
         <p>The Volunteer tab on your Dashboard shows open volunteer opportunities — it's a public community board, not tied to any school. Anyone with an account can post a task or sign up. No paperwork needed.</p>
         <div className="mt-3 space-y-2">
           <Step icon={MapPin} label="Browse tasks" description="See what's needed — each post shows a description, location, date, and how many volunteers are needed." />
-          <Step icon={Users} label="Sign up" description="Click 'Sign up' to join. Your spot is confirmed immediately — just show up and help." />
-          <Step icon={ClipboardList} label="Post your own" description="Any registered user can post a task. Add a title, description, location, date, and how many people you need. No approval, no school required." />
+          <Step icon={Phone} label="Organizer's phone" description="When you sign up, the organizer will see your request. Once they approve you, their phone number is revealed so you can coordinate." />
+          <Step icon={ClipboardList} label="Post your own" description="Any registered user can post a task. Add a title, description, location, date, phone number, and how many people you need." />
         </div>
       </Section>
 
       <Section title="Organizer Dashboard (My Tasks)">
-        <p>When you post a task, you get access to the <strong>My Tasks</strong> page (linked in the sidebar or from the Volunteer tab). Here you can see everyone who signed up and log their volunteer hours directly — no approval needed.</p>
+        <p>When you post a task, you get access to the <strong>My Tasks</strong> page (linked in the sidebar or from the Volunteer tab). Here you can manage signups and log hours.</p>
         <div className="mt-3 space-y-2">
-          <Step icon={ClipboardList} label="View signups" description="Each task expands to show the name and email of everyone who signed up." />
-          <Step icon={Clock} label="Log hours" description="Click 'Log hours' next to a volunteer, enter the hours and date. The hours are saved to their account automatically." />
-          <Step icon={MapPin} label="Location & task included" description="When you log hours, the task title and location are recorded so the volunteer knows what the hours were for." />
+          <Step icon={Users} label="Review signups" description="Each task expands to show everyone who signed up. Their status starts as Pending." />
+          <Step icon={CheckCircle} label="Approve volunteers" description="Click Approve to accept a volunteer — this reveals your phone number to them so they can coordinate with you." />
+          <Step icon={XCircle} label="Reject if needed" description="If someone shouldn't join, click Reject. They'll see the status on their end." />
+          <Step icon={Clock} label="Log hours" description="Once approved, click 'Log hours' next to a volunteer, enter the hours and date. Saved directly to their account." />
+          <Step icon={Phone} label="Your phone number" description="The phone number you entered when posting the task is shown on the My Tasks page. It's only shared with volunteers you approve." />
         </div>
-        <p className="mt-3 text-xs text-earth-500">This lets you (the organizer) verify and record hours for your volunteers without any approval workflow. Volunteers don't need to log anything themselves for your task.</p>
       </Section>
 
       <Section title="Joining a School">
