@@ -118,6 +118,31 @@ CREATE TABLE IF NOT EXISTS public_task_signups (
 CREATE INDEX IF NOT EXISTS idx_public_tasks_status ON public_tasks(status);
 CREATE INDEX IF NOT EXISTS idx_public_signups_task ON public_task_signups(task_id);
 CREATE INDEX IF NOT EXISTS idx_public_signups_user ON public_task_signups(user_id);
+
+CREATE TABLE IF NOT EXISTS school_messages (
+  id          TEXT PRIMARY KEY,
+  school_id   TEXT NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+  sender_id   TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  sender_name TEXT,
+  message     TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS school_subscriptions (
+  id                    TEXT PRIMARY KEY,
+  school_id             TEXT NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+  stripe_customer_id    TEXT,
+  stripe_subscription_id TEXT,
+  status                TEXT NOT NULL DEFAULT 'inactive' CHECK (status IN ('active','past_due','canceled','inactive','trialing')),
+  plan_type             TEXT,
+  price_amount          NUMERIC,
+  current_period_start  TIMESTAMPTZ,
+  current_period_end    TIMESTAMPTZ,
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(school_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_school_messages_school ON school_messages(school_id, created_at DESC);
 `
 
 // Idempotent: safe to run on every boot. Creates tables if missing.

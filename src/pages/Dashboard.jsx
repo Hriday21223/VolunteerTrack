@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X, School, Users, Hand, FileText } from 'lucide-react'
+import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X, School, Users, Hand, FileText, MessageSquare } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { useLocalStorage } from '@/hooks/useLocalStorage.js'
@@ -30,6 +30,7 @@ export default function Dashboard() {
   const [publicTasks, setPublicTasks] = useState([])
   const [dashTab, setDashTab] = useState('home')
   const [userLoc, setUserLoc] = useState(null)
+  const [schoolMessages, setSchoolMessages] = useState([])
 
   const total = useMemo(() => logs.reduce((s, l) => s + (Number(l.hours) || 0), 0), [logs])
 
@@ -66,6 +67,11 @@ export default function Dashboard() {
       try {
         const infoRes = await fetch(`${apiUrl}/school/info?id=${user.schoolId}`)
         if (infoRes.ok) { const d = await infoRes.json(); if (d.school) setSchoolInfo(d.school) }
+        const token = localStorage.getItem('voluntrack:auth_token')
+        const msgRes = await fetch(`${apiUrl}/school/messages`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (msgRes.ok) { const d = await msgRes.json(); setSchoolMessages(d.messages || []) }
       } catch {}
     })()
   }, [user?.schoolId])
@@ -244,6 +250,23 @@ export default function Dashboard() {
               <Link to="/school/dashboard" className="btn-secondary ml-auto text-sm">Dashboard</Link>
             </div>
           </Card>
+
+          {schoolMessages.length > 0 && (
+            <Card className="mb-5">
+              <div className="flex items-center gap-2 mb-3">
+                <MessageSquare className="w-4 h-4 text-brand-600" />
+                <h3 className="font-display font-semibold">School announcements</h3>
+              </div>
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {schoolMessages.slice(0, 10).map((m) => (
+                  <div key={m.id} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-sm">{m.message}</p>
+                    <p className="text-xs text-earth-500 mt-1">{m.sender_name} · {new Date(m.created_at).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
 
           {user?.role === 'student' && publicTasks.length > 0 && (
             <Card className="mb-5">

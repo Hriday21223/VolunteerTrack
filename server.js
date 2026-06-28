@@ -14,6 +14,78 @@ dotenv.config()
 const app = express()
 const port = process.env.PORT || 10000
 
+// Stripe webhook MUST be before express.json() — it needs the raw body
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature']
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  if (!webhookSecret) return res.status(503).json({ error: 'Webhook not configured.' })
+
+  try {
+    const { default: Stripe } = await import('stripe')
+    const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
+    const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret)
+
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object
+        const schoolId = session.metadata?.schoolId
+        if (!schoolId) break
+        const subscriptionId = session.subscription
+        const customerId = session.customer
+        // Fetch subscription details from Stripe to get period dates
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+        await query(
+          `INSERT INTO school_subscriptions (id, school_id, stripe_customer_id, stripe_subscription_id, status, plan_type, price_amount, current_period_start, current_period_end)
+           VALUES ($1, $2, $3, $4, 'active', 'school_yearly', 200, to_timestamp($5), to_timestamp($6))
+           ON CONFLICT (school_id) DO UPDATE SET
+             status = 'active',
+             stripe_customer_id = EXCLUDED.stripe_customer_id,
+             stripe_subscription_id = EXCLUDED.stripe_subscription_id,
+             current_period_start = EXCLUDED.current_period_start,
+             current_period_end = EXCLUDED.current_period_end`,
+          [uid('sub'), schoolId, customerId, subscriptionId, subscription.current_period_start, subscription.current_period_end],
+        )
+        break
+      }
+      case 'invoice.paid': {
+        const invoice = event.data.object
+        const subscriptionId = invoice.subscription
+        if (!subscriptionId) break
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+        await query(
+          `UPDATE school_subscriptions SET
+            status = 'active',
+            current_period_start = to_timestamp($1),
+            current_period_end = to_timestamp($2)
+           WHERE stripe_subscription_id = $3`,
+          [subscription.current_period_start, subscription.current_period_end, subscriptionId],
+        )
+        break
+      }
+      case 'customer.subscription.deleted':
+      case 'customer.subscription.updated': {
+        const sub = event.data.object
+        const stripeStatus = sub.status // active, past_due, canceled, etc.
+        const dbStatus = stripeStatus === 'active' ? 'active' : stripeStatus === 'past_due' ? 'past_due' : 'canceled'
+        await query(
+          `UPDATE school_subscriptions SET
+            status = $1,
+            current_period_start = to_timestamp($2),
+            current_period_end = to_timestamp($3)
+           WHERE stripe_subscription_id = $4`,
+          [dbStatus, sub.current_period_start, sub.current_period_end, sub.id],
+        )
+        break
+      }
+    }
+
+    return res.json({ received: true })
+  } catch (error) {
+    console.error('Stripe webhook error:', error)
+    return res.status(400).json({ error: 'Webhook signature verification failed.' })
+  }
+})
+
 // General rate limiting for API endpoints
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

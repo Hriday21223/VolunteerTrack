@@ -489,4 +489,121 @@ router.delete('/admin/:id', limiter, requireDb, requireAuth('admin'), async (req
   }
 })
 
+// --- School chat (school admin → students) ---
+
+// Send a message (school admin only)
+router.post('/messages', limiter, requireDb, requireAuth('school'), async (req, res) => {
+  const { message } = req.body
+  if (!message || typeof message !== 'string' || message.trim().length === 0 || message.length > 2000) {
+    return res.status(400).json({ error: 'Message is required (max 2000 chars).' })
+  }
+  try {
+    const { rows: userRows } = await query('SELECT name, school_id FROM users WHERE id = $1', [req.auth.sub])
+    if (!userRows[0]?.school_id) return res.status(400).json({ error: 'No school linked to your account.' })
+    const id = uid('msg')
+    await query(
+      'INSERT INTO school_messages (id, school_id, sender_id, sender_name, message) VALUES ($1, $2, $3, $4, $5)',
+      [id, userRows[0].school_id, req.auth.sub, userRows[0].name, message.trim()],
+    )
+    return res.status(201).json({ ok: true, id })
+  } catch (error) {
+    console.error('send message failed:', error)
+    return res.status(500).json({ error: 'Could not send message.' })
+  }
+})
+
+// Get messages for this school (school admin or student)
+router.get('/messages', limiter, requireDb, requireAuth(), async (req, res) => {
+  try {
+    const { rows: userRows } = await query('SELECT school_id FROM users WHERE id = $1', [req.auth.sub])
+    if (!userRows[0]?.school_id) return res.json({ messages: [] })
+    const { rows } = await query(
+      `SELECT id, sender_id, sender_name, message, created_at
+       FROM school_messages WHERE school_id = $1
+       ORDER BY created_at DESC LIMIT 100`,
+      [userRows[0].school_id],
+    )
+    return res.json({ messages: rows })
+  } catch (error) {
+    console.error('get messages failed:', error)
+    return res.status(500).json({ error: 'Could not fetch messages.' })
+  }
+})
+
+// --- Stripe subscription (school plan: $200/year) ---
+
+// Create a checkout session for the $200/year school plan
+router.post('/create-checkout-session', limiter, requireDb, requireAuth('school'), async (req, res) => {
+  try {
+    const stripeSecret = process.env.STRIPE_SECRET_KEY
+    if (!stripeSecret) return res.status(503).json({ error: 'Payments not configured.' })
+
+    const { default: Stripe } = await import('stripe')
+    const stripe = Stripe(stripeSecret)
+
+    const { rows: userRows } = await query('SELECT school_id FROM users WHERE id = $1', [req.auth.sub])
+    if (!userRows[0]?.school_id) return res.status(400).json({ error: 'No school linked.' })
+
+    const schoolId = userRows[0].school_id
+    const { rows: schoolRows } = await query('SELECT name FROM schools WHERE id = $1', [schoolId])
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: { name: 'VolunTrack School Plan — Yearly' },
+          recurring: { interval: 'year' },
+          unit_amount: 20000, // $200 in cents
+        },
+        quantity: 1,
+      }],
+      metadata: { schoolId },
+      success_url: `${req.headers.origin}/school/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.origin}/school/dashboard`,
+      customer_email: req.auth.email,
+    })
+
+    return res.json({ url: session.url })
+  } catch (error) {
+    console.error('checkout session failed:', error)
+    return res.status(500).json({ error: 'Could not create checkout session.' })
+  }
+})
+
+// Get subscription status for the current school
+router.get('/subscription-status', limiter, requireDb, requireAuth('school'), async (req, res) => {
+  try {
+    const { rows: userRows } = await query('SELECT school_id FROM users WHERE id = $1', [req.auth.sub])
+    if (!userRows[0]?.school_id) return res.json({ active: false })
+
+    const { rows } = await query(
+      'SELECT status, plan_type, current_period_end FROM school_subscriptions WHERE school_id = $1',
+      [userRows[0].school_id],
+    )
+    const sub = rows[0]
+    return res.json({
+      active: sub?.status === 'active',
+      status: sub?.status || 'inactive',
+      planType: sub?.plan_type || null,
+      periodEnd: sub?.current_period_end || null,
+    })
+  } catch (error) {
+    console.error('subscription status failed:', error)
+    return res.status(500).json({ error: 'Could not check subscription.' })
+  }
+})
+
+// Check if school has paid (used by middleware)
+async function hasActiveSubscription(schoolId) {
+  try {
+    const { rows } = await query(
+      'SELECT 1 FROM school_subscriptions WHERE school_id = $1 AND status = $2',
+      [schoolId, 'active'],
+    )
+    return rows.length > 0
+  } catch { return false }
+}
+
+export { hasActiveSubscription }
 export default router

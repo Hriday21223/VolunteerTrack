@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Upload, CheckCircle, XCircle, Clock, FileText, Download, Search, Users, MapPin, Calendar } from 'lucide-react'
+import { ArrowLeft, Upload, CheckCircle, XCircle, Clock, FileText, Download, Search, Users, MapPin, Calendar, MessageSquare, CreditCard } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -26,11 +26,68 @@ export default function SchoolDashboard() {
   const [subTab, setSubTab] = useState('reports')
   const [taskForm, setTaskForm] = useState({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1 })
   const [taskBusy, setTaskBusy] = useState(false)
+  const [messages, setMessages] = useState([])
+  const [messageText, setMessageText] = useState('')
+  const [sendingMsg, setSendingMsg] = useState(false)
+  const [subStatus, setSubStatus] = useState(null)
+  const [checkingOut, setCheckingOut] = useState(false)
 
   useEffect(() => {
     if (!user) return
     loadData()
+    if (user?.role === 'school') checkSubscription()
   }, [user])
+
+  const checkSubscription = async () => {
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const res = await fetch(`${apiUrl}/school/subscription-status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) { const d = await res.json(); setSubStatus(d) }
+    } catch {}
+  }
+
+  const loadMessages = async () => {
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const res = await fetch(`${apiUrl}/school/messages`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) { const d = await res.json(); setMessages(d.messages || []) }
+    } catch {}
+  }
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault()
+    if (!messageText.trim()) return
+    setSendingMsg(true)
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const res = await fetch(`${apiUrl}/school/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ message: messageText.trim() }),
+      })
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
+      setMessageText('')
+      loadMessages()
+    } catch (e) { setToastMsg(e.message); setToast(true) } finally { setSendingMsg(false) }
+  }
+
+  const handleCheckout = async () => {
+    setCheckingOut(true)
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const res = await fetch(`${apiUrl}/school/create-checkout-session`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
+      const d = await res.json()
+      if (d.url) window.location.href = d.url
+    } catch (e) { setToastMsg(e.message); setToast(true) } finally { setCheckingOut(false) }
+  }
 
   const loadData = async () => {
     setLoading(true)
@@ -179,7 +236,12 @@ export default function SchoolDashboard() {
         <div className="flex gap-2">
           <button onClick={() => setTab('pdfs')} className={`btn-sm ${tab === 'pdfs' ? 'btn-primary' : 'btn-ghost'}`}>Reports</button>
           {user?.role === 'school' && (
-            <button onClick={() => { setTab('students'); setSubTab('list') }} className={`btn-sm ${tab === 'students' ? 'btn-primary' : 'btn-ghost'}`}>Students</button>
+            <>
+              <button onClick={() => { setTab('students'); setSubTab('list') }} className={`btn-sm ${tab === 'students' ? 'btn-primary' : 'btn-ghost'}`}>Students</button>
+              <button onClick={() => { setTab('chat'); loadMessages() }} className={`btn-sm ${tab === 'chat' ? 'btn-primary' : 'btn-ghost'}`}>
+                <MessageSquare className="w-3.5 h-3.5 mr-1" /> Chat
+              </button>
+            </>
           )}
           <button onClick={() => setTab('volunteer')} className={`btn-sm ${tab === 'volunteer' ? 'btn-primary' : 'btn-ghost'}`}>
             <Users className="w-3.5 h-3.5 mr-1" /> Volunteer
@@ -188,6 +250,50 @@ export default function SchoolDashboard() {
       }
     >
       <div className="max-w-4xl mx-auto space-y-4">
+        {user?.role === 'school' && subStatus && !subStatus.active && (
+          <Card className="border-amber-500/30 bg-amber-950/10">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-amber-300">School Plan Required</h3>
+                <p className="text-sm text-amber-400/80 mt-1">$200/year — unlocks student management, PDF reviews, chat, and more.</p>
+              </div>
+              <button onClick={handleCheckout} disabled={checkingOut} className="btn-primary shrink-0">
+                <CreditCard className="w-4 h-4 mr-2" /> {checkingOut ? 'Redirecting…' : 'Subscribe'}
+              </button>
+            </div>
+          </Card>
+        )}
+
+        {tab === 'chat' && user?.role === 'school' && (
+          <div className="space-y-4">
+            <Card>
+              <h3 className="font-semibold mb-3 flex items-center gap-2"><MessageSquare className="w-4 h-4 text-brand-600" /> Send announcement</h3>
+              <form onSubmit={handleSendMessage} className="space-y-3">
+                <textarea
+                  className="input" rows={3} placeholder="Write a message to all students…"
+                  value={messageText} onChange={(e) => setMessageText(e.target.value)} maxLength={2000} required
+                />
+                <button type="submit" className="btn-primary" disabled={sendingMsg || !messageText.trim()}>
+                  {sendingMsg ? 'Sending…' : 'Send to all students'}
+                </button>
+              </form>
+            </Card>
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm text-earth-400 uppercase tracking-wider">Previously sent</h3>
+              {messages.length === 0 ? (
+                <Card><p className="text-center text-earth-500 py-6 text-sm">No messages sent yet.</p></Card>
+              ) : messages.map((m) => (
+                <Card key={m.id} padded={false} className="p-4">
+                  <p className="text-sm">{m.message}</p>
+                  <p className="text-xs text-earth-500 mt-2">
+                    {m.sender_name} · {new Date(m.created_at).toLocaleString()}
+                  </p>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
         {user?.role === 'student' && (
           <Card>
             <h3 className="font-semibold mb-3 flex items-center gap-2"><Upload className="w-4 h-4 text-brand-600" /> Upload verification PDF</h3>
