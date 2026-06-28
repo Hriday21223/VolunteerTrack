@@ -1,36 +1,63 @@
 import { NavLink, useLocation, Link } from 'react-router-dom'
-import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell, Plus, Shield, HelpCircle, ClipboardList } from 'lucide-react'
+import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Plus, Shield, HelpCircle, ClipboardList, School } from 'lucide-react'
 import { cn } from '@/utils/cn.js'
-import { useMemo } from 'react'
+import { useAuth } from '@/hooks/useAuth.jsx'
 
-const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
-
-const ITEMS = [
-  { to: '/',             label: 'Home',     icon: Home },
-  { to: '/log',          label: 'Log',      icon: Clock },
-  { to: '/calendar',     label: 'Calendar', icon: Calendar },
-  { to: '/achievements', label: 'Awards',   icon: Trophy },
-  { to: '/reports',      label: 'Reports',  icon: FileText },
-  { to: '/profile',      label: 'Profile',  icon: User },
-  { to: '/settings',     label: 'Settings', icon: Settings },
-  { to: '/my-tasks',     label: 'Tasks',    icon: ClipboardList },
-  { to: '/help',         label: 'Help',     icon: HelpCircle },
-]
-
-const ADMIN_ITEM = { to: '/admin', label: 'Admin', icon: Shield }
+const ROLE_ITEMS = {
+  student: [
+    { to: '/',             label: 'Home',     icon: Home },
+    { to: '/log',          label: 'Log',      icon: Clock },
+    { to: '/calendar',     label: 'Calendar', icon: Calendar },
+    { to: '/achievements', label: 'Awards',   icon: Trophy },
+    { to: '/reports',      label: 'Reports',  icon: FileText },
+    { to: '/profile',      label: 'Profile',  icon: User },
+    { to: '/settings',     label: 'Settings', icon: Settings },
+    { to: '/help',         label: 'Help',     icon: HelpCircle },
+  ],
+  volunteer: [
+    { to: '/',             label: 'Home',     icon: Home },
+    { to: '/my-tasks',     label: 'Tasks',    icon: ClipboardList },
+    { to: '/log',          label: 'Log',      icon: Clock },
+    { to: '/calendar',     label: 'Calendar', icon: Calendar },
+    { to: '/achievements', label: 'Awards',   icon: Trophy },
+    { to: '/reports',      label: 'Reports',  icon: FileText },
+    { to: '/profile',      label: 'Profile',  icon: User },
+    { to: '/settings',     label: 'Settings', icon: Settings },
+    { to: '/help',         label: 'Help',     icon: HelpCircle },
+  ],
+  school: [
+    { to: '/',             label: 'Home',     icon: Home },
+    { to: '/school/dashboard', label: 'School', icon: School },
+    { to: '/log',          label: 'Log',      icon: Clock },
+    { to: '/calendar',     label: 'Calendar', icon: Calendar },
+    { to: '/reports',      label: 'Reports',  icon: FileText },
+    { to: '/profile',      label: 'Profile',  icon: User },
+    { to: '/settings',     label: 'Settings', icon: Settings },
+    { to: '/help',         label: 'Help',     icon: HelpCircle },
+  ],
+  admin: [
+    { to: '/',             label: 'Home',     icon: Home },
+    { to: '/admin',        label: 'Admin',    icon: Shield },
+    { to: '/log',          label: 'Log',      icon: Clock },
+    { to: '/calendar',     label: 'Calendar', icon: Calendar },
+    { to: '/reports',      label: 'Reports',  icon: FileText },
+    { to: '/profile',      label: 'Profile',  icon: User },
+    { to: '/settings',     label: 'Settings', icon: Settings },
+    { to: '/help',         label: 'Help',     icon: HelpCircle },
+  ],
+}
 
 export default function MobileTabBar() {
   const { pathname } = useLocation()
-  const user = useMemo(() => JSON.parse(localStorage.getItem('voluntrack:user') || '{}'), [])
-  const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()
-  
-  const allItems = isAdmin ? [...ITEMS, ADMIN_ITEM] : ITEMS
+  const { user } = useAuth()
+  const role = user?.role || 'student'
+  const items = ROLE_ITEMS[role] || ROLE_ITEMS.student
 
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-30">
       <div className="mx-4 mb-4 rounded-[1.5rem] bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-xl border border-earth-200/50 dark:border-white/10 shadow-2xl shadow-black/5 dark:shadow-black/20">
-        <ul className={`grid px-1 pt-1 ${isAdmin ? 'grid-cols-10' : 'grid-cols-9'}`}>
-          {allItems.map(({ to, label, icon: Icon }) => {
+        <ul className="grid px-1 pt-1" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}>
+          {items.map(({ to, label, icon: Icon }) => {
             const active = to === '/' ? pathname === '/' : pathname.startsWith(to)
             return (
               <li key={to}>

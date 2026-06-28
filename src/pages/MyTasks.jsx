@@ -5,7 +5,7 @@ import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
 import { useData } from '@/hooks/useData.jsx'
 
-const apiUrl = import.meta.env.VITE_API_URL || ''
+const apiUrl = import.meta.env.VITE_API_URL || '/api'
 
 export default function MyTasks() {
   const { refreshLogs } = useData()
@@ -80,7 +80,7 @@ export default function MyTasks() {
   return (
     <AppLayout
       title="My Tasks"
-      subtitle="Manage your volunteer opportunities and log hours for volunteers"
+      subtitle="Needed Volunteers"
     >
       <div className="max-w-3xl mx-auto space-y-4">
         {loading ? (
