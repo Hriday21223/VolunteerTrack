@@ -237,6 +237,76 @@ router.get('/info', limiter, requireDb, async (req, res) => {
   }
 })
 
+// --- Volunteer tasks ---
+
+// Create a task (school admin)
+router.post('/tasks', limiter, requireDb, requireAuth('school'), async (req, res) => {
+  const { title, description, location, date, time, slotsTotal } = req.body
+  if (!title || !description || !location || !date) return res.status(400).json({ error: 'Title, description, location, and date required.' })
+
+  try {
+    const { rows: userRows } = await query('SELECT school_id FROM users WHERE id = $1', [req.auth.sub])
+    if (!userRows[0]?.school_id) return res.status(404).json({ error: 'School not found.' })
+
+    const id = uid('task')
+    await query(
+      `INSERT INTO volunteer_tasks (id, school_id, title, description, location, date, time, slots_total, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [id, userRows[0].school_id, title, description, location, date, time || null, Number(slotsTotal) || 1, req.auth.sub],
+    )
+    return res.status(201).json({ ok: true, id })
+  } catch (error) {
+    console.error('create task failed:', error)
+    return res.status(500).json({ error: 'Could not create task.' })
+  }
+})
+
+// List tasks for the school (anyone linked can see)
+router.get('/tasks', limiter, requireDb, requireAuth(), async (req, res) => {
+  try {
+    const { rows: userRows } = await query('SELECT school_id FROM users WHERE id = $1', [req.auth.sub])
+    const schoolId = userRows[0]?.school_id
+    if (!schoolId) return res.status(404).json({ error: 'No school linked.' })
+
+    const { rows } = await query(
+      `SELECT t.id, t.title, t.description, t.location, t.date, t.time, t.slots_total,
+              t.status, t.created_at,
+              (SELECT COUNT(*) FROM volunteer_signups WHERE task_id = t.id) AS slots_filled,
+              EXISTS(SELECT 1 FROM volunteer_signups WHERE task_id = t.id AND user_id = $2) AS signed_up
+       FROM volunteer_tasks t
+       WHERE t.school_id = $1
+       ORDER BY t.date DESC, t.created_at DESC`,
+      [schoolId, req.auth.sub],
+    )
+    return res.json({ tasks: rows })
+  } catch (error) {
+    console.error('list tasks failed:', error)
+    return res.status(500).json({ error: 'Could not fetch tasks.' })
+  }
+})
+
+// Sign up for a task (student)
+router.post('/tasks/:id/signup', limiter, requireDb, requireAuth('student'), async (req, res) => {
+  try {
+    const { rows } = await query('SELECT * FROM volunteer_tasks WHERE id = $1', [req.params.id])
+    if (rows.length === 0) return res.status(404).json({ error: 'Task not found.' })
+    if (rows[0].status === 'closed') return res.status(400).json({ error: 'Task is closed.' })
+
+    const { rows: signups } = await query('SELECT COUNT(*) AS cnt FROM volunteer_signups WHERE task_id = $1', [req.params.id])
+    if (Number(signups[0].cnt) >= rows[0].slots_total) return res.status(400).json({ error: 'Task is full.' })
+
+    const id = uid('sig')
+    await query(
+      'INSERT INTO volunteer_signups (id, task_id, user_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+      [id, req.params.id, req.auth.sub],
+    )
+    return res.json({ ok: true, id })
+  } catch (error) {
+    console.error('task signup failed:', error)
+    return res.status(500).json({ error: 'Could not sign up.' })
+  }
+})
+
 // --- Admin endpoints ---
 
 // List all schools (admin only)

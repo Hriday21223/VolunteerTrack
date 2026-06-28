@@ -87,8 +87,31 @@ CREATE TABLE IF NOT EXISTS pdf_uploads (
 CREATE INDEX IF NOT EXISTS idx_users_school_id ON users(school_id);
 CREATE INDEX IF NOT EXISTS idx_logs_user_id    ON logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_goals_user_id   ON goals(user_id);
-CREATE INDEX IF NOT EXISTS idx_pdf_user_id     ON pdf_uploads(user_id);
-CREATE INDEX IF NOT EXISTS idx_pdf_school_id   ON pdf_uploads(school_id);
+CREATE TABLE IF NOT EXISTS volunteer_tasks (
+  id              TEXT PRIMARY KEY,
+  school_id       TEXT NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+  title           TEXT NOT NULL,
+  description     TEXT NOT NULL,
+  location        TEXT NOT NULL,
+  date            DATE NOT NULL,
+  time            TEXT,
+  slots_total     INTEGER NOT NULL DEFAULT 1,
+  created_by      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status          TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','closed')),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS volunteer_signups (
+  id              TEXT PRIMARY KEY,
+  task_id         TEXT NOT NULL REFERENCES volunteer_tasks(id) ON DELETE CASCADE,
+  user_id         TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  signed_up_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(task_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_school_id     ON volunteer_tasks(school_id);
+CREATE INDEX IF NOT EXISTS idx_signups_task_id     ON volunteer_signups(task_id);
+CREATE INDEX IF NOT EXISTS idx_signups_user_id     ON volunteer_signups(user_id);
 `
 
 // Idempotent: safe to run on every boot. Creates tables if missing.
