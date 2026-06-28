@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, FileText } from 'lucide-react'
+import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, FileText, CreditCard, Edit3 } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import { useAuth } from '@/hooks/useAuth.jsx'
@@ -59,6 +59,8 @@ export default function Admin() {
   const [loadingSchools, setLoadingSchools] = useState(false)
   const [submissions, setSubmissions] = useState([])
   const [loadingSubs, setLoadingSubs] = useState(false)
+  const [payModal, setPayModal] = useState(null) // school id
+  const [payNotes, setPayNotes] = useState('')
 
   useEffect(() => {
     if (user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
@@ -98,6 +100,34 @@ export default function Admin() {
       setSubmissions(data.submissions || [])
     } catch {} finally { setLoadingSubs(false) }
   }, [])
+
+  const markPaid = async (id) => {
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const res = await fetch(`${apiUrl}/school/admin/${id}/payment`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: 'paid', notes: payNotes }),
+      })
+      if (!res.ok) throw new Error('Failed')
+      setPayModal(null); setPayNotes(''); loadSchools()
+      setToastMessage('School marked as paid'); setToast(true)
+    } catch { setToastMessage('Failed to update payment'); setToast(true) }
+  }
+
+  const markUnpaid = async (id) => {
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const res = await fetch(`${apiUrl}/school/admin/${id}/payment`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: 'unpaid' }),
+      })
+      if (!res.ok) throw new Error('Failed')
+      loadSchools()
+      setToastMessage('School marked as unpaid'); setToast(true)
+    } catch { setToastMessage('Failed to update payment'); setToast(true) }
+  }
 
   const deleteSchool = async (id, name) => {
     if (!confirm(`Delete "${name}" and unlink all its students?`)) return
@@ -257,16 +287,39 @@ export default function Admin() {
                         Code: <span className="font-mono">{s.pin}</span>
                         {s.contact_email && ` · ${s.contact_email}`}
                       </p>
-                      <p className="text-xs text-earth-500">
-                        <Users className="w-3 h-3 inline mr-1" />
-                        {s.student_count} student{s.student_count === 1 ? '' : 's'} ·
-                        Joined {new Date(s.created_at).toLocaleDateString()}
-                      </p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        <span className="text-xs text-earth-500">
+                          <Users className="w-3 h-3 inline mr-1" />
+                          {s.student_count} student{s.student_count === 1 ? '' : 's'} ·
+                          Joined {new Date(s.created_at).toLocaleDateString()}
+                        </span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          s.payment_status === 'paid'
+                            ? 'bg-emerald-500/10 text-emerald-400'
+                            : 'bg-amber-500/10 text-amber-400'
+                        }`}>
+                          {s.payment_status === 'paid' ? 'Paid' : 'Unpaid'}
+                        </span>
+                      </div>
+                      {s.payment_notes && (
+                        <p className="text-xs text-earth-500 mt-0.5">{s.payment_notes}</p>
+                      )}
                     </div>
                   </div>
-                  <button onClick={() => deleteSchool(s.id, s.name)} className="text-red-400 hover:text-red-300 p-2" title="Delete school">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex gap-1">
+                    {s.payment_status === 'paid' ? (
+                      <button onClick={() => markUnpaid(s.id)} className="text-amber-400 hover:text-amber-300 p-2" title="Mark as unpaid">
+                        <CreditCard className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button onClick={() => { setPayModal(s.id); setPayNotes('') }} className="text-emerald-400 hover:text-emerald-300 p-2" title="Mark as paid">
+                        <CreditCard className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button onClick={() => deleteSchool(s.id, s.name)} className="text-red-400 hover:text-red-300 p-2" title="Delete school">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </Card>
             ))}
@@ -315,6 +368,28 @@ export default function Admin() {
           ))}
         </div>
       )}
+
+      {payModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setPayModal(null)}>
+          <Card className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-semibold mb-2">Mark school as paid</h3>
+            <p className="text-sm text-earth-400 mb-4">Record how they paid (cash, check, Venmo, etc.)</p>
+            <div className="space-y-3">
+              <textarea
+                className="input" rows={3}
+                placeholder="e.g. Paid via check #1024 on June 1"
+                value={payNotes} onChange={(e) => setPayNotes(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <button onClick={() => setPayModal(null)} className="btn-ghost flex-1">Cancel</button>
+                <button onClick={() => markPaid(payModal)} className="btn-primary flex-1">Mark as paid</button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      <Toast open={toast} onClose={() => setToast(false)}>{toastMessage}</Toast>
     </AppLayout>
   )
 }

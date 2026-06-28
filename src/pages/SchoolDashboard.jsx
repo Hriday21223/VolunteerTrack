@@ -29,6 +29,7 @@ export default function SchoolDashboard() {
   const [messages, setMessages] = useState([])
   const [messageText, setMessageText] = useState('')
   const [sendingMsg, setSendingMsg] = useState(false)
+  const [schoolInfo, setSchoolInfo] = useState(null)
 
   useEffect(() => {
     if (!user) return
@@ -68,10 +69,12 @@ export default function SchoolDashboard() {
       const token = localStorage.getItem('voluntrack:auth_token')
       const headers = { Authorization: `Bearer ${token}` }
 
-      const [pdfRes, taskRes] = await Promise.all([
+      const [pdfRes, taskRes, infoRes] = await Promise.all([
         fetch(`${apiUrl}/school/pdfs`, { headers }),
         fetch(`${apiUrl}/school/public-tasks`),
+        fetch(`${apiUrl}/school/info?id=${user.schoolId}`, { headers }),
       ])
+      if (infoRes.ok) { const d = await infoRes.json(); setSchoolInfo(d.school) }
       if (pdfRes.ok) {
         const data = await pdfRes.json()
         setPdfs(data.pdfs || [])
@@ -204,7 +207,20 @@ export default function SchoolDashboard() {
   return (
     <AppLayout
       title={user?.role === 'school' ? 'School Dashboard' : 'My Documents'}
-      subtitle={user?.role === 'school' ? 'Review student uploads' : 'Upload verification documents'}
+      subtitle={
+        <span className="flex items-center gap-2">
+          {user?.role === 'school' ? 'Review student uploads' : 'Upload verification documents'}
+          {schoolInfo?.paymentStatus && (
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+              schoolInfo.paymentStatus === 'paid'
+                ? 'bg-emerald-500/20 text-emerald-600'
+                : 'bg-amber-500/20 text-amber-600'
+            }`}>
+              {schoolInfo.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
+            </span>
+          )}
+        </span>
+      }
       action={
         <div className="flex gap-2">
           <button onClick={() => setTab('pdfs')} className={`btn-sm ${tab === 'pdfs' ? 'btn-primary' : 'btn-ghost'}`}>Reports</button>

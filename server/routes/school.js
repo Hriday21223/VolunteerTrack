@@ -224,14 +224,14 @@ router.get('/info', limiter, requireDb, async (req, res) => {
   try {
     let rows
     if (pin) {
-      const r = await query('SELECT id, name, pin FROM schools WHERE pin = $1', [pin])
+      const r = await query('SELECT id, name, pin, payment_status, payment_notes, paid_at FROM schools WHERE pin = $1', [pin])
       rows = r.rows
     } else {
-      const r = await query('SELECT id, name, pin FROM schools WHERE id = $1', [id])
+      const r = await query('SELECT id, name, pin, payment_status, payment_notes, paid_at FROM schools WHERE id = $1', [id])
       rows = r.rows
     }
     if (rows.length === 0) return res.status(404).json({ error: 'No school found.' })
-    return res.json({ school: { id: rows[0].id, name: rows[0].name, pin: rows[0].pin } })
+    return res.json({ school: { id: rows[0].id, name: rows[0].name, pin: rows[0].pin, paymentStatus: rows[0].payment_status, paymentNotes: rows[0].payment_notes, paidAt: rows[0].paid_at } })
   } catch (error) {
     return res.status(500).json({ error: 'Could not fetch school.' })
   }
@@ -447,7 +447,7 @@ router.get('/public-tasks/:id/logs', limiter, requireDb, requireAuth(), async (r
 router.get('/admin/list', limiter, requireDb, requireAuth('admin'), async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT s.id, s.name, s.pin, s.contact_email, s.created_at,
+      `SELECT s.id, s.name, s.pin, s.contact_email, s.payment_status, s.payment_notes, s.paid_at, s.created_at,
         (SELECT COUNT(*) FROM users WHERE school_id = s.id AND role = 'student') AS student_count
        FROM schools s ORDER BY s.created_at DESC`,
     )
@@ -474,6 +474,30 @@ router.get('/admin/submissions', limiter, requireDb, requireAuth('admin'), async
   } catch (error) {
     console.error('admin submissions failed:', error)
     return res.status(500).json({ error: 'Could not fetch submissions.' })
+  }
+})
+
+// Update payment status for a school (admin only)
+router.patch('/admin/:id/payment', limiter, requireDb, requireAuth('admin'), async (req, res) => {
+  const { status, notes } = req.body
+  if (!status || !['paid', 'unpaid'].includes(status)) return res.status(400).json({ error: 'Status must be paid or unpaid.' })
+
+  try {
+    if (status === 'paid') {
+      await query(
+        'UPDATE schools SET payment_status = $1, payment_notes = $2, paid_at = now() WHERE id = $3',
+        [status, notes || null, req.params.id],
+      )
+    } else {
+      await query(
+        'UPDATE schools SET payment_status = $1, payment_notes = $2, paid_at = NULL WHERE id = $3',
+        [status, null, req.params.id],
+      )
+    }
+    return res.json({ ok: true })
+  } catch (error) {
+    console.error('update payment failed:', error)
+    return res.status(500).json({ error: 'Could not update payment.' })
   }
 })
 

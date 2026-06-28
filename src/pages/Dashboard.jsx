@@ -238,7 +238,7 @@ export default function Dashboard() {
         </div>
       ) : (
       <>
-      {schoolInfo && (
+          {schoolInfo && (
         <>
           <Card className="mb-5">
             <div className="flex items-center gap-3">
@@ -246,6 +246,15 @@ export default function Dashboard() {
               <div>
                 <p className="font-medium text-sm">{schoolInfo.name}</p>
                 <p className="text-xs text-earth-400">Code: <span className="font-mono">{schoolInfo.pin}</span></p>
+                {schoolInfo.paymentStatus && (
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    schoolInfo.paymentStatus === 'paid'
+                      ? 'bg-emerald-500/10 text-emerald-400'
+                      : 'bg-amber-500/10 text-amber-400'
+                  }`}>
+                    {schoolInfo.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
+                  </span>
+                )}
               </div>
               <Link to="/school/dashboard" className="btn-secondary ml-auto text-sm">Dashboard</Link>
             </div>
