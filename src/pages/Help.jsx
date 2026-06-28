@@ -39,13 +39,13 @@ function StudentHandbook() {
     <div className="max-w-3xl mx-auto">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-white mb-2">Student Handbook</h2>
-        <p className="text-sm text-earth-400">Everything you need to track volunteer hours, earn badges, and stay on top of your goals.</p>
+        <p className="text-sm text-earth-400">Everything you need to track volunteer hours, earn badges, find nearby tasks, and stay connected with your school.</p>
       </div>
 
       <Section title="Getting Started">
         <p>After signing up, you'll land on your Dashboard. Take the quick tour to see your stats, weekly chart, and recent activity at a glance.</p>
         <div className="mt-3 space-y-2">
-          <Step icon={User} label="Create an account" description="Sign up with your name, email, and password. You'll be logged in automatically." />
+          <Step icon={User} label="Create an account" description="Sign up with your name, email, password, school code, and grade. You'll be logged in automatically." />
           <Step icon={Trophy} label="Set your first goal" description="Go to Settings to set a volunteer hour target and a deadline to stay motivated." />
           <Step icon={Clock} label="Log your first hours" description="Click 'Log hours' on the dashboard or use the + button on mobile to record a session." />
         </div>
@@ -72,16 +72,16 @@ function StudentHandbook() {
       </Section>
 
       <Section title="Needed Volunteers">
-        <p>The Volunteer tab on your Dashboard shows open volunteer opportunities — it's a public community board, not tied to any school. Anyone with an account can post a task or sign up. No paperwork needed.</p>
+        <p>The Volunteer tab on your Dashboard shows open volunteer opportunities sorted by distance. Tasks near you appear first. It's a public community board — anyone can post or sign up.</p>
         <div className="mt-3 space-y-2">
-          <Step icon={MapPin} label="Browse tasks" description="See what's needed — each post shows a description, location, date, and how many volunteers are needed." />
+          <Step icon={MapPin} label="Browse by distance" description="Tasks are sorted nearest to you using your browser location. Each card shows the distance from you." />
           <Step icon={Phone} label="Organizer's phone" description="When you sign up, the organizer will see your request. Once they approve you, their phone number is revealed so you can coordinate." />
           <Step icon={ClipboardList} label="Post your own" description="Any registered user can post a task. Add a title, description, location, date, phone number, and how many people you need." />
         </div>
       </Section>
 
       <Section title="Organizer Dashboard (My Tasks)">
-        <p>When you post a task, you get access to the <strong>My Tasks</strong> page (linked in the sidebar or from the Volunteer tab). Here you can manage signups and log hours.</p>
+        <p>When you post a task, you get access to the <strong>My Tasks</strong> page (linked in the sidebar). Here you can manage signups and log hours.</p>
         <div className="mt-3 space-y-2">
           <Step icon={Users} label="Review signups" description="Each task expands to show everyone who signed up. Their status starts as Pending." />
           <Step icon={CheckCircle} label="Approve volunteers" description="Click Approve to accept a volunteer — this reveals your phone number to them so they can coordinate with you." />
@@ -91,18 +91,25 @@ function StudentHandbook() {
         </div>
       </Section>
 
+      <Section title="School Announcements">
+        <p>If you're linked to a school, your Dashboard shows <strong>School announcements</strong> — messages sent by your school admin. Check them regularly for updates, deadlines, and important info.</p>
+      </Section>
+
+      <Section title="Payment Notices">
+        <p>Your Dashboard also shows <strong>Payment notices</strong> from the system admin. If a payment due date is approaching (within 10 days), a countdown banner appears. Payment-related messages from the admin are displayed in the Payment notices section.</p>
+      </Section>
+
       <Section title="Joining a School">
-        <p>If your school uses VolunTrack, you can join by entering your school code in Settings. The code is provided by your school administrator.</p>
+        <p>Enter your school code in Settings to link your account. The code is provided by your school administrator.</p>
         <p className="mt-2">Once linked, you'll see your school name on your dashboard, access the school dashboard, and be able to submit reports for review.</p>
       </Section>
 
       <Section title="Profile & Settings">
-        <p>Your Profile page shows your account info, total hours, and earned badges. In Settings, you can:</p>
+        <p>Your Profile page shows your account info, total hours, earned badges, and your role. In Settings, you can:</p>
         <ul className="list-disc list-inside space-y-1 mt-2">
           <li>Change your name, email, or password</li>
           <li>Join or leave a school</li>
           <li>Set or update your volunteer hour goal</li>
-          <li>Toggle dark/light theme</li>
           <li>Manage reminders</li>
         </ul>
       </Section>
@@ -115,19 +122,19 @@ function SchoolHandbook() {
     <div className="max-w-3xl mx-auto">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-white mb-2">School Handbook</h2>
-        <p className="text-sm text-earth-400">How to manage your school dashboard, review student submissions, and post volunteer tasks.</p>
+        <p className="text-sm text-earth-400">Manage your school dashboard, review student submissions, send announcements, post volunteer tasks, and track billing.</p>
       </div>
 
       <Section title="School Dashboard Overview">
-        <p>Your school dashboard gives you access to students, PDF submissions, and volunteer tasks. Navigate between tabs to manage each area.</p>
+        <p>Your school dashboard has tabs for Reports, Students, Chat, and Volunteer. Navigate between them to manage each area. Your payment status (Paid/Unpaid) and any admin notices are shown at the top.</p>
       </Section>
 
       <Section title="Managing Students">
-        <p>The Students tab shows all students linked to your school. You can see each student's name, email, and grade. To add students, share your school code — students enter it in their Settings page to join.</p>
+        <p>The Students tab shows all students linked to your school — name, email, and grade. Share your school code with students — they enter it in their Settings page to join.</p>
       </Section>
 
       <Section title="Reviewing PDF Submissions">
-        <p>When students submit reports, they appear in the Reports tab. Each submission shows the student's name, submission date, and status.</p>
+        <p>When students submit reports, they appear in the Reports tab. Each submission shows the student's name, date, and status.</p>
         <div className="mt-3 space-y-2">
           <Step icon={FileText} label="View submission" description="Click 'View' to open the PDF and read the student's report." />
           <Step icon={CheckCircle} label="Approve or reject" description="After reviewing, mark the submission as approved or rejected. Optionally add notes." />
@@ -135,9 +142,18 @@ function SchoolHandbook() {
         </div>
       </Section>
 
+      <Section title="School Chat (Announcements)">
+        <p>The Chat tab lets you send announcements to all your students. Type a message (up to 2000 characters) and click Send. The message appears instantly on every student's Dashboard.</p>
+        <p className="mt-2">Use it for reminders, event updates, deadlines, or any school-wide communication.</p>
+      </Section>
+
       <Section title="Posting Volunteer Tasks">
-        <p>In the Volunteer tab, you can post volunteer opportunities for students. Fill in the title, description, location, date, time, and number of slots.</p>
-        <p className="mt-2">Students will see open tasks on their Dashboard and can sign up. You'll be able to track how many slots are filled.</p>
+        <p>In the Volunteer tab, you can post volunteer opportunities for students. Fill in the title, description, location, date, time, and number of slots. Your location is captured for distance-based sorting.</p>
+        <p className="mt-2">Students will see open tasks on their Dashboard sorted by proximity, and can sign up.</p>
+      </Section>
+
+      <Section title="Payment & Billing">
+        <p>Your school's payment status is shown at the top of the dashboard. The system admin may send payment notices that appear on your dashboard. If a due date is set, a countdown banner shows when payment is due within 10 days.</p>
       </Section>
     </div>
   )
@@ -148,27 +164,27 @@ function VolunteerHandbook() {
     <div className="max-w-3xl mx-auto">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-white mb-2">Volunteer Task Maker Handbook</h2>
-        <p className="text-sm text-earth-400">Post volunteer opportunities, manage signups, and log hours for your team.</p>
+        <p className="text-sm text-earth-400">Post volunteer opportunities, manage signups, log hours for your team, and track tasks by location.</p>
       </div>
 
       <Section title="Getting Started">
         <p>When you create an account, choose <strong>"I'm a Volunteer Task Maker"</strong>. You'll skip the school-related fields and go straight to posting tasks.</p>
         <div className="mt-3 space-y-2">
           <Step icon={Hand} label="Sign up as a Task Maker" description="Select 'Volunteer Task Maker' on the register page. Only name, email, and password needed." />
-          <Step icon={ClipboardList} label="Post your first task" description="Go to the Volunteer tab, click 'Post a task', and fill in the details." />
+          <Step icon={ClipboardList} label="Post your first task" description="Go to the My Tasks page and fill in the details. Your location is captured automatically for proximity sorting." />
           <Step icon={Users} label="Manage signups" description="Use the My Tasks page to review, approve, and log hours for volunteers." />
         </div>
       </Section>
 
       <Section title="Posting a Task">
-        <p>Click the Volunteer tab on your Dashboard, then <strong>Post a task</strong>. You'll need to fill in:</p>
+        <p>Go to <strong>My Tasks</strong> page and click the post form. You'll need to fill in:</p>
         <div className="mt-3 space-y-2">
           <Step icon={FileText} label="Title & description" description="Name your task and explain what volunteers will be doing." />
-          <Step icon={MapPin} label="Location" description="Where the task takes place. Must be a real location so volunteers can find you." />
+          <Step icon={MapPin} label="Location" description="Where the task takes place. Your browser location is captured for distance-based sorting." />
           <Step icon={Phone} label="Phone number" description="Required. Your phone number is kept private — only shared with volunteers you approve." />
           <Step icon={Calendar} label="Date, time & slots" description="When the task happens and how many volunteers you need." />
         </div>
-        <p className="mt-2 text-xs text-earth-500">Once posted, your task appears on the public Needed Volunteers board for everyone to see.</p>
+        <p className="mt-2 text-xs text-earth-500">Once posted, your task appears on the public board sorted by distance for nearby students.</p>
       </Section>
 
       <Section title="My Tasks Dashboard">
@@ -177,7 +193,7 @@ function VolunteerHandbook() {
           <Step icon={Users} label="Review signups" description="Each task expands to show who signed up. You'll see their name, email, and signup status (Pending)." />
           <Step icon={CheckCircle} label="Approve volunteers" description="Click Approve to accept someone. This reveals your phone number to them so they can contact you." />
           <Step icon={XCircle} label="Reject if needed" description="Click Reject to decline. The volunteer will see the rejection status on their end." />
-          <Step icon={Clock} label="Log hours" description="Once approved, click 'Log hours' next to a volunteer, enter the hours and date. The hours are saved to their account automatically — no approval needed." />
+          <Step icon={Clock} label="Log hours" description="Once approved, click 'Log hours' next to a volunteer, enter the hours and date. The hours are saved to their account automatically." />
         </div>
       </Section>
 
@@ -186,14 +202,13 @@ function VolunteerHandbook() {
       </Section>
 
       <Section title="Tracking Your Own Hours">
-        <p>You can also log your own volunteer hours on the Log Hours page — fill in the date, activity, category, and hours. View them on your Calendar and export reports from the Reports page.</p>
+        <p>You can also log your own volunteer hours on the Log Hours page. View them on your Calendar and export reports from the Reports page.</p>
       </Section>
 
       <Section title="Profile & Settings">
         <p>In Settings you can:</p>
         <ul className="list-disc list-inside space-y-1 mt-2">
           <li>Change your name, email, or password</li>
-          <li>Toggle dark/light theme</li>
           <li>Manage reminders</li>
         </ul>
       </Section>
@@ -210,7 +225,7 @@ function GuestGuide() {
       </div>
 
       <Section title="What is VolunTrack?">
-        <p>VolunTrack is a volunteer hour tracking app. It helps you log your volunteer sessions, track progress toward goals, earn achievement badges, and generate reports for school or personal records.</p>
+        <p>VolunTrack is a volunteer hour tracking app with school integration. Log sessions, track goals, earn badges, generate reports, find nearby volunteer tasks, and connect with your school.</p>
       </Section>
 
       <Section title="Key Features">
@@ -218,17 +233,17 @@ function GuestGuide() {
           <Step icon={Clock} label="Log hours" description="Record every volunteer session with date, activity, category, and hours." />
           <Step icon={Calendar} label="Calendar view" description="See your logged hours organized by month." />
           <Step icon={Trophy} label="Achievements" description="Earn badges as you hit milestones." />
-          <Step icon={FileText} label="Reports" description="Export a PDF summary of all your hours." />
-          <Step icon={School} label="School integration" description="Link to your school and submit reports for review." />
-          <Step icon={Users} label="Volunteer tasks" description="Find and sign up for volunteer opportunities." />
+          <Step icon={FileText} label="Reports" description="Export a PDF summary of all your hours and submit to your school." />
+          <Step icon={School} label="School integration" description="Link to your school, submit reports, and receive announcements." />
+          <Step icon={MapPin} label="Nearby tasks" description="Find volunteer opportunities sorted by distance from your location." />
+          <Step icon={Users} label="Volunteer tasks" description="Post opportunities, manage signups, and log hours for your team." />
         </div>
       </Section>
 
       <Section title="Getting Started">
         <p>Ready to start tracking? Here's what to do:</p>
         <div className="mt-3 space-y-2">
-          <Step icon={User} label="Create an account" description={<span>Go to the <Link to="/register" className="text-brand-400 hover:underline">Sign Up</Link> page and enter your details.</span>} />
-          <Step icon={Settings} label="Set up your profile" description="Add your grade, set a volunteer goal, and customize your experience." />
+          <Step icon={User} label="Create an account" description={<span>Go to the <Link to="/register" className="text-brand-400 hover:underline">Sign Up</Link> page — choose Student or Volunteer Task Maker.</span>} />
           <Step icon={School} label="Join your school" description="Ask your school for their code and enter it in Settings to link your account." />
           <Step icon={Clock} label="Start logging" description="Use the Log Hours page or the + button on mobile to record your first session." />
         </div>
