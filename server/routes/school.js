@@ -237,72 +237,66 @@ router.get('/info', limiter, requireDb, async (req, res) => {
   }
 })
 
-// --- Volunteer tasks ---
+// --- Public volunteer tasks (any user can post, any user can sign up) ---
 
-// Create a task (school admin)
-router.post('/tasks', limiter, requireDb, requireAuth('school'), async (req, res) => {
+// Create a public task
+router.post('/public-tasks', limiter, requireDb, requireAuth(), async (req, res) => {
   const { title, description, location, date, time, slotsTotal } = req.body
   if (!title || !description || !location || !date) return res.status(400).json({ error: 'Title, description, location, and date required.' })
 
   try {
-    const { rows: userRows } = await query('SELECT school_id FROM users WHERE id = $1', [req.auth.sub])
-    if (!userRows[0]?.school_id) return res.status(404).json({ error: 'School not found.' })
+    const { rows } = await query('SELECT name, email FROM users WHERE id = $1', [req.auth.sub])
+    if (rows.length === 0) return res.status(404).json({ error: 'User not found.' })
 
-    const id = uid('task')
+    const id = uid('ptask')
     await query(
-      `INSERT INTO volunteer_tasks (id, school_id, title, description, location, date, time, slots_total, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [id, userRows[0].school_id, title, description, location, date, time || null, Number(slotsTotal) || 1, req.auth.sub],
+      `INSERT INTO public_tasks (id, title, description, location, date, time, slots_total, created_by, creator_name, creator_email)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [id, title, description, location, date, time || null, Number(slotsTotal) || 1, req.auth.sub, rows[0].name, rows[0].email],
     )
     return res.status(201).json({ ok: true, id })
   } catch (error) {
-    console.error('create task failed:', error)
+    console.error('create public task failed:', error)
     return res.status(500).json({ error: 'Could not create task.' })
   }
 })
 
-// List tasks for the school (anyone linked can see)
-router.get('/tasks', limiter, requireDb, requireAuth(), async (req, res) => {
+// List open public tasks (anyone, no auth required for reading)
+router.get('/public-tasks', limiter, requireDb, async (_req, res) => {
   try {
-    const { rows: userRows } = await query('SELECT school_id FROM users WHERE id = $1', [req.auth.sub])
-    const schoolId = userRows[0]?.school_id
-    if (!schoolId) return res.status(404).json({ error: 'No school linked.' })
-
     const { rows } = await query(
-      `SELECT t.id, t.title, t.description, t.location, t.date, t.time, t.slots_total,
-              t.status, t.created_at,
-              (SELECT COUNT(*) FROM volunteer_signups WHERE task_id = t.id) AS slots_filled,
-              EXISTS(SELECT 1 FROM volunteer_signups WHERE task_id = t.id AND user_id = $2) AS signed_up
-       FROM volunteer_tasks t
-       WHERE t.school_id = $1
-       ORDER BY t.date DESC, t.created_at DESC`,
-      [schoolId, req.auth.sub],
+      `SELECT id, title, description, location, date, time, slots_total, status,
+              creator_name, created_at,
+              (SELECT COUNT(*) FROM public_task_signups WHERE task_id = t.id) AS slots_filled
+       FROM public_tasks t
+       WHERE status = 'open'
+       ORDER BY date ASC, created_at DESC`,
     )
     return res.json({ tasks: rows })
   } catch (error) {
-    console.error('list tasks failed:', error)
+    console.error('list public tasks failed:', error)
     return res.status(500).json({ error: 'Could not fetch tasks.' })
   }
 })
 
-// Sign up for a task (student)
-router.post('/tasks/:id/signup', limiter, requireDb, requireAuth('student'), async (req, res) => {
+// Sign up for a public task
+router.post('/public-tasks/:id/signup', limiter, requireDb, requireAuth(), async (req, res) => {
   try {
-    const { rows } = await query('SELECT * FROM volunteer_tasks WHERE id = $1', [req.params.id])
+    const { rows } = await query('SELECT * FROM public_tasks WHERE id = $1', [req.params.id])
     if (rows.length === 0) return res.status(404).json({ error: 'Task not found.' })
     if (rows[0].status === 'closed') return res.status(400).json({ error: 'Task is closed.' })
 
-    const { rows: signups } = await query('SELECT COUNT(*) AS cnt FROM volunteer_signups WHERE task_id = $1', [req.params.id])
+    const { rows: signups } = await query('SELECT COUNT(*) AS cnt FROM public_task_signups WHERE task_id = $1', [req.params.id])
     if (Number(signups[0].cnt) >= rows[0].slots_total) return res.status(400).json({ error: 'Task is full.' })
 
-    const id = uid('sig')
+    const sid = uid('psig')
     await query(
-      'INSERT INTO volunteer_signups (id, task_id, user_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
-      [id, req.params.id, req.auth.sub],
+      'INSERT INTO public_task_signups (id, task_id, user_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+      [sid, req.params.id, req.auth.sub],
     )
-    return res.json({ ok: true, id })
+    return res.json({ ok: true, id: sid })
   } catch (error) {
-    console.error('task signup failed:', error)
+    console.error('public task signup failed:', error)
     return res.status(500).json({ error: 'Could not sign up.' })
   }
 })

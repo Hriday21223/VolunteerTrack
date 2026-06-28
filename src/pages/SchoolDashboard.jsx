@@ -40,7 +40,7 @@ export default function SchoolDashboard() {
 
       const [pdfRes, taskRes] = await Promise.all([
         fetch(`${apiUrl}/school/pdfs`, { headers }),
-        fetch(`${apiUrl}/school/tasks`, { headers }),
+        fetch(`${apiUrl}/school/public-tasks`),
       ])
       if (pdfRes.ok) {
         const data = await pdfRes.json()
@@ -266,35 +266,33 @@ export default function SchoolDashboard() {
 
         {tab === 'volunteer' && (
           <div className="space-y-4">
-            {user?.role === 'school' && (
-              <Card>
-                <h3 className="font-semibold mb-3">Post a volunteer task</h3>
-                <form onSubmit={async (e) => {
-                  e.preventDefault(); setTaskBusy(true)
-                  try {
-                    const token = localStorage.getItem('voluntrack:auth_token')
-                    const res = await fetch(`${apiUrl}/school/tasks`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                      body: JSON.stringify(taskForm),
-                    })
-                    if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
-                    setTaskForm({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1 })
-                    setToastMsg('Task posted!'); setToast(true); loadData()
-                  } catch (e) { setToastMsg(e.message); setToast(true) } finally { setTaskBusy(false) }
-                }} className="space-y-3">
-                  <input className="input" placeholder="Task title" value={taskForm.title} onChange={(e) => setTaskForm({...taskForm, title: e.target.value})} required />
-                  <textarea className="input" rows={2} placeholder="Description" value={taskForm.description} onChange={(e) => setTaskForm({...taskForm, description: e.target.value})} required />
-                  <input className="input" placeholder="Location" value={taskForm.location} onChange={(e) => setTaskForm({...taskForm, location: e.target.value})} required />
-                  <div className="grid grid-cols-3 gap-2">
-                    <input type="date" className="input" value={taskForm.date} onChange={(e) => setTaskForm({...taskForm, date: e.target.value})} required />
-                    <input type="time" className="input" value={taskForm.time} onChange={(e) => setTaskForm({...taskForm, time: e.target.value})} />
-                    <input type="number" className="input" min={1} placeholder="Slots" value={taskForm.slotsTotal} onChange={(e) => setTaskForm({...taskForm, slotsTotal: e.target.value})} />
-                  </div>
-                  <button type="submit" className="btn-primary w-full" disabled={taskBusy}>{taskBusy ? 'Posting…' : 'Post task'}</button>
-                </form>
-              </Card>
-            )}
+            <Card>
+              <h3 className="font-semibold mb-3">Post a volunteer task</h3>
+              <form onSubmit={async (e) => {
+                e.preventDefault(); setTaskBusy(true)
+                try {
+                  const token = localStorage.getItem('voluntrack:auth_token')
+                  const res = await fetch(`${apiUrl}/school/public-tasks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify(taskForm),
+                  })
+                  if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
+                  setTaskForm({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1 })
+                  setToastMsg('Task posted!'); setToast(true); loadData()
+                } catch (e) { setToastMsg(e.message); setToast(true) } finally { setTaskBusy(false) }
+              }} className="space-y-3">
+                <input className="input" placeholder="Task title" value={taskForm.title} onChange={(e) => setTaskForm({...taskForm, title: e.target.value})} required />
+                <textarea className="input" rows={2} placeholder="Description" value={taskForm.description} onChange={(e) => setTaskForm({...taskForm, description: e.target.value})} required />
+                <input className="input" placeholder="Location" value={taskForm.location} onChange={(e) => setTaskForm({...taskForm, location: e.target.value})} required />
+                <div className="grid grid-cols-3 gap-2">
+                  <input type="date" className="input" value={taskForm.date} onChange={(e) => setTaskForm({...taskForm, date: e.target.value})} required />
+                  <input type="time" className="input" value={taskForm.time} onChange={(e) => setTaskForm({...taskForm, time: e.target.value})} />
+                  <input type="number" className="input" min={1} placeholder="Slots" value={taskForm.slotsTotal} onChange={(e) => setTaskForm({...taskForm, slotsTotal: e.target.value})} />
+                </div>
+                <button type="submit" className="btn-primary w-full" disabled={taskBusy}>{taskBusy ? 'Posting…' : 'Post task'}</button>
+              </form>
+            </Card>
 
             {tasks.length === 0 ? (
               <Card><p className="text-center text-earth-500 py-8">No volunteer tasks yet.</p></Card>
@@ -314,11 +312,11 @@ export default function SchoolDashboard() {
                         <span>{filled}/{total} filled</span>
                       </div>
                     </div>
-                    {user?.role === 'student' && !full && (
+                    {!full && (
                       <button onClick={async () => {
                         try {
                           const token = localStorage.getItem('voluntrack:auth_token')
-                          const res = await fetch(`${apiUrl}/school/tasks/${t.id}/signup`, {
+                          const res = await fetch(`${apiUrl}/school/public-tasks/${t.id}/signup`, {
                             method: 'POST',
                             headers: { Authorization: `Bearer ${token}` },
                           })
