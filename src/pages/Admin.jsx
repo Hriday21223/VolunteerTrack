@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, Lock, XCircle, Sparkles, School, Users, FileText } from 'lucide-react'
+import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, FileText } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import { useAuth } from '@/hooks/useAuth.jsx'
@@ -8,7 +8,6 @@ import { useAuth } from '@/hooks/useAuth.jsx'
 const apiUrl = import.meta.env.VITE_API_URL || '/api'
 
 const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
-const ADMIN_PASSWORD = '122410'
 
 function generateDraft(contact) {
   const subject = contact.subject || 'General question'
@@ -53,15 +52,11 @@ function generateDraft(contact) {
 export default function Admin() {
   const nav = useNavigate()
   const { user } = useAuth()
-  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('voluntrack:admin-unlocked') === '1')
-  const [password, setPassword] = useState('')
-  const [err, setErr] = useState('')
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [drafts, setDrafts] = useState({})
   const [tab, setTab] = useState('inbox')
   const [schools, setSchools] = useState([])
   const [loadingSchools, setLoadingSchools] = useState(false)
-  const [granting, setGranting] = useState(false)
   const [submissions, setSubmissions] = useState([])
   const [loadingSubs, setLoadingSubs] = useState(false)
 
@@ -72,22 +67,6 @@ export default function Admin() {
       setIsAuthorized(false)
     }
   }, [user?.email])
-
-  const grantAdmin = async () => {
-    setGranting(true)
-    try {
-      const token = localStorage.getItem('voluntrack:auth_token')
-      if (!token) return
-      const res = await fetch(`${apiUrl}/auth/grant-admin`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) { alert('Failed to grant admin. Are you logged in?'); return }
-      const data = await res.json()
-      localStorage.setItem('voluntrack:auth_token', data.token)
-      window.location.reload()
-    } catch { alert('Error contacting server.') } finally { setGranting(false) }
-  }
 
   const loadSchools = useCallback(async () => {
     setLoadingSchools(true)
@@ -140,19 +119,8 @@ export default function Admin() {
   }, [])
 
   useEffect(() => {
-    if (unlocked) loadSchools()
-  }, [unlocked, loadSchools])
-
-  const unlock = (e) => {
-    e.preventDefault()
-    if (password === ADMIN_PASSWORD) {
-      setUnlocked(true)
-      sessionStorage.setItem('voluntrack:admin-unlocked', '1')
-      setErr('')
-    } else {
-      setErr('Incorrect password')
-    }
-  }
+    loadSchools()
+  }, [loadSchools])
 
   // Show access denied if user is not authorized
   if (!isAuthorized) {
@@ -176,35 +144,6 @@ export default function Admin() {
     )
   }
 
-  if (!unlocked) {
-    return (
-      <AppLayout title="Admin" subtitle="Restricted access">
-        <Card padded={false} className="p-6 max-w-sm mx-auto">
-          <div className="text-center mb-4">
-            <div className="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/30 grid place-items-center text-brand-700 mx-auto mb-2">
-              <Lock className="w-5 h-5" />
-            </div>
-            <h2 className="font-semibold text-earth-900 dark:text-earth-100">Enter admin password</h2>
-            <p className="text-xs text-earth-500 mt-1">This area is for your team only.</p>
-          </div>
-          <form onSubmit={unlock} className="space-y-3">
-            <input
-              type="password"
-              className="input text-center tracking-widest"
-              placeholder="Enter password"
-              value={password}
-              onChange={(e) => { setPassword(e.target.value); setErr('') }}
-              autoFocus
-            />
-            {err && <div className="text-sm text-red-600 text-center">{err}</div>}
-            <button type="submit" className="btn-primary w-full">Unlock</button>
-            <button type="button" onClick={() => nav(-1)} className="btn-ghost w-full">Back</button>
-          </form>
-
-        </Card>
-      </AppLayout>
-    )
-  }
 
   const toggleDraft = (idx) => {
     setDrafts((prev) => {
@@ -230,12 +169,6 @@ export default function Admin() {
     window.location.reload()
   }
 
-  const logout = () => {
-    sessionStorage.removeItem('voluntrack:admin-unlocked')
-    setUnlocked(false)
-    setPassword('')
-  }
-
   return (
     <AppLayout
       title={tab === 'inbox' ? 'Contact inbox' : tab === 'schools' ? 'Manage schools' : 'Submissions'}
@@ -256,12 +189,7 @@ export default function Admin() {
               <School className="w-3.5 h-3.5 mr-1" /> Add school
             </Link>
           )}
-          {user?.role !== 'admin' ? (
-            <button onClick={grantAdmin} disabled={granting} className="btn-ghost text-yellow-500">
-              {granting ? 'Granting…' : 'Grant admin'}
-            </button>
-          ) : null}
-          <button onClick={logout} className="btn-ghost">Lock</button>
+
         </div>
       }
     >
