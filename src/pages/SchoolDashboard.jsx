@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Upload, CheckCircle, XCircle, Clock, FileText, Download, Search, Users, MapPin, Calendar, MessageSquare } from 'lucide-react'
+import { ArrowLeft, Upload, CheckCircle, XCircle, Clock, FileText, Download, Search, Users, MapPin, Calendar, MessageSquare, Bell } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -30,6 +30,7 @@ export default function SchoolDashboard() {
   const [messageText, setMessageText] = useState('')
   const [sendingMsg, setSendingMsg] = useState(false)
   const [schoolInfo, setSchoolInfo] = useState(null)
+  const [adminNotifs, setAdminNotifs] = useState([])
 
   useEffect(() => {
     if (!user) return
@@ -75,6 +76,8 @@ export default function SchoolDashboard() {
         fetch(`${apiUrl}/school/info?id=${user.schoolId}`, { headers }),
       ])
       if (infoRes.ok) { const d = await infoRes.json(); setSchoolInfo(d.school) }
+      const notifRes = await fetch(`${apiUrl}/school/admin/notifications`, { headers })
+      if (notifRes.ok) { const d = await notifRes.json(); setAdminNotifs(d.notifications || []) }
       if (pdfRes.ok) {
         const data = await pdfRes.json()
         setPdfs(data.pdfs || [])
@@ -239,6 +242,31 @@ export default function SchoolDashboard() {
       }
     >
       <div className="max-w-4xl mx-auto space-y-4">
+        {adminNotifs.length > 0 && (
+          <Card>
+            <h3 className="font-semibold text-sm flex items-center gap-2 mb-3"><Bell className="w-4 h-4 text-brand-600" /> Payment notices</h3>
+            <div className="space-y-2">
+              {adminNotifs.map((n) => (
+                <div key={n.id} className="text-sm p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                  <p>{n.message}</p>
+                  <p className="text-xs text-earth-500 mt-1">{new Date(n.created_at).toLocaleDateString()}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+        {schoolInfo?.paymentDueDate && (() => {
+          const daysLeft = Math.ceil((new Date(schoolInfo.paymentDueDate) - new Date()) / (1000 * 60 * 60 * 24))
+          if (daysLeft <= 10 && daysLeft >= 0) {
+            return (
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-sm">
+                <Calendar className="w-4 h-4 inline mr-1" />
+                Payment due in <strong>{daysLeft} day{daysLeft === 1 ? '' : 's'}</strong>
+              </div>
+            )
+          }
+          return null
+        })()}
         {tab === 'chat' && user?.role === 'school' && (
           <div className="space-y-4">
             <Card>

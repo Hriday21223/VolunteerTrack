@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, FileText, CreditCard } from 'lucide-react'
+import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, FileText, CreditCard, Download, Calendar, Bell } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -64,6 +64,10 @@ export default function Admin() {
   const [payNotes, setPayNotes] = useState('')
   const [toast, setToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
+  const [dueDate, setDueDate] = useState('')
+  const [notifyMsg, setNotifyMsg] = useState('')
+  const [showDueModal, setShowDueModal] = useState(false)
+  const [showNotifyModal, setShowNotifyModal] = useState(false)
 
   useEffect(() => {
     if (user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
@@ -145,6 +149,51 @@ export default function Admin() {
     } catch {}
   }
 
+  const exportCsv = () => {
+    const header = 'Name,Code,Contact Email,Payment Status,Payment Notes,Students,Joined\n'
+    const rows = schools.map((s) =>
+      `"${s.name}","${s.pin}","${s.contact_email || ''}","${s.payment_status}","${s.payment_notes || ''}",${s.student_count},"${new Date(s.created_at).toLocaleDateString()}"`
+    ).join('\n')
+    const blob = new Blob([header + rows], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'schools.csv'; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const setGlobalDueDate = async () => {
+    if (!dueDate) return
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const res = await fetch(`${apiUrl}/school/admin/payment-due-date`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ dueDate }),
+      })
+      if (!res.ok) throw new Error('Failed')
+      setShowDueModal(false)
+      loadSchools()
+      setToastMessage('Payment due date updated for all schools')
+      setToast(true)
+    } catch { setToastMessage('Failed to set due date'); setToast(true) }
+  }
+
+  const sendNotify = async () => {
+    if (!notifyMsg.trim()) return
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const res = await fetch(`${apiUrl}/school/admin/notify-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ message: notifyMsg.trim() }),
+      })
+      if (!res.ok) throw new Error('Failed')
+      setShowNotifyModal(false); setNotifyMsg('')
+      setToastMessage('Payment notification sent to all schools')
+      setToast(true)
+    } catch { setToastMessage('Failed to send notification'); setToast(true) }
+  }
+
   const contacts = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem('voluntrack:contacts') || '[]').sort((a, b) => b.sentAt - a.sentAt)
@@ -217,12 +266,6 @@ export default function Admin() {
           <button onClick={() => { setTab('submissions'); loadSubmissions() }} className={`btn-sm ${tab === 'submissions' ? 'btn-primary' : 'btn-ghost'}`}>
             <FileText className="w-3.5 h-3.5 mr-1" /> Submissions
           </button>
-          {tab === 'schools' && (
-            <Link to="/school/register" className="btn-sm btn-primary">
-              <School className="w-3.5 h-3.5 mr-1" /> Add school
-            </Link>
-          )}
-
         </div>
       }
     >
@@ -279,6 +322,35 @@ export default function Admin() {
           </Card>
         ) : (
           <div className="space-y-3">
+            <div className="flex flex-wrap gap-2 mb-4">
+              {(() => {
+                const dueRows = schools.filter((s) => s.payment_due_date)
+                if (dueRows.length > 0) {
+                  const daysLeft = Math.ceil((new Date(dueRows[0].payment_due_date) - new Date()) / (1000 * 60 * 60 * 24))
+                  if (daysLeft <= 10 && daysLeft >= 0) {
+                    return (
+                      <div className="w-full p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-sm mb-2">
+                        <Calendar className="w-4 h-4 inline mr-1" />
+                        Payment due in <strong>{daysLeft} day{daysLeft === 1 ? '' : 's'}</strong>
+                      </div>
+                    )
+                  }
+                }
+                return null
+              })()}
+              <button onClick={exportCsv} className="btn-sm btn-ghost">
+                <Download className="w-3.5 h-3.5 mr-1" /> Export CSV
+              </button>
+              <button onClick={() => setShowDueModal(true)} className="btn-sm btn-ghost">
+                <Calendar className="w-3.5 h-3.5 mr-1" /> Set due date
+              </button>
+              <button onClick={() => setShowNotifyModal(true)} className="btn-sm btn-ghost">
+                <Bell className="w-3.5 h-3.5 mr-1" /> Notify all schools
+              </button>
+              <Link to="/school/register" className="btn-sm btn-primary ml-auto">
+                <School className="w-3.5 h-3.5 mr-1" /> Add school
+              </Link>
+            </div>
             {schools.map((s) => (
               <Card key={s.id} padded={false} className="p-4">
                 <div className="flex items-center justify-between gap-4">
@@ -386,6 +458,42 @@ export default function Admin() {
               <div className="flex gap-2">
                 <button onClick={() => setPayModal(null)} className="btn-ghost flex-1">Cancel</button>
                 <button onClick={() => markPaid(payModal)} className="btn-primary flex-1">Mark as paid</button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {showDueModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowDueModal(false)}>
+          <Card className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-semibold mb-2">Set payment due date</h3>
+            <p className="text-sm text-earth-400 mb-4">This date applies to all schools.</p>
+            <div className="space-y-3">
+              <input type="date" className="input" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              <div className="flex gap-2">
+                <button onClick={() => setShowDueModal(false)} className="btn-ghost flex-1">Cancel</button>
+                <button onClick={setGlobalDueDate} className="btn-primary flex-1" disabled={!dueDate}>Save</button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {showNotifyModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowNotifyModal(false)}>
+          <Card className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-semibold mb-2">Send payment notice</h3>
+            <p className="text-sm text-earth-400 mb-4">A notification will appear on every school's dashboard.</p>
+            <div className="space-y-3">
+              <textarea
+                className="input" rows={3}
+                placeholder="e.g. Annual subscription payment is due Jun 30"
+                value={notifyMsg} onChange={(e) => setNotifyMsg(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <button onClick={() => setShowNotifyModal(false)} className="btn-ghost flex-1">Cancel</button>
+                <button onClick={sendNotify} className="btn-primary flex-1" disabled={!notifyMsg.trim()}>Send</button>
               </div>
             </div>
           </Card>

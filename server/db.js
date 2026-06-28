@@ -132,6 +132,12 @@ CREATE TABLE IF NOT EXISTS school_messages (
 );
 
 CREATE INDEX IF NOT EXISTS idx_school_messages_school ON school_messages(school_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS admin_notifications (
+  id          TEXT PRIMARY KEY,
+  message     TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 `
 
 // Idempotent: safe to run on every boot. Creates tables if missing.
@@ -146,5 +152,6 @@ export async function initSchema() {
   try { await query(`ALTER TABLE schools ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'unpaid'`) } catch {}
   try { await query(`ALTER TABLE schools ADD COLUMN IF NOT EXISTS payment_notes TEXT`) } catch {}
   try { await query(`ALTER TABLE schools ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ`) } catch {}
+  try { await query(`ALTER TABLE schools ADD COLUMN IF NOT EXISTS payment_due_date DATE`) } catch {}
   return true
 }

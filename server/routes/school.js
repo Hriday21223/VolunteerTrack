@@ -224,14 +224,14 @@ router.get('/info', limiter, requireDb, async (req, res) => {
   try {
     let rows
     if (pin) {
-      const r = await query('SELECT id, name, pin, payment_status, payment_notes, paid_at FROM schools WHERE pin = $1', [pin])
+      const r = await query('SELECT id, name, pin, payment_status, payment_notes, paid_at, payment_due_date FROM schools WHERE pin = $1', [pin])
       rows = r.rows
     } else {
-      const r = await query('SELECT id, name, pin, payment_status, payment_notes, paid_at FROM schools WHERE id = $1', [id])
+      const r = await query('SELECT id, name, pin, payment_status, payment_notes, paid_at, payment_due_date FROM schools WHERE id = $1', [id])
       rows = r.rows
     }
     if (rows.length === 0) return res.status(404).json({ error: 'No school found.' })
-    return res.json({ school: { id: rows[0].id, name: rows[0].name, pin: rows[0].pin, paymentStatus: rows[0].payment_status, paymentNotes: rows[0].payment_notes, paidAt: rows[0].paid_at } })
+    return res.json({ school: { id: rows[0].id, name: rows[0].name, pin: rows[0].pin, paymentStatus: rows[0].payment_status, paymentNotes: rows[0].payment_notes, paidAt: rows[0].paid_at, paymentDueDate: rows[0].payment_due_date } })
   } catch (error) {
     return res.status(500).json({ error: 'Could not fetch school.' })
   }
@@ -447,7 +447,7 @@ router.get('/public-tasks/:id/logs', limiter, requireDb, requireAuth(), async (r
 router.get('/admin/list', limiter, requireDb, requireAuth('admin'), async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT s.id, s.name, s.pin, s.contact_email, s.payment_status, s.payment_notes, s.paid_at, s.created_at,
+      `SELECT s.id, s.name, s.pin, s.contact_email, s.payment_status, s.payment_notes, s.paid_at, s.payment_due_date, s.created_at,
         (SELECT COUNT(*) FROM users WHERE school_id = s.id AND role = 'student') AS student_count
        FROM schools s ORDER BY s.created_at DESC`,
     )
@@ -510,6 +510,51 @@ router.delete('/admin/:id', limiter, requireDb, requireAuth('admin'), async (req
   } catch (error) {
     console.error('admin delete school failed:', error)
     return res.status(500).json({ error: 'Could not delete school.' })
+  }
+})
+
+// Set global payment due date (admin only)
+router.patch('/admin/payment-due-date', limiter, requireDb, requireAuth('admin'), async (req, res) => {
+  const { dueDate } = req.body
+  if (!dueDate) return res.status(400).json({ error: 'dueDate is required.' })
+  try {
+    await query('UPDATE schools SET payment_due_date = $1', [dueDate])
+    return res.json({ ok: true })
+  } catch (error) {
+    console.error('set payment due date failed:', error)
+    return res.status(500).json({ error: 'Could not set due date.' })
+  }
+})
+
+// Send payment notification to all schools (admin only)
+router.post('/admin/notify-payment', limiter, requireDb, requireAuth('admin'), async (req, res) => {
+  const { message } = req.body
+  if (!message || typeof message !== 'string' || message.trim().length === 0) {
+    return res.status(400).json({ error: 'Message is required.' })
+  }
+  try {
+    const id = uid('anot')
+    await query(
+      'INSERT INTO admin_notifications (id, message) VALUES ($1, $2)',
+      [id, message.trim()],
+    )
+    return res.status(201).json({ ok: true, id })
+  } catch (error) {
+    console.error('notify payment failed:', error)
+    return res.status(500).json({ error: 'Could not send notification.' })
+  }
+})
+
+// Get all admin notifications (any auth user)
+router.get('/admin/notifications', limiter, requireDb, requireAuth(), async (req, res) => {
+  try {
+    const { rows } = await query(
+      'SELECT id, message, created_at FROM admin_notifications ORDER BY created_at DESC LIMIT 50',
+    )
+    return res.json({ notifications: rows })
+  } catch (error) {
+    console.error('get notifications failed:', error)
+    return res.status(500).json({ error: 'Could not fetch notifications.' })
   }
 })
 

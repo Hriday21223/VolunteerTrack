@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X, School, Users, Hand, FileText, MessageSquare } from 'lucide-react'
+import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X, School, Users, Hand, FileText, MessageSquare, Bell, Calendar } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { useLocalStorage } from '@/hooks/useLocalStorage.js'
@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [dashTab, setDashTab] = useState('home')
   const [userLoc, setUserLoc] = useState(null)
   const [schoolMessages, setSchoolMessages] = useState([])
+  const [adminNotifs, setAdminNotifs] = useState([])
 
   const total = useMemo(() => logs.reduce((s, l) => s + (Number(l.hours) || 0), 0), [logs])
 
@@ -72,6 +73,8 @@ export default function Dashboard() {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (msgRes.ok) { const d = await msgRes.json(); setSchoolMessages(d.messages || []) }
+        const notifRes = await fetch(`${apiUrl}/school/admin/notifications`, { headers })
+        if (notifRes.ok) { const d = await notifRes.json(); setAdminNotifs(d.notifications || []) }
       } catch {}
     })()
   }, [user?.schoolId])
@@ -259,6 +262,40 @@ export default function Dashboard() {
               <Link to="/school/dashboard" className="btn-secondary ml-auto text-sm">Dashboard</Link>
             </div>
           </Card>
+
+          {schoolInfo?.paymentDueDate && (() => {
+            const daysLeft = Math.ceil((new Date(schoolInfo.paymentDueDate) - new Date()) / (1000 * 60 * 60 * 24))
+            if (daysLeft <= 10 && daysLeft >= 0) {
+              return (
+                <Card className="mb-5">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-amber-500" />
+                    <p className="text-sm text-amber-600 dark:text-amber-400">
+                      Payment due in <strong>{daysLeft} day{daysLeft === 1 ? '' : 's'}</strong>
+                    </p>
+                  </div>
+                </Card>
+              )
+            }
+            return null
+          })()}
+
+          {adminNotifs.length > 0 && (
+            <Card className="mb-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Bell className="w-4 h-4 text-brand-600" />
+                <h3 className="font-display font-semibold">Payment notices</h3>
+              </div>
+              <div className="space-y-2">
+                {adminNotifs.map((n) => (
+                  <div key={n.id} className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3">
+                    <p className="text-sm">{n.message}</p>
+                    <p className="text-xs text-earth-500 mt-1">{new Date(n.created_at).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
 
           {schoolMessages.length > 0 && (
             <Card className="mb-5">
