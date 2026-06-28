@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Upload, CheckCircle, XCircle, Clock, FileText, Download, Search, Users, MapPin, Calendar, MessageSquare, CreditCard } from 'lucide-react'
+import { ArrowLeft, Upload, CheckCircle, XCircle, Clock, FileText, Download, Search, Users, MapPin, Calendar, MessageSquare } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -29,24 +29,11 @@ export default function SchoolDashboard() {
   const [messages, setMessages] = useState([])
   const [messageText, setMessageText] = useState('')
   const [sendingMsg, setSendingMsg] = useState(false)
-  const [subStatus, setSubStatus] = useState(null)
-  const [checkingOut, setCheckingOut] = useState(false)
 
   useEffect(() => {
     if (!user) return
     loadData()
-    if (user?.role === 'school') checkSubscription()
   }, [user])
-
-  const checkSubscription = async () => {
-    try {
-      const token = localStorage.getItem('voluntrack:auth_token')
-      const res = await fetch(`${apiUrl}/school/subscription-status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (res.ok) { const d = await res.json(); setSubStatus(d) }
-    } catch {}
-  }
 
   const loadMessages = async () => {
     try {
@@ -73,20 +60,6 @@ export default function SchoolDashboard() {
       setMessageText('')
       loadMessages()
     } catch (e) { setToastMsg(e.message); setToast(true) } finally { setSendingMsg(false) }
-  }
-
-  const handleCheckout = async () => {
-    setCheckingOut(true)
-    try {
-      const token = localStorage.getItem('voluntrack:auth_token')
-      const res = await fetch(`${apiUrl}/school/create-checkout-session`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
-      const d = await res.json()
-      if (d.url) window.location.href = d.url
-    } catch (e) { setToastMsg(e.message); setToast(true) } finally { setCheckingOut(false) }
   }
 
   const loadData = async () => {
@@ -250,20 +223,6 @@ export default function SchoolDashboard() {
       }
     >
       <div className="max-w-4xl mx-auto space-y-4">
-        {user?.role === 'school' && subStatus && !subStatus.active && (
-          <Card className="border-amber-500/30 bg-amber-950/10">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h3 className="font-semibold text-amber-300">School Plan Required</h3>
-                <p className="text-sm text-amber-400/80 mt-1">$200/year — unlocks student management, PDF reviews, chat, and more.</p>
-              </div>
-              <button onClick={handleCheckout} disabled={checkingOut} className="btn-primary shrink-0">
-                <CreditCard className="w-4 h-4 mr-2" /> {checkingOut ? 'Redirecting…' : 'Subscribe'}
-              </button>
-            </div>
-          </Card>
-        )}
-
         {tab === 'chat' && user?.role === 'school' && (
           <div className="space-y-4">
             <Card>
