@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS schools (
 
 CREATE TABLE IF NOT EXISTS users (
   id            TEXT PRIMARY KEY,
-  role          TEXT NOT NULL CHECK (role IN ('admin','school','student')),
+  role          TEXT NOT NULL CHECK (role IN ('admin','school','student','volunteer')),
   name          TEXT NOT NULL,
   email         TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,

@@ -86,13 +86,12 @@ function requireDb(_req, res, next) {
   next()
 }
 
-// Public self-registration always creates a student account. School and admin
-// accounts are provisioned by an admin (later phases).
 router.post('/register', authLimiter, requireDb, async (req, res) => {
   const name = validateName(req.body.name || '')
   const email = validateEmail(req.body.email || '')
   const password = validatePassword(req.body.password || '')
   const grade = validateGrade(req.body.grade || '')
+  const role = req.body.role === 'volunteer' ? 'volunteer' : 'student'
 
   if (!name) {
     return res.status(400).json({ error: 'Name is required and must be valid.' })
@@ -113,9 +112,9 @@ router.post('/register', authLimiter, requireDb, async (req, res) => {
     const id = uid('usr')
     const { rows } = await query(
       `INSERT INTO users (id, role, name, email, password_hash, grade)
-       VALUES ($1, 'student', $2, $3, $4, $5)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [id, name, email, hash, grade || null],
+      [id, role, name, email, hash, grade || null],
     )
     const user = publicUser(rows[0])
     return res.status(201).json({ token: signToken(user), user })
