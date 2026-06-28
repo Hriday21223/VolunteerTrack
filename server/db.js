@@ -135,6 +135,7 @@ CREATE INDEX IF NOT EXISTS idx_school_messages_school ON school_messages(school_
 
 CREATE TABLE IF NOT EXISTS admin_notifications (
   id          TEXT PRIMARY KEY,
+  school_id   TEXT REFERENCES schools(id) ON DELETE CASCADE,
   message     TEXT NOT NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -153,5 +154,6 @@ export async function initSchema() {
   try { await query(`ALTER TABLE schools ADD COLUMN IF NOT EXISTS payment_notes TEXT`) } catch {}
   try { await query(`ALTER TABLE schools ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ`) } catch {}
   try { await query(`ALTER TABLE schools ADD COLUMN IF NOT EXISTS payment_due_date DATE`) } catch {}
+  try { await query(`ALTER TABLE admin_notifications ADD COLUMN IF NOT EXISTS school_id TEXT REFERENCES schools(id) ON DELETE CASCADE`) } catch {}
   return true
 }

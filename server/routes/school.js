@@ -545,12 +545,43 @@ router.post('/admin/notify-payment', limiter, requireDb, requireAuth('admin'), a
   }
 })
 
-// Get all admin notifications (any auth user)
+// Send notification to a specific school (admin only)
+router.post('/admin/notify-school/:schoolId', limiter, requireDb, requireAuth('admin'), async (req, res) => {
+  const { message } = req.body
+  if (!message || typeof message !== 'string' || message.trim().length === 0) {
+    return res.status(400).json({ error: 'Message is required.' })
+  }
+  try {
+    const id = uid('anot')
+    await query(
+      'INSERT INTO admin_notifications (id, school_id, message) VALUES ($1, $2, $3)',
+      [id, req.params.schoolId, message.trim()],
+    )
+    return res.status(201).json({ ok: true, id })
+  } catch (error) {
+    console.error('notify school failed:', error)
+    return res.status(500).json({ error: 'Could not send notification.' })
+  }
+})
+
+// Get admin notifications (any auth user). If schoolId query param provided,
+// returns notifications for that school + broadcast ones (school_id IS NULL).
 router.get('/admin/notifications', limiter, requireDb, requireAuth(), async (req, res) => {
   try {
-    const { rows } = await query(
-      'SELECT id, message, created_at FROM admin_notifications ORDER BY created_at DESC LIMIT 50',
-    )
+    const { schoolId } = req.query
+    let rows
+    if (schoolId) {
+      const r = await query(
+        'SELECT id, message, created_at FROM admin_notifications WHERE school_id IS NULL OR school_id = $1 ORDER BY created_at DESC LIMIT 50',
+        [schoolId],
+      )
+      rows = r.rows
+    } else {
+      const r = await query(
+        'SELECT id, message, created_at FROM admin_notifications ORDER BY created_at DESC LIMIT 50',
+      )
+      rows = r.rows
+    }
     return res.json({ notifications: rows })
   } catch (error) {
     console.error('get notifications failed:', error)

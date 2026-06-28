@@ -76,7 +76,7 @@ export default function SchoolDashboard() {
         fetch(`${apiUrl}/school/info?id=${user.schoolId}`, { headers }),
       ])
       if (infoRes.ok) { const d = await infoRes.json(); setSchoolInfo(d.school) }
-      const notifRes = await fetch(`${apiUrl}/school/admin/notifications`, { headers })
+      const notifRes = await fetch(`${apiUrl}/school/admin/notifications?schoolId=${user.schoolId}`, { headers })
       if (notifRes.ok) { const d = await notifRes.json(); setAdminNotifs(d.notifications || []) }
       if (pdfRes.ok) {
         const data = await pdfRes.json()

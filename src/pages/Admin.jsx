@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, FileText, CreditCard, Download, Calendar, Bell } from 'lucide-react'
+import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, CreditCard, Download, Calendar, Bell } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -66,6 +66,7 @@ export default function Admin() {
   const [notifyMsg, setNotifyMsg] = useState('')
   const [showDueModal, setShowDueModal] = useState(false)
   const [showNotifyModal, setShowNotifyModal] = useState(false)
+  const [notifySchoolId, setNotifySchoolId] = useState(null) // null = all schools, string = specific school
 
   useEffect(() => {
     if (user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
@@ -166,14 +167,17 @@ export default function Admin() {
     if (!notifyMsg.trim()) return
     try {
       const token = localStorage.getItem('voluntrack:auth_token')
-      const res = await fetch(`${apiUrl}/school/admin/notify-payment`, {
+      const url = notifySchoolId
+        ? `${apiUrl}/school/admin/notify-school/${notifySchoolId}`
+        : `${apiUrl}/school/admin/notify-payment`
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ message: notifyMsg.trim() }),
       })
       if (!res.ok) throw new Error('Failed')
-      setShowNotifyModal(false); setNotifyMsg('')
-      setToastMessage('Payment notification sent to all schools')
+      setShowNotifyModal(false); setNotifyMsg(''); setNotifySchoolId(null)
+      setToastMessage('Notification sent')
       setToast(true)
     } catch { setToastMessage('Failed to send notification'); setToast(true) }
   }
@@ -294,7 +298,7 @@ export default function Admin() {
               <button onClick={() => setShowDueModal(true)} className="btn-sm btn-ghost">
                 <Calendar className="w-3.5 h-3.5 mr-1" /> Set due date
               </button>
-              <button onClick={() => setShowNotifyModal(true)} className="btn-sm btn-ghost">
+              <button onClick={() => { setNotifySchoolId(null); setShowNotifyModal(true) }} className="btn-sm btn-ghost">
                 <Bell className="w-3.5 h-3.5 mr-1" /> Notify all schools
               </button>
               <Link to="/school/register" className="btn-sm btn-primary ml-auto">
@@ -341,6 +345,9 @@ export default function Admin() {
                         <CreditCard className="w-4 h-4" />
                       </button>
                     )}
+                    <button onClick={() => { setNotifySchoolId(s.id); setShowNotifyModal(true) }} className="text-brand-400 hover:text-brand-300 p-2" title="Notify this school">
+                      <Bell className="w-4 h-4" />
+                    </button>
                     <button onClick={() => deleteSchool(s.id, s.name)} className="text-red-400 hover:text-red-300 p-2" title="Delete school">
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -431,10 +438,12 @@ export default function Admin() {
       )}
 
       {showNotifyModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowNotifyModal(false)}>
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => { setShowNotifyModal(false); setNotifySchoolId(null) }}>
           <Card className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-semibold mb-2">Send payment notice</h3>
-            <p className="text-sm text-earth-400 mb-4">A notification will appear on every school's dashboard.</p>
+            <h3 className="font-semibold mb-2">
+              {notifySchoolId ? 'Notify this school' : 'Notify all schools'}
+            </h3>
+            <p className="text-sm text-earth-400 mb-4">The notification will appear on the school dashboard.</p>
             <div className="space-y-3">
               <textarea
                 className="input" rows={3}
