@@ -14,7 +14,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "predeploy": "npm run build",
+    "predeploy": "npm run build && cp dist/index.html dist/404.html",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
