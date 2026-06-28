@@ -58,8 +58,6 @@ export default function Admin() {
   const [tab, setTab] = useState('inbox')
   const [schools, setSchools] = useState([])
   const [loadingSchools, setLoadingSchools] = useState(false)
-  const [submissions, setSubmissions] = useState([])
-  const [loadingSubs, setLoadingSubs] = useState(false)
   const [payModal, setPayModal] = useState(null) // school id
   const [payNotes, setPayNotes] = useState('')
   const [toast, setToast] = useState(false)
@@ -92,20 +90,6 @@ export default function Admin() {
     } catch {} finally {
       setLoadingSchools(false)
     }
-  }, [])
-
-  const loadSubmissions = useCallback(async () => {
-    setLoadingSubs(true)
-    try {
-      const token = localStorage.getItem('voluntrack:auth_token')
-      if (!token) return
-      const res = await fetch(`${apiUrl}/school/admin/submissions`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) return
-      const data = await res.json()
-      setSubmissions(data.submissions || [])
-    } catch {} finally { setLoadingSubs(false) }
   }, [])
 
   const markPaid = async (id) => {
@@ -253,8 +237,8 @@ export default function Admin() {
 
   return (
     <AppLayout
-      title={tab === 'inbox' ? 'Contact inbox' : tab === 'schools' ? 'Manage schools' : 'Submissions'}
-      subtitle={tab === 'inbox' ? `${contacts.length} message${contacts.length === 1 ? '' : 's'} received` : tab === 'schools' ? `${schools.length} school${schools.length === 1 ? '' : 's'} registered` : `${submissions.length} submission${submissions.length === 1 ? '' : 's'}`}
+      title={tab === 'inbox' ? 'Contact inbox' : 'Manage schools'}
+      subtitle={tab === 'inbox' ? `${contacts.length} message${contacts.length === 1 ? '' : 's'} received` : `${schools.length} school${schools.length === 1 ? '' : 's'} registered`}
       action={
         <div className="flex gap-2">
           <button onClick={() => setTab('inbox')} className={`btn-sm ${tab === 'inbox' ? 'btn-primary' : 'btn-ghost'}`}>
@@ -262,9 +246,6 @@ export default function Admin() {
           </button>
           <button onClick={() => { setTab('schools'); loadSchools() }} className={`btn-sm ${tab === 'schools' ? 'btn-primary' : 'btn-ghost'}`}>
             <School className="w-3.5 h-3.5 mr-1" /> Schools
-          </button>
-          <button onClick={() => { setTab('submissions'); loadSubmissions() }} className={`btn-sm ${tab === 'submissions' ? 'btn-primary' : 'btn-ghost'}`}>
-            <FileText className="w-3.5 h-3.5 mr-1" /> Submissions
           </button>
         </div>
       }
@@ -277,38 +258,7 @@ export default function Admin() {
         </div>
       </Card>
 
-      {tab === 'submissions' ? (
-        loadingSubs ? (
-          <Card><p className="text-center text-earth-400 py-8">Loading submissions…</p></Card>
-        ) : submissions.length === 0 ? (
-          <Card>
-            <div className="text-center py-12 text-earth-500">
-              <FileText className="w-10 h-10 mx-auto mb-3 opacity-50" />
-              <p className="font-medium text-earth-900 dark:text-earth-100">No submissions yet</p>
-              <p className="text-sm mt-1">Student report submissions will appear here.</p>
-            </div>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {submissions.map((s) => (
-              <Card key={s.id} padded={false} className="p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{s.filename}</p>
-                    <p className="text-xs text-earth-400">
-                      {s.user_name} ({s.user_email}) · {s.school_name} ({s.school_pin})
-                    </p>
-                    <p className="text-xs text-earth-500 mt-0.5">
-                      <span className={`capitalize ${s.status === 'approved' ? 'text-emerald-400' : s.status === 'rejected' ? 'text-red-400' : 'text-amber-400'}`}>{s.status}</span>
-                      {' · '}{new Date(s.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )
-      ) : tab === 'schools' ? (
+      {tab === 'schools' ? (
         loadingSchools ? (
           <Card><p className="text-center text-earth-400 py-8">Loading schools…</p></Card>
         ) : schools.length === 0 ? (
