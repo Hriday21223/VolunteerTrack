@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Target, Trophy, FileText, Calendar, Sparkles, ShieldCheck, Users, Instagram, Clock, ChevronDown, Star, CheckCircle, BarChart3, BookOpen, Building2 } from 'lucide-react'
+import { ArrowRight, Target, Trophy, FileText, Calendar, Sparkles, ShieldCheck, Users, Instagram, Clock, ChevronDown, Star, CheckCircle, BarChart3, Building2, Heart, TreePine, BookOpen as Book, Stethoscope, PawPrint, Palette, Dumbbell, Church, Megaphone, Ambulance, Globe } from 'lucide-react'
 import Card from '@/components/Card.jsx'
 
 const FEATURES = [
@@ -17,11 +17,17 @@ const STEPS = [
   { icon: Trophy, title: 'Earn & export', body: 'Unlock badges and export polished reports for school or scholarships.' },
 ]
 
-const STATS = [
-  { value: '12,400+', label: 'Hours logged' },
-  { value: '2,800+', label: 'Active volunteers' },
-  { value: '320+', label: 'Schools & organizations' },
-  { value: '1,500+', label: 'Badges earned' },
+const CATEGORIES = [
+  { icon: Heart,     label: 'Community Service', color: 'bg-brand-100 text-brand-800 dark:bg-brand-900/40 dark:text-brand-200' },
+  { icon: TreePine,  label: 'Environmental', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200' },
+  { icon: Book,      label: 'Education & Tutoring', color: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200' },
+  { icon: Stethoscope, label: 'Health & Wellness', color: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200' },
+  { icon: PawPrint,  label: 'Animal Welfare', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200' },
+  { icon: Palette,   label: 'Arts & Culture', color: 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/40 dark:text-fuchsia-200' },
+  { icon: Dumbbell,  label: 'Sports & Coaching', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200' },
+  { icon: Church,    label: 'Religious & Faith', color: 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200' },
+  { icon: Megaphone, label: 'Political & Advocacy', color: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200' },
+  { icon: Ambulance, label: 'Disaster Relief', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200' },
 ]
 
 const TESTIMONIALS = [
@@ -121,12 +127,19 @@ export default function About() {
           </section>
 
           <section className="mt-20">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-px rounded-2xl overflow-hidden border border-white/10">
-              {STATS.map(({ value, label }) => (
-                <div key={label} className="bg-slate-900/70 p-8 text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-brand-300">{value}</div>
-                  <div className="mt-2 text-sm text-earth-400">{label}</div>
-                </div>
+            <div className="text-center">
+              <p className="text-sm uppercase tracking-[0.35em] text-brand-600">Categories</p>
+              <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">Track every type of service.</h2>
+              <p className="mt-3 text-earth-400 max-w-xl mx-auto">
+                VolunTrack supports a wide range of volunteer categories so you can log whatever service you do.
+              </p>
+            </div>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              {CATEGORIES.map(({ icon: Icon, label, color }) => (
+                <span key={label} className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${color}`}>
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </span>
               ))}
             </div>
           </section>
@@ -138,8 +151,8 @@ export default function About() {
                 <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">Everything you need to manage service hours and showcase impact.</h2>
               </div>
               <div className="flex flex-wrap gap-3">
-                <span className="inline-flex items-center gap-2 rounded-full bg-brand-100 px-4 py-2 text-sm font-semibold text-brand-700 dark:bg-brand-900/30 dark:text-brand-300"><ShieldCheck className="w-4 h-4" /> Private by default</span>
-                <span className="inline-flex items-center gap-2 rounded-full bg-earth-100 px-4 py-2 text-sm font-semibold text-earth-700 dark:bg-white/5 dark:text-earth-300"><Users className="w-4 h-4" /> Built for students</span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-brand-100 px-4 py-2 text-sm font-semibold text-brand-700 dark:bg-brand-900/30 dark:text-brand-300"><ShieldCheck className="w-4 h-4" /> Private & stores in your local storage</span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-earth-100 px-4 py-2 text-sm font-semibold text-earth-700 dark:bg-white/5 dark:text-earth-300"><Users className="w-4 h-4" /> Volunteer Task Maker — post opportunities</span>
               </div>
             </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
