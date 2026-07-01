@@ -241,6 +241,18 @@ export default function Dashboard() {
         </div>
       ) : (
       <>
+          {!user?.schoolId && user?.role !== 'school' && user?.role !== 'admin' && (
+            <Card className="mb-5 border border-dashed border-brand-700/40 bg-brand-900/10">
+              <div className="flex items-center gap-3">
+                <School className="w-5 h-5 text-brand-400" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm text-white">Join a school or organization</p>
+                  <p className="text-xs text-earth-400 mt-0.5">Link your account to unlock school features.</p>
+                </div>
+                <Link to="/settings" className="btn-sm btn-primary text-xs">Go to Settings</Link>
+              </div>
+            </Card>
+          )}
           {schoolInfo && (
         <>
           <Card className="mb-5">

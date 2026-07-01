@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, Copy, Eye, EyeOff, QrCode, School, Upload } from 'lucide-react'
+import { Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, Copy, Eye, EyeOff, QrCode, School, Upload, Sparkles } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
-import { hashPin, sendPasswordResetCode, clearPasswordResetCode } from '@/api/index.js'
+import { hashPin, sendPasswordResetCode, clearPasswordResetCode, createLog } from '@/api/index.js'
+import { buildDemoLogs, buildDemoGoals, buildDemoReminders } from '@/lib/demoData.js'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -256,11 +257,34 @@ export default function Settings() {
 
 
 
+        <Card className="border border-dashed border-brand-700/30 bg-brand-900/5">
+          <h3 className="font-display font-semibold mb-3 flex items-center gap-2"><Sparkles className="w-4 h-4 text-brand-400" /> Demo data</h3>
+          <p className="text-sm text-earth-500 dark:text-earth-400 mb-4">
+            Populate your account with sample logs, goals, and reminders to explore the app before adding your own data.
+          </p>
+          <button
+            onClick={() => {
+              const existing = logs.length
+              if (existing > 0 && !confirm('This will add demo data alongside your existing logs. Continue?')) return
+              buildDemoLogs().forEach((l) => createLog(l))
+              buildDemoGoals().forEach((g) => saveGoal(g))
+              setToastMessage('Demo data loaded! Refresh to see it.')
+              setToast(true)
+            }}
+            className="btn-primary inline-flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4" /> Load demo data
+          </button>
+        </Card>
+
         <Card>
           <h3 className="font-display font-semibold mb-3 flex items-center gap-2"><Bell className="w-4 h-4 text-brand-600" /> Reminders</h3>
-          <p className="text-sm text-earth-500 dark:text-earth-400">
-            Reminder scheduling is coming soon. In the meantime, log your hours right after each session — it's the easiest habit to keep.
+          <p className="text-sm text-earth-500 dark:text-earth-400 mb-4">
+            Set up weekly or one-time reminders so you never forget to log your volunteer hours.
           </p>
+          <Link to="/reminders" className="btn-primary inline-flex items-center gap-2">
+            <Bell className="w-4 h-4" /> Manage reminders
+          </Link>
         </Card>
 
         <Card>
