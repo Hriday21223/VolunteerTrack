@@ -400,6 +400,7 @@ export default function Status() {
   const [agentLog, setAgentLog] = useState(getAgentLog)
   const [ready, setReady] = useState(false)
   const [agentRunning, setAgentRunning] = useState(false)
+  const [pendingApprovals, setPendingApprovals] = useState([])
   const prevRef = useRef({})
 
   useEffect(() => {
@@ -518,20 +519,44 @@ export default function Status() {
     setIncidents(getIncidents())
 
     if (toFix.length > 0) {
-      setAgentRunning(true)
-      logAgentAction(`AI Agent activated — ${toFix.length} issue(s) detected`, 'info')
+      logAgentAction(`AI Agent detected ${toFix.length} issue(s) — awaiting approval`, 'info')
       const incs = getIncidents()
-      toFix.forEach(async (svc) => {
+      const approvals = toFix.map((svc) => {
         const inc = incs.find((i) => i.service === svc && i.status === 'detected')
-        if (inc) {
-          await runAgent(svc, inc.id)
-          setIncidents(getIncidents())
-          setAgentLog(getAgentLog())
-        }
-      })
-      setTimeout(() => setAgentRunning(false), toFix.length * 3000)
+        return inc ? { service: svc, incidentId: inc.id } : null
+      }).filter(Boolean)
+      setPendingApprovals(approvals)
     }
   }, [ready, appHealthy, online, swStatus, storageOk, sessionOk, indexedDbOk, cacheOk, cookiesOk, notificationOk, geolocationOk, pwaSupported, canvasOk, webglOk, fileApiOk, clipboardOk, touchOk, batteryOk, vibrationOk, webSocketOk, webAudioOk, screenWakeOk, workersOk])
+
+  async function approveFix(service, incidentId) {
+    setPendingApprovals((prev) => prev.filter((a) => a.service !== service))
+    setAgentRunning(true)
+    await runAgent(service, incidentId)
+    setIncidents(getIncidents())
+    setAgentLog(getAgentLog())
+    if (pendingApprovals.length <= 1) setAgentRunning(false)
+  }
+
+  async function approveAll() {
+    const approvals = [...pendingApprovals]
+    setPendingApprovals([])
+    setAgentRunning(true)
+    for (const { service, incidentId } of approvals) {
+      await runAgent(service, incidentId)
+    }
+    setIncidents(getIncidents())
+    setAgentLog(getAgentLog())
+    setAgentRunning(false)
+  }
+
+  function rejectFix(service, incidentId) {
+    setPendingApprovals((prev) => prev.filter((a) => a.service !== service))
+    updateIncidentStatus(incidentId, 'failed')
+    logAgentAction(`Fix for ${service} rejected by user`, 'error')
+    setIncidents(getIncidents())
+    setAgentLog(getAgentLog())
+  }
 
   useEffect(() => {
     const h = () => { setAgentLog(getAgentLog()); setIncidents(getIncidents()) }
@@ -584,18 +609,38 @@ export default function Status() {
             <div className="flex items-center gap-3">
               {agentRunning ? (
                 <Loader2 className="w-5 h-5 text-amber-600 animate-spin" />
-              ) : (
+              ) : pendingApprovals.length > 0 ? (
                 <Bot className="w-5 h-5 text-amber-600" />
+              ) : (
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
               )}
-              <div className="text-sm">
+              <div className="text-sm flex-1">
                 <p className="font-medium text-amber-800 dark:text-amber-200">
-                  AI Agent — {agentRunning ? 'resolving issues...' : 'auto-fix complete'}
+                  {agentRunning ? 'AI Agent — resolving issues...' : pendingApprovals.length > 0 ? `AI Agent — ${pendingApprovals.length} fix(es) need approval` : 'AI Agent — auto-fix complete'}
                 </p>
                 <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
                   {active.length} unresolved · {resolved.length} resolved
                 </p>
               </div>
+              {pendingApprovals.length > 0 && (
+                <button onClick={approveAll} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600">
+                  Approve All
+                </button>
+              )}
             </div>
+            {pendingApprovals.length > 0 && (
+              <div className="mt-3 space-y-2 border-t border-amber-200/50 dark:border-amber-700/30 pt-3">
+                {pendingApprovals.map(({ service, incidentId }) => (
+                  <div key={incidentId} className="flex items-center justify-between text-sm">
+                    <span className="text-amber-800 dark:text-amber-200 font-medium">{service}</span>
+                    <div className="flex gap-2">
+                      <button onClick={() => approveFix(service, incidentId)} className="text-xs font-semibold px-2.5 py-1 rounded bg-green-500 text-white hover:bg-green-600">Approve</button>
+                      <button onClick={() => rejectFix(service, incidentId)} className="text-xs font-semibold px-2.5 py-1 rounded bg-red-500/20 text-red-600 hover:bg-red-500/30">Reject</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         )}
 
