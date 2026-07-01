@@ -7,7 +7,8 @@ import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
 
 export default function Login() {
-  const { login, loginWithPin } = useAuth()
+  const { login, loginWithPin, user } = useAuth()
+  const isAdmin = user?.email?.toLowerCase() === 'karnatamhriday@gmail.com'
   const nav = useNavigate()
   const loc = useLocation()
   const [mode, setMode] = useState('password')
