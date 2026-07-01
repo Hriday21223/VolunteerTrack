@@ -379,7 +379,8 @@ export default function Status() {
   const colorDepth = window.screen.colorDepth
   const pixelRatio = window.devicePixelRatio
 
-  const allOk = services.every((s) => s.ok)
+  const criticalServices = services.filter((s) => s.critical)
+  const allOk = criticalServices.every((s) => s.ok)
   const active = incidents.filter((i) => i.status !== 'resolved')
   const resolved = incidents.filter((i) => i.status === 'resolved')
   const [statusTab, setStatusTab] = useState('overview')
@@ -448,7 +449,7 @@ export default function Status() {
           <Card>
             <h2 className="font-display font-semibold text-lg mb-4 flex items-center gap-2">
               <Activity className="w-5 h-5 text-brand-600" /> Services
-              <span className="ml-auto text-xs font-normal text-earth-400">{services.filter(s => s.ok).length}/{services.length} operational</span>
+              <span className="ml-auto text-xs font-normal text-earth-400">{criticalServices.filter(s => s.ok).length}/{criticalServices.length} critical operational</span>
             </h2>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
               <StatusBadge ok={appHealthy} label={`Application — ${appHealthy ? 'responding' : 'unreachable'}`} />
