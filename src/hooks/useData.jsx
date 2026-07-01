@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { listLogs, createLog, updateLog, deleteLog,
          listGoals, upsertGoal, deleteGoal,
-         getEarned, markEarned, getReview, saveReview } from '@/api/index.js'
+         getEarned, markEarned, getReviews, saveReview } from '@/api/index.js'
 import { evaluateAchievements } from '@/lib/achievements.js'
 
 const DataContext = createContext(null)
@@ -12,7 +12,7 @@ export function DataProvider({ children }) {
   const [earned, setEarned] = useState(() => getEarned())
   const [pendingBadges, setPendingBadges] = useState([])
   const [showReview, setShowReview] = useState(false)
-  const [reviewSubmitted, setReviewSubmitted] = useState(() => !!getReview())
+  const [reviewSubmitted, setReviewSubmitted] = useState(() => getReviews().length > 0)
 
   const totalHours = useMemo(() => logs.reduce((s, l) => s + (Number(l.hours) || 0), 0), [logs])
 
@@ -31,7 +31,7 @@ export function DataProvider({ children }) {
     setLogs((prev) => {
       const next = [log, ...prev]
       const total = next.reduce((s, l) => s + (Number(l.hours) || 0), 0)
-      if (total >= 10 && !getReview()) {
+      if (total >= 10 && getReviews().length === 0) {
         setShowReview(true)
       }
       return next

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, Copy, Eye, EyeOff, QrCode, School, Upload, Sparkles } from 'lucide-react'
+import { Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, Copy, Eye, EyeOff, QrCode, School, Upload, Sparkles, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { hashPin, sendPasswordResetCode, clearPasswordResetCode, createLog } from '@/api/index.js'
@@ -65,6 +65,11 @@ export default function Settings() {
 
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('')
+  const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' })
+  const [showPw, setShowPw] = useState(false)
+  const [pwBusy, setPwBusy] = useState(false)
+  const [pwError, setPwError] = useState('')
+  const [pwDone, setPwDone] = useState(false)
 
   const addGoal = (e) => {
     e.preventDefault()
@@ -73,6 +78,35 @@ export default function Settings() {
     setNewGoal({ title: '', targetHours: 50, primary: false })
     setToastMessage('Goal added')
     setToast(true)
+  }
+
+  const onChangePassword = async (e) => {
+    e.preventDefault()
+    setPwError('')
+    setPwDone(false)
+    if (!pwForm.current || !pwForm.newPw || !pwForm.confirm) { setPwError('Fill in all fields.'); return }
+    if (pwForm.newPw.length < 6) { setPwError('New password must be at least 6 characters.'); return }
+    if (pwForm.newPw !== pwForm.confirm) { setPwError('Passwords do not match.'); return }
+    setPwBusy(true)
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const apiUrl = import.meta.env.VITE_API_URL || '/api'
+      const res = await fetch(`${apiUrl}/auth/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ email: user.email, currentPassword: pwForm.current, newPassword: pwForm.newPw }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to update password')
+      }
+      setPwForm({ current: '', newPw: '', confirm: '' })
+      setPwDone(true)
+    } catch (err) {
+      setPwError(err.message)
+    } finally {
+      setPwBusy(false)
+    }
   }
 
   const handleDeleteAccount = () => {
@@ -275,6 +309,36 @@ export default function Settings() {
           >
             <Sparkles className="w-4 h-4" /> Load demo data
           </button>
+        </Card>
+
+        <Card>
+          <h3 className="font-display font-semibold mb-3 flex items-center gap-2"><Lock className="w-4 h-4 text-brand-600" /> Change password</h3>
+          <form onSubmit={onChangePassword} className="grid sm:grid-cols-3 gap-4">
+            <div>
+              <label className="label flex items-center gap-1.5"><Lock className="w-4 h-4" /> Current password</label>
+              <input type={showPw ? 'text' : 'password'} className="input" value={pwForm.current} onChange={(e) => setPwForm((f) => ({ ...f, current: e.target.value }))} required />
+            </div>
+            <div>
+              <label className="label flex items-center gap-1.5"><Lock className="w-4 h-4" /> New password</label>
+              <input type={showPw ? 'text' : 'password'} className="input" value={pwForm.newPw} onChange={(e) => setPwForm((f) => ({ ...f, newPw: e.target.value }))} required minLength={6} />
+            </div>
+            <div>
+              <label className="label flex items-center gap-1.5"><Lock className="w-4 h-4" /> Confirm new</label>
+              <div className="flex gap-2">
+                <input type={showPw ? 'text' : 'password'} className="input flex-1" value={pwForm.confirm} onChange={(e) => setPwForm((f) => ({ ...f, confirm: e.target.value }))} required />
+                <button type="button" onClick={() => setShowPw(!showPw)} className="btn-ghost px-2" title={showPw ? 'Hide' : 'Show'}>
+                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            {pwError && <div className="sm:col-span-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-300 px-3 py-2 rounded-lg">{pwError}</div>}
+            {pwDone && <div className="sm:col-span-3 text-sm text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-300 px-3 py-2 rounded-lg flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Password updated</div>}
+            <div className="sm:col-span-3">
+              <button className="btn-primary" type="submit" disabled={pwBusy}>
+                {pwBusy ? 'Updating\u2026' : 'Update password'}
+              </button>
+            </div>
+          </form>
         </Card>
 
         <Card>

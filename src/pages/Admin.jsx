@@ -1,10 +1,11 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, CreditCard, Download, Calendar, Bell } from 'lucide-react'
+import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, CreditCard, Download, Calendar, Bell, Star, Heart } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
 import { useAuth } from '@/hooks/useAuth.jsx'
+import { getReviews } from '@/api/index.js'
 
 const apiUrl = import.meta.env.VITE_API_URL || '/api'
 
@@ -188,6 +189,10 @@ export default function Admin() {
     } catch { return [] }
   }, [])
 
+  const reviews = useMemo(() => {
+    return getReviews().sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
+  }, [])
+
   useEffect(() => {
     loadSchools()
   }, [loadSchools])
@@ -241,12 +246,15 @@ export default function Admin() {
 
   return (
     <AppLayout
-      title={tab === 'inbox' ? 'Contact inbox' : 'Manage schools'}
-      subtitle={tab === 'inbox' ? `${contacts.length} message${contacts.length === 1 ? '' : 's'} received` : `${schools.length} school${schools.length === 1 ? '' : 's'} registered`}
+      title={tab === 'inbox' ? 'Contact inbox' : tab === 'reviews' ? 'Reviews' : 'Manage schools'}
+      subtitle={tab === 'inbox' ? `${contacts.length} message${contacts.length === 1 ? '' : 's'} received` : tab === 'reviews' ? `${reviews.length} review${reviews.length === 1 ? '' : 's'} submitted` : `${schools.length} school${schools.length === 1 ? '' : 's'} registered`}
       action={
         <div className="flex gap-2">
           <button onClick={() => setTab('inbox')} className={`btn-sm ${tab === 'inbox' ? 'btn-primary' : 'btn-ghost'}`}>
             <MessageSquare className="w-3.5 h-3.5 mr-1" /> Inbox
+          </button>
+          <button onClick={() => setTab('reviews')} className={`btn-sm ${tab === 'reviews' ? 'btn-primary' : 'btn-ghost'}`}>
+            <Star className="w-3.5 h-3.5 mr-1" /> Reviews
           </button>
           <button onClick={() => { setTab('schools'); loadSchools() }} className={`btn-sm ${tab === 'schools' ? 'btn-primary' : 'btn-ghost'}`}>
             <School className="w-3.5 h-3.5 mr-1" /> Schools
@@ -262,7 +270,42 @@ export default function Admin() {
         </div>
       </Card>
 
-      {tab === 'schools' ? (
+      {tab === 'reviews' ? (
+        reviews.length === 0 ? (
+          <Card>
+            <div className="text-center py-12 text-earth-500">
+              <Star className="w-10 h-10 mx-auto mb-3 opacity-50" />
+              <p className="font-medium text-earth-900 dark:text-earth-100">No reviews yet</p>
+              <p className="text-sm mt-1">Reviews submitted by users will appear here.</p>
+            </div>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {reviews.map((r) => (
+              <Card key={r.id} padded={false} className="p-5">
+                <div className="flex items-start gap-4">
+                  <div className="flex gap-1 shrink-0">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Star key={n} className={`w-5 h-5 ${n <= r.rating ? 'fill-brand-400 text-brand-400' : 'text-earth-600'}`} />
+                    ))}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs text-earth-500">{new Date(r.submittedAt).toLocaleString()}</span>
+                    </div>
+                    {r.comment && (
+                      <p className="mt-2 text-sm text-earth-300 whitespace-pre-wrap">{r.comment}</p>
+                    )}
+                    {!r.comment && (
+                      <p className="mt-2 text-xs text-earth-500 italic">No comment left</p>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )
+      ) : tab === 'schools' ? (
         loadingSchools ? (
           <Card><p className="text-center text-earth-400 py-8">Loading schools…</p></Card>
         ) : schools.length === 0 ? (
