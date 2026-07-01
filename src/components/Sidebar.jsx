@@ -1,4 +1,4 @@
-import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Shield, HelpCircle, ClipboardList, School } from 'lucide-react'
+import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Shield, HelpCircle, ClipboardList, School, Activity } from 'lucide-react'
 import { NavLink, Link } from 'react-router-dom'
 import { cn } from '@/utils/cn.js'
 import { useAuth } from '@/hooks/useAuth.jsx'
@@ -13,6 +13,7 @@ const ROLE_ITEMS = {
     { to: '/profile',      label: 'Profile',     icon: User },
     { to: '/settings',     label: 'Settings',    icon: Settings },
     { to: '/help',         label: 'Help',        icon: HelpCircle },
+    { to: '/status',       label: 'Status',      icon: Activity },
   ],
   volunteer: [
     { to: '/',             label: 'Dashboard',   icon: Home },
@@ -23,7 +24,8 @@ const ROLE_ITEMS = {
     { to: '/reports',      label: 'Reports',     icon: FileText },
     { to: '/profile',      label: 'Profile',     icon: User },
     { to: '/settings',     label: 'Settings',    icon: Settings },
-    { to: '/help',         label: 'Help',        icon: HelpCircle },
+    { to: '/help',         label: 'Help',             icon: HelpCircle },
+    { to: '/status',       label: 'Status',           icon: Activity },
   ],
   school: [
     { to: '/',             label: 'Dashboard',        icon: Home },
@@ -34,6 +36,7 @@ const ROLE_ITEMS = {
     { to: '/profile',      label: 'Profile',          icon: User },
     { to: '/settings',     label: 'Settings',         icon: Settings },
     { to: '/help',         label: 'Help',             icon: HelpCircle },
+    { to: '/status',       label: 'Status',           icon: Activity },
   ],
   admin: [
     { to: '/',             label: 'Dashboard',   icon: Home },
@@ -43,7 +46,8 @@ const ROLE_ITEMS = {
     { to: '/reports',      label: 'Reports',     icon: FileText },
     { to: '/profile',      label: 'Profile',     icon: User },
     { to: '/settings',     label: 'Settings',    icon: Settings },
-    { to: '/help',         label: 'Help',        icon: HelpCircle },
+    { to: '/help',         label: 'Help',             icon: HelpCircle },
+    { to: '/status',       label: 'Status',           icon: Activity },
   ],
 }
 
@@ -92,6 +96,7 @@ export default function Sidebar() {
         <div className="mt-4 flex gap-3">
           <Link to="/about" className="text-earth-300 hover:text-white">About</Link>
           <Link to="/contact" className="text-earth-300 hover:text-white">Contact</Link>
+          <Link to="/status" className="text-earth-300 hover:text-white">Status</Link>
         </div>
         <div className="mt-4 text-earth-500">© VolunTrack 2026</div>
       </div>

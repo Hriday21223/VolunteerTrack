@@ -1,5 +1,5 @@
 import { NavLink, useLocation, Link } from 'react-router-dom'
-import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Plus, Shield, HelpCircle, ClipboardList, School } from 'lucide-react'
+import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Plus, Shield, HelpCircle, ClipboardList, School, Activity } from 'lucide-react'
 import { cn } from '@/utils/cn.js'
 import { useAuth } from '@/hooks/useAuth.jsx'
 
@@ -13,6 +13,7 @@ const ROLE_ITEMS = {
     { to: '/profile',      label: 'Profile',  icon: User },
     { to: '/settings',     label: 'Settings', icon: Settings },
     { to: '/help',         label: 'Help',     icon: HelpCircle },
+    { to: '/status',       label: 'Status',   icon: Activity },
   ],
   volunteer: [
     { to: '/',             label: 'Home',     icon: Home },
@@ -24,6 +25,7 @@ const ROLE_ITEMS = {
     { to: '/profile',      label: 'Profile',  icon: User },
     { to: '/settings',     label: 'Settings', icon: Settings },
     { to: '/help',         label: 'Help',     icon: HelpCircle },
+    { to: '/status',       label: 'Status',   icon: Activity },
   ],
   school: [
     { to: '/',             label: 'Home',     icon: Home },
@@ -34,6 +36,7 @@ const ROLE_ITEMS = {
     { to: '/profile',      label: 'Profile',  icon: User },
     { to: '/settings',     label: 'Settings', icon: Settings },
     { to: '/help',         label: 'Help',     icon: HelpCircle },
+    { to: '/status',       label: 'Status',   icon: Activity },
   ],
   admin: [
     { to: '/',             label: 'Home',     icon: Home },
@@ -44,6 +47,7 @@ const ROLE_ITEMS = {
     { to: '/profile',      label: 'Profile',  icon: User },
     { to: '/settings',     label: 'Settings', icon: Settings },
     { to: '/help',         label: 'Help',     icon: HelpCircle },
+    { to: '/status',       label: 'Status',   icon: Activity },
   ],
 }
 
