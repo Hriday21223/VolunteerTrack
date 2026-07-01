@@ -62,9 +62,9 @@ export default defineConfig({
   ],
 
   resolve: {
-    alias: {
-      '@': resolve('./src'),
-    },
+    alias: [
+      { find: '@', replacement: resolve('./src') },
+    ],
   },
 
   server: {

@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, CreditCard, Download, Calendar, Bell, Star, Heart } from 'lucide-react'
+import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, CreditCard, Download, Calendar, Bell, Star, Heart, AlertTriangle, Bot, Loader2, Wrench, CheckCircle2 } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -68,6 +68,18 @@ export default function Admin() {
   const [showDueModal, setShowDueModal] = useState(false)
   const [showNotifyModal, setShowNotifyModal] = useState(false)
   const [notifySchoolId, setNotifySchoolId] = useState(null) // null = all schools, string = specific school
+  const [incidents, setIncidents] = useState([])
+  const [agentLog, setAgentLog] = useState([])
+  useEffect(() => {
+    try { setIncidents(JSON.parse(localStorage.getItem('voluntrack:incidents') || '[]')) } catch { setIncidents([]) }
+    try { setAgentLog(JSON.parse(localStorage.getItem('voluntrack:agent_log') || '[]')) } catch { setAgentLog([]) }
+    const handler = () => {
+      try { setIncidents(JSON.parse(localStorage.getItem('voluntrack:incidents') || '[]')) } catch { setIncidents([]) }
+      try { setAgentLog(JSON.parse(localStorage.getItem('voluntrack:agent_log') || '[]')) } catch { setAgentLog([]) }
+    }
+    window.addEventListener('storage', handler)
+    return () => window.removeEventListener('storage', handler)
+  }, [])
 
   useEffect(() => {
     if (user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
@@ -246,8 +258,8 @@ export default function Admin() {
 
   return (
     <AppLayout
-      title={tab === 'inbox' ? 'Contact inbox' : tab === 'reviews' ? 'Reviews' : 'Manage schools'}
-      subtitle={tab === 'inbox' ? `${contacts.length} message${contacts.length === 1 ? '' : 's'} received` : tab === 'reviews' ? `${reviews.length} review${reviews.length === 1 ? '' : 's'} submitted` : `${schools.length} school${schools.length === 1 ? '' : 's'} registered`}
+      title={tab === 'inbox' ? 'Contact inbox' : tab === 'reviews' ? 'Reviews' : tab === 'incidents' ? 'Incidents' : 'Manage schools'}
+      subtitle={tab === 'inbox' ? `${contacts.length} message${contacts.length === 1 ? '' : 's'} received` : tab === 'reviews' ? `${reviews.length} review${reviews.length === 1 ? '' : 's'} submitted` : tab === 'incidents' ? `${incidents.length} incident${incidents.length === 1 ? '' : 's'} logged` : `${schools.length} school${schools.length === 1 ? '' : 's'} registered`}
       action={
         <div className="flex gap-2">
           <button onClick={() => setTab('inbox')} className={`btn-sm ${tab === 'inbox' ? 'btn-primary' : 'btn-ghost'}`}>
@@ -258,6 +270,12 @@ export default function Admin() {
           </button>
           <button onClick={() => { setTab('schools'); loadSchools() }} className={`btn-sm ${tab === 'schools' ? 'btn-primary' : 'btn-ghost'}`}>
             <School className="w-3.5 h-3.5 mr-1" /> Schools
+          </button>
+          <button onClick={() => setTab('incidents')} className={`btn-sm ${tab === 'incidents' ? 'btn-primary' : 'btn-ghost'} relative`}>
+            <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Incidents
+            {incidents.length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-bold">{incidents.length > 9 ? '9+' : incidents.length}</span>
+            )}
           </button>
         </div>
       }
@@ -400,6 +418,83 @@ export default function Admin() {
             ))}
           </div>
         )
+      ) : tab === 'incidents' ? (
+        <>
+          {incidents.length === 0 ? (
+            <Card>
+              <div className="text-center py-12 text-earth-500">
+                <AlertTriangle className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                <p className="font-medium text-earth-900 dark:text-earth-100">No incidents</p>
+                <p className="text-sm mt-1">All services are running normally.</p>
+              </div>
+            </Card>
+          ) : (
+            <div className="space-y-3 mb-6">
+              {incidents.map((inc) => {
+                const statusColors = {
+                  detected: 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800',
+                  investigating: 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800',
+                  fixing: 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800',
+                  resolved: 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800',
+                  failed: 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800',
+                }
+                const statusIcons = {
+                  detected: <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />,
+                  investigating: <Loader2 className="w-4 h-4 text-amber-500 mt-0.5 shrink-0 animate-spin" />,
+                  fixing: <Wrench className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />,
+                  resolved: <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />,
+                  failed: <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />,
+                }
+                return (
+                  <Card key={inc.id} padded={false} className={`p-4 border ${statusColors[inc.status] || statusColors.detected}`}>
+                    <div className="flex items-start gap-3">
+                      {statusIcons[inc.status] || statusIcons.detected}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm text-earth-800 dark:text-earth-200">{inc.service}</p>
+                          <span className={`text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded ${
+                            inc.status === 'resolved' ? 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30' :
+                            inc.status === 'failed' ? 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/30' :
+                            inc.status === 'investigating' || inc.status === 'fixing' ? 'text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/30' :
+                            'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/30'
+                          }`}>{inc.status}</span>
+                        </div>
+                        <p className="text-xs text-earth-500 dark:text-earth-400 mt-0.5">{inc.detail}</p>
+                        <p className="text-xs text-earth-400 dark:text-earth-500 mt-0.5">{new Date(inc.detectedAt).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </Card>
+                )
+              })}
+            </div>
+          )}
+
+          <Card>
+            <h3 className="font-display font-semibold text-base mb-3 flex items-center gap-2">
+              <Bot className="w-4 h-4 text-brand-600" /> AI Agent Log
+            </h3>
+            {agentLog.length === 0 ? (
+              <p className="text-sm text-earth-500 dark:text-earth-400">No agent activity yet.</p>
+            ) : (
+              <div className="space-y-1 max-h-48 overflow-y-auto">
+                {agentLog.map((entry) => {
+                  const typeColors = {
+                    info: 'text-blue-600 dark:text-blue-400',
+                    fixing: 'text-amber-600 dark:text-amber-400',
+                    success: 'text-green-600 dark:text-green-400',
+                    error: 'text-red-600 dark:text-red-400',
+                  }
+                  return (
+                    <div key={entry.id} className="flex items-start gap-2 text-xs">
+                      <span className="text-earth-400 dark:text-earth-500 shrink-0 w-16">{new Date(entry.timestamp).toLocaleTimeString()}</span>
+                      <span className={typeColors[entry.type] || 'text-earth-600 dark:text-earth-300'}>{entry.message}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </Card>
+        </>
       ) : contacts.length === 0 ? (
         <Card>
           <div className="text-center py-12 text-earth-500">
