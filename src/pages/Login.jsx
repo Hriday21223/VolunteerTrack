@@ -1,11 +1,18 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Mail, Lock, ArrowRight } from 'lucide-react'
+import { Mail, Lock, ArrowRight, UserCog, School, GraduationCap } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
+import { findUserByEmail, createUser } from '@/api/index.js'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
 
 const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
+
+const QUICK_USERS = [
+  { label: 'Admin',   email: 'karnatamhriday@gmail.com', password: 'test123', role: 'admin',    icon: UserCog,     desc: 'Full access to everything' },
+  { label: 'School',  email: 'school@demo.com',          password: 'demo123', role: 'school',   icon: School,       desc: 'Manage students & tasks' },
+  { label: 'Student', email: 'student@demo.com',         password: 'demo123', role: 'student',  icon: GraduationCap, desc: 'Track & log volunteer hours' },
+]
 
 export default function Login() {
   const { login, loginWithPin } = useAuth()
@@ -20,6 +27,23 @@ export default function Login() {
   const [toast, setToast] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const isAdmin = email.toLowerCase() === ADMIN_EMAIL
+
+  const quickLogin = async (u) => {
+    setErr('')
+    setBusy(true)
+    try {
+      if (!findUserByEmail(u.email)) {
+        createUser({ name: u.label, email: u.email, password: u.password, role: u.role, school: '', grade: '' })
+      }
+      await login(u.email, u.password)
+      setToast(true)
+      setTimeout(() => nav('/', { replace: true }), 600)
+    } catch (e) {
+      setErr(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)')
@@ -161,6 +185,32 @@ export default function Login() {
               <div className="mt-4 text-center text-sm text-slate-400">
                 {isMobile ? 'Syncing from laptop?' : 'Syncing from mobile?'}{' '}
                 <Link to="/sync-login" className="text-sky-200 font-semibold hover:text-white">Use sync PIN</Link>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-white/10">
+                <p className="text-xs text-slate-500 text-center mb-3">Quick login (demo accounts)</p>
+                <div className="flex flex-col gap-2">
+                  {QUICK_USERS.map((u) => {
+                    const Icon = u.icon
+                    return (
+                      <button
+                        key={u.label}
+                        onClick={() => quickLogin(u)}
+                        disabled={busy}
+                        className="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm text-left hover:bg-slate-800/60 disabled:opacity-40 transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-brand-900/40 border border-brand-700/30 grid place-items-center text-brand-300">
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-slate-200">{u.label}</div>
+                          <div className="text-xs text-slate-500">{u.desc}</div>
+                        </div>
+                        <span className="text-xs text-brand-400 font-mono">{u.email}</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             </div>
           </Card>

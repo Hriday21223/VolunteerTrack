@@ -60,7 +60,7 @@ export function updateSyncPin(userId, syncPin) {
   return users[idx]
 }
 
-export function createUser({ name, email, password, pin = '', school = '', grade = '' }) {
+export function createUser({ name, email, password, pin = '', school = '', grade = '', role = 'student' }) {
   const users = getUsers()
   if (findUserByEmail(email)) {
     throw new Error('An account with that email already exists.')
@@ -73,6 +73,7 @@ export function createUser({ name, email, password, pin = '', school = '', grade
     email: email.trim().toLowerCase(),
     school: school.trim(),
     grade: grade.trim(),
+    role: role.trim(),
     passwordHash: hashPassword(password),
     pinHash: pin ? hashPin(pin) : null,
     syncPin: null,
@@ -274,15 +275,17 @@ export function clearFired(id) {
   write(keys.fired, getFired().filter((x) => x !== id))
 }
 
-/* ---------- Review ---------- */
+/* ---------- Reviews ---------- */
 
-export function getReview() {
-  return read(keys.review, null)
+export function getReviews() {
+  return read(keys.reviews, [])
 }
 
 export function saveReview(data) {
-  const review = { ...data, submittedAt: new Date().toISOString() }
-  write(keys.review, review)
+  const review = { id: uid('rev'), ...data, submittedAt: new Date().toISOString() }
+  const reviews = getReviews()
+  reviews.push(review)
+  write(keys.reviews, reviews)
   return review
 }
 
