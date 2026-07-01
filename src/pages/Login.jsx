@@ -10,8 +10,8 @@ const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
 
 const QUICK_USERS = [
   { label: 'Admin',   email: 'karnatamhriday@gmail.com', password: 'test123', role: 'admin',    icon: UserCog,     desc: 'Full access to everything' },
-  { label: 'School',  email: 'school@demo.com',          password: 'demo123', role: 'school',   icon: School,       desc: 'Manage students & tasks' },
-  { label: 'Student', email: 'student@demo.com',         password: 'demo123', role: 'student',  icon: GraduationCap, desc: 'Track & log volunteer hours' },
+  { label: 'School',  email: 'karnatamhriday@gmail.com', password: 'test123', role: 'school',   icon: School,       desc: 'Manage students & tasks' },
+  { label: 'Student', email: 'karnatamhriday@gmail.com', password: 'test123', role: 'student',  icon: GraduationCap, desc: 'Track & log volunteer hours' },
 ]
 
 export default function Login() {
@@ -32,8 +32,12 @@ export default function Login() {
     setErr('')
     setBusy(true)
     try {
-      if (!findUserByEmail(u.email)) {
-        createUser({ name: u.label, email: u.email, password: u.password, role: u.role, school: '', grade: '' })
+      let existing = findUserByEmail(u.email)
+      if (!existing) {
+        existing = createUser({ name: 'Hriday Karnatam', email: u.email, password: u.password, role: u.role, school: '', grade: '' })
+      } else {
+        const { updateUser } = await import('@/api/index.js')
+        updateUser(existing.id, { role: u.role })
       }
       await login(u.email, u.password)
       setToast(true)
