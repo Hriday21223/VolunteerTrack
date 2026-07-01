@@ -28,362 +28,7 @@ function DetailRow({ label, value }) {
   )
 }
 
-const STORAGE_KEYS = ['voluntrack:logs', 'voluntrack:goals', 'voluntrack:achievements', 'voluntrack:users', 'voluntrack:contacts', 'voluntrack:reminders', 'voluntrack:fired', 'voluntrack:reviews', 'voluntrack::session']
-const INCIDENTS_KEY = 'voluntrack:incidents'
-const AGENT_LOG_KEY = 'voluntrack:agent_log'
-
-function getIncidents() {
-  try { return JSON.parse(localStorage.getItem(INCIDENTS_KEY) || '[]') } catch { return [] }
-}
-
-function getAgentLog() {
-  try { return JSON.parse(localStorage.getItem(AGENT_LOG_KEY) || '[]') } catch { return [] }
-}
-
-function saveIncident(service, detail) {
-  const incidents = getIncidents()
-  incidents.unshift({ service, detail, detectedAt: new Date().toISOString(), id: Date.now(), status: 'detected' })
-  localStorage.setItem(INCIDENTS_KEY, JSON.stringify(incidents.slice(0, 50)))
-}
-
-function updateIncidentStatus(id, status) {
-  const incidents = getIncidents()
-  const idx = incidents.findIndex((i) => i.id === id)
-  if (idx !== -1) {
-    incidents[idx] = { ...incidents[idx], status, updatedAt: new Date().toISOString() }
-    localStorage.setItem(INCIDENTS_KEY, JSON.stringify(incidents.slice(0, 50)))
-  }
-}
-
-function logAgentAction(message, type = 'info') {
-  const log = getAgentLog()
-  log.unshift({ message, type, timestamp: new Date().toISOString(), id: Date.now() + Math.random() })
-  localStorage.setItem(AGENT_LOG_KEY, JSON.stringify(log.slice(0, 100)))
-}
-
-function sendEmailAlert(service) {
-  const apiUrl = import.meta.env.VITE_API_URL || '/api'
-  fetch(`${apiUrl}/contact`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'VolunTrack Monitor',
-      email: 'karnatamhriday@gmail.com',
-      subject: `ALERT: ${service} is down`,
-      message: `Service: ${service}\nDetected at: ${new Date().toISOString()}\n\nThis is an automated alert from the VolunTrack status monitor.`,
-    }),
-  }).catch(() => {})
-}
-
-function notify(service) {
-  if (!('Notification' in window) || Notification.permission === 'denied') return
-  if (Notification.permission === 'granted') {
-    new Notification(`VolunTrack Alert: ${service}`, {
-      body: `${service} is experiencing issues. AI agent is investigating.`,
-      icon: `${import.meta.env.BASE_URL}logo.png`,
-    })
-  } else {
-    Notification.requestPermission()
-  }
-}
-
-async function runAgent(service, incidentId) {
-  updateIncidentStatus(incidentId, 'investigating')
-  logAgentAction(`Investigating ${service}...`, 'info')
-
-  if (service === 'Service Worker') {
-    logAgentAction('Attempting to re-register Service Worker...', 'fixing')
-    try {
-      await navigator.serviceWorker.register('/VolunteerTrack/sw.js')
-      const reg = await navigator.serviceWorker.ready
-      if (reg.active) {
-        updateIncidentStatus(incidentId, 'resolved')
-        logAgentAction('Service Worker re-registered successfully', 'success')
-        return
-      }
-    } catch (e) {
-      logAgentAction(`Service Worker fix failed: ${e.message}`, 'error')
-    }
-  }
-
-  if (service === 'Local Storage') {
-    logAgentAction('Attempting to recover Local Storage...', 'fixing')
-    try {
-      const backup = sessionStorage.getItem('voluntrack_backup')
-      if (backup) {
-        const keys = JSON.parse(backup)
-        keys.forEach((k) => {
-          const v = sessionStorage.getItem(`voluntrack_backup_${k}`)
-          if (v) localStorage.setItem(k, v)
-        })
-        logAgentAction('Restored Local Storage from Session Storage backup', 'success')
-        updateIncidentStatus(incidentId, 'resolved')
-        return
-      }
-    } catch {}
-    logAgentAction('No backup found, reinitializing storage...', 'fixing')
-    try {
-      localStorage.setItem('voluntrack:logs', '[]')
-      localStorage.setItem('voluntrack:goals', '[]')
-      localStorage.setItem('voluntrack:achievements', '[]')
-      localStorage.setItem('voluntrack:users', '[]')
-      logAgentAction('Storage reinitialized with empty data', 'success')
-      updateIncidentStatus(incidentId, 'resolved')
-    } catch {
-      updateIncidentStatus(incidentId, 'failed')
-      logAgentAction('Local Storage cannot be recovered', 'error')
-    }
-    return
-  }
-
-  if (service === 'Session Storage') {
-    logAgentAction('Attempting to recover Session Storage...', 'fixing')
-    try {
-      sessionStorage.setItem('__agent_test__', '1')
-      sessionStorage.removeItem('__agent_test__')
-      updateIncidentStatus(incidentId, 'resolved')
-      logAgentAction('Session Storage is operational', 'success')
-    } catch {
-      updateIncidentStatus(incidentId, 'failed')
-      logAgentAction('Session Storage unavailable in this browser', 'error')
-    }
-    return
-  }
-
-  if (service === 'Connection') {
-    logAgentAction('Cannot fix network connection automatically', 'error')
-    updateIncidentStatus(incidentId, 'failed')
-    return
-  }
-
-  if (service === 'Geolocation') {
-    logAgentAction('Geolocation requires user permission — cannot auto-fix', 'error')
-    updateIncidentStatus(incidentId, 'failed')
-    return
-  }
-
-  if (service === 'IndexedDB') {
-    logAgentAction('Verifying IndexedDB availability...', 'fixing')
-    try {
-      const db = await new Promise((resolve, reject) => {
-        const req = indexedDB.open('_healthcheck', 1)
-        req.onsuccess = () => { indexedDB.deleteDatabase('_healthcheck'); resolve(true) }
-        req.onerror = () => reject()
-      })
-      if (db) {
-        updateIncidentStatus(incidentId, 'resolved')
-        logAgentAction('IndexedDB is operational', 'success')
-      }
-    } catch {
-      updateIncidentStatus(incidentId, 'failed')
-      logAgentAction('IndexedDB is unavailable', 'error')
-    }
-    return
-  }
-
-  if (service === 'Cache API') {
-    logAgentAction('Verifying Cache API availability...', 'fixing')
-    try {
-      const cache = await caches.open('_healthcheck')
-      if (cache) {
-        await caches.delete('_healthcheck')
-        updateIncidentStatus(incidentId, 'resolved')
-        logAgentAction('Cache API is operational', 'success')
-      }
-    } catch {
-      updateIncidentStatus(incidentId, 'failed')
-      logAgentAction('Cache API unavailable in this browser', 'error')
-    }
-    return
-  }
-
-  if (service === 'Cookies') {
-    logAgentAction('Cookies are controlled by browser settings — cannot auto-enable', 'error')
-    updateIncidentStatus(incidentId, 'failed')
-    return
-  }
-
-  if (service === 'Notifications') {
-    logAgentAction('Requesting notification permission...', 'fixing')
-    try {
-      const perm = await Notification.requestPermission()
-      if (perm === 'granted') {
-        updateIncidentStatus(incidentId, 'resolved')
-        logAgentAction('Notification permission granted', 'success')
-      } else {
-        updateIncidentStatus(incidentId, 'failed')
-        logAgentAction('Notification permission denied by user', 'error')
-      }
-    } catch {
-      updateIncidentStatus(incidentId, 'failed')
-      logAgentAction('Notifications not supported', 'error')
-    }
-    return
-  }
-
-  if (service === 'Canvas 2D') {
-    logAgentAction('Verifying Canvas 2D availability...', 'fixing')
-    try {
-      const c = document.createElement('canvas')
-      const ctx = c.getContext('2d')
-      if (ctx) {
-        updateIncidentStatus(incidentId, 'resolved')
-        logAgentAction('Canvas 2D is operational', 'success')
-      } else {
-        updateIncidentStatus(incidentId, 'failed')
-        logAgentAction('Canvas 2D unavailable', 'error')
-      }
-    } catch {
-      updateIncidentStatus(incidentId, 'failed')
-      logAgentAction('Canvas 2D not supported', 'error')
-    }
-    return
-  }
-
-  if (service === 'WebGL') {
-    logAgentAction('Attempting WebGL with software rendering fallback...', 'fixing')
-    try {
-      const c = document.createElement('canvas')
-      const gl = c.getContext('webgl', { failIfMajorPerformanceCaveat: false }) || c.getContext('experimental-webgl', { failIfMajorPerformanceCaveat: false })
-      if (gl) {
-        updateIncidentStatus(incidentId, 'resolved')
-        logAgentAction('WebGL recovered with software rendering', 'success')
-      } else {
-        updateIncidentStatus(incidentId, 'failed')
-        logAgentAction('WebGL unavailable — GPU/software rendering not available', 'error')
-      }
-    } catch {
-      updateIncidentStatus(incidentId, 'failed')
-      logAgentAction('WebGL not supported in this browser', 'error')
-    }
-    return
-  }
-
-  if (service === 'Web Workers') {
-    logAgentAction('Testing Web Worker creation...', 'fixing')
-    try {
-      const blob = new Blob(['self.postMessage("ok")'], { type: 'application/javascript' })
-      const worker = new Worker(URL.createObjectURL(blob))
-      worker.terminate()
-      updateIncidentStatus(incidentId, 'resolved')
-      logAgentAction('Web Workers are operational', 'success')
-    } catch {
-      updateIncidentStatus(incidentId, 'failed')
-      logAgentAction('Web Workers not supported in this browser', 'error')
-    }
-    return
-  }
-
-  if (service === 'WebSocket') {
-    logAgentAction('Checking WebSocket API availability...', 'fixing')
-    try {
-      const ws = new WebSocket('wss://echo.websocket.org')
-      ws.onopen = () => { ws.close(); updateIncidentStatus(incidentId, 'resolved'); logAgentAction('WebSocket is operational', 'success') }
-      ws.onerror = () => { updateIncidentStatus(incidentId, 'failed'); logAgentAction('WebSocket unavailable — possibly restricted by network', 'error') }
-      setTimeout(() => { if (ws.readyState === 0) { ws.close(); updateIncidentStatus(incidentId, 'failed') } }, 3000)
-    } catch {
-      updateIncidentStatus(incidentId, 'failed')
-      logAgentAction('WebSocket not supported', 'error')
-    }
-    return
-  }
-
-  if (service === 'File API') {
-    logAgentAction('File API is a browser capability — no fix available', 'error')
-    updateIncidentStatus(incidentId, 'failed')
-    return
-  }
-
-  if (service === 'Clipboard') {
-    logAgentAction('Clipboard requires user gesture — attempting to read...', 'fixing')
-    try {
-      await navigator.clipboard.readText()
-      updateIncidentStatus(incidentId, 'resolved')
-      logAgentAction('Clipboard API is operational', 'success')
-    } catch {
-      updateIncidentStatus(incidentId, 'failed')
-      logAgentAction('Clipboard unavailable — requires secure context + user gesture', 'error')
-    }
-    return
-  }
-
-  if (service === 'Touch Events') {
-    logAgentAction('Touch Events depend on hardware — cannot auto-fix', 'error')
-    updateIncidentStatus(incidentId, 'failed')
-    return
-  }
-
-  if (service === 'Battery API') {
-    logAgentAction('Battery API is device-dependent — checking availability...', 'fixing')
-    try {
-      const battery = await navigator.getBattery()
-      if (battery) {
-        updateIncidentStatus(incidentId, 'resolved')
-        logAgentAction('Battery API is operational', 'success')
-      }
-    } catch {
-      updateIncidentStatus(incidentId, 'failed')
-      logAgentAction('Battery API not available on this device', 'error')
-    }
-    return
-  }
-
-  if (service === 'Vibration') {
-    logAgentAction('Vibration API is hardware-dependent — cannot auto-fix', 'error')
-    updateIncidentStatus(incidentId, 'failed')
-    return
-  }
-
-  if (service === 'Web Audio') {
-    logAgentAction('Testing Web Audio API...', 'fixing')
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)()
-      if (ctx) {
-        ctx.close()
-        updateIncidentStatus(incidentId, 'resolved')
-        logAgentAction('Web Audio API is operational', 'success')
-      }
-    } catch {
-      updateIncidentStatus(incidentId, 'failed')
-      logAgentAction('Web Audio API not supported', 'error')
-    }
-    return
-  }
-
-  if (service === 'Screen Wake Lock') {
-    logAgentAction('Screen Wake Lock requires user gesture — cannot auto-acquire', 'error')
-    updateIncidentStatus(incidentId, 'failed')
-    return
-  }
-
-  if (service === 'PWA') {
-    logAgentAction('Attempting to re-register Service Worker for PWA...', 'fixing')
-    try {
-      await navigator.serviceWorker.register('/VolunteerTrack/sw.js')
-      const reg = await navigator.serviceWorker.ready
-      if (reg.active) {
-        updateIncidentStatus(incidentId, 'resolved')
-        logAgentAction('PWA service worker registered successfully', 'success')
-      } else {
-        updateIncidentStatus(incidentId, 'failed')
-        logAgentAction('PWA service worker registered but not active', 'error')
-      }
-    } catch (e) {
-      updateIncidentStatus(incidentId, 'failed')
-      logAgentAction(`PWA fix failed: ${e.message}`, 'error')
-    }
-    return
-  }
-
-  if (service === 'Application') {
-    logAgentAction('Application is reachable — no action needed', 'success')
-    updateIncidentStatus(incidentId, 'resolved')
-    return
-  }
-
-  logAgentAction(`No automated fix available for ${service}`, 'error')
-  updateIncidentStatus(incidentId, 'failed')
-}
+import { getIncidents, getAgentLog, saveIncident, logAgentAction, sendEmailAlert, notify, runAgent, updateIncidentStatus } from '@/lib/agent.js'
 
 export default function Status() {
   const storageOk = (() => {
@@ -400,7 +45,6 @@ export default function Status() {
   const [agentLog, setAgentLog] = useState(getAgentLog)
   const [ready, setReady] = useState(false)
   const [agentRunning, setAgentRunning] = useState(false)
-  const [pendingApprovals, setPendingApprovals] = useState([])
   const prevRef = useRef({})
 
   useEffect(() => {
@@ -519,44 +163,20 @@ export default function Status() {
     setIncidents(getIncidents())
 
     if (toFix.length > 0) {
-      logAgentAction(`AI Agent detected ${toFix.length} issue(s) — awaiting approval`, 'info')
+      setAgentRunning(true)
+      logAgentAction(`AI Agent activated — ${toFix.length} issue(s) detected`, 'info')
       const incs = getIncidents()
-      const approvals = toFix.map((svc) => {
+      toFix.forEach(async (svc) => {
         const inc = incs.find((i) => i.service === svc && i.status === 'detected')
-        return inc ? { service: svc, incidentId: inc.id } : null
-      }).filter(Boolean)
-      setPendingApprovals(approvals)
+        if (inc) {
+          await runAgent(svc, inc.id)
+          setIncidents(getIncidents())
+          setAgentLog(getAgentLog())
+        }
+      })
+      setTimeout(() => setAgentRunning(false), toFix.length * 3000)
     }
   }, [ready, appHealthy, online, swStatus, storageOk, sessionOk, indexedDbOk, cacheOk, cookiesOk, notificationOk, geolocationOk, pwaSupported, canvasOk, webglOk, fileApiOk, clipboardOk, touchOk, batteryOk, vibrationOk, webSocketOk, webAudioOk, screenWakeOk, workersOk])
-
-  async function approveFix(service, incidentId) {
-    setPendingApprovals((prev) => prev.filter((a) => a.service !== service))
-    setAgentRunning(true)
-    await runAgent(service, incidentId)
-    setIncidents(getIncidents())
-    setAgentLog(getAgentLog())
-    if (pendingApprovals.length <= 1) setAgentRunning(false)
-  }
-
-  async function approveAll() {
-    const approvals = [...pendingApprovals]
-    setPendingApprovals([])
-    setAgentRunning(true)
-    for (const { service, incidentId } of approvals) {
-      await runAgent(service, incidentId)
-    }
-    setIncidents(getIncidents())
-    setAgentLog(getAgentLog())
-    setAgentRunning(false)
-  }
-
-  function rejectFix(service, incidentId) {
-    setPendingApprovals((prev) => prev.filter((a) => a.service !== service))
-    updateIncidentStatus(incidentId, 'failed')
-    logAgentAction(`Fix for ${service} rejected by user`, 'error')
-    setIncidents(getIncidents())
-    setAgentLog(getAgentLog())
-  }
 
   useEffect(() => {
     const h = () => { setAgentLog(getAgentLog()); setIncidents(getIncidents()) }
@@ -609,38 +229,18 @@ export default function Status() {
             <div className="flex items-center gap-3">
               {agentRunning ? (
                 <Loader2 className="w-5 h-5 text-amber-600 animate-spin" />
-              ) : pendingApprovals.length > 0 ? (
-                <Bot className="w-5 h-5 text-amber-600" />
               ) : (
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <Bot className="w-5 h-5 text-amber-600" />
               )}
-              <div className="text-sm flex-1">
+              <div className="text-sm">
                 <p className="font-medium text-amber-800 dark:text-amber-200">
-                  {agentRunning ? 'AI Agent — resolving issues...' : pendingApprovals.length > 0 ? `AI Agent — ${pendingApprovals.length} fix(es) need approval` : 'AI Agent — auto-fix complete'}
+                  AI Agent — {agentRunning ? 'resolving issues...' : 'auto-fix complete'}
                 </p>
                 <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
                   {active.length} unresolved · {resolved.length} resolved
                 </p>
               </div>
-              {pendingApprovals.length > 0 && (
-                <button onClick={approveAll} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600">
-                  Approve All
-                </button>
-              )}
             </div>
-            {pendingApprovals.length > 0 && (
-              <div className="mt-3 space-y-2 border-t border-amber-200/50 dark:border-amber-700/30 pt-3">
-                {pendingApprovals.map(({ service, incidentId }) => (
-                  <div key={incidentId} className="flex items-center justify-between text-sm">
-                    <span className="text-amber-800 dark:text-amber-200 font-medium">{service}</span>
-                    <div className="flex gap-2">
-                      <button onClick={() => approveFix(service, incidentId)} className="text-xs font-semibold px-2.5 py-1 rounded bg-green-500 text-white hover:bg-green-600">Approve</button>
-                      <button onClick={() => rejectFix(service, incidentId)} className="text-xs font-semibold px-2.5 py-1 rounded bg-red-500/20 text-red-600 hover:bg-red-500/30">Reject</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </Card>
         )}
 

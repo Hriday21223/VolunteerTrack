@@ -6,6 +6,7 @@ import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { getReviews } from '@/api/index.js'
+import { runAgent, updateIncidentStatus, getAgentLog, logAgentAction } from '@/lib/agent.js'
 
 const apiUrl = import.meta.env.VITE_API_URL || '/api'
 
@@ -70,6 +71,7 @@ export default function Admin() {
   const [notifySchoolId, setNotifySchoolId] = useState(null) // null = all schools, string = specific school
   const [incidents, setIncidents] = useState([])
   const [agentLog, setAgentLog] = useState([])
+  const [fixing, setFixing] = useState(null)
   useEffect(() => {
     try { setIncidents(JSON.parse(localStorage.getItem('voluntrack:incidents') || '[]')) } catch { setIncidents([]) }
     try { setAgentLog(JSON.parse(localStorage.getItem('voluntrack:agent_log') || '[]')) } catch { setAgentLog([]) }
@@ -430,42 +432,51 @@ export default function Admin() {
             </Card>
           ) : (
             <div className="space-y-3 mb-6">
-              {incidents.map((inc) => {
-                const statusColors = {
-                  detected: 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800',
-                  investigating: 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800',
-                  fixing: 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800',
-                  resolved: 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800',
-                  failed: 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800',
-                }
-                const statusIcons = {
-                  detected: <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />,
-                  investigating: <Loader2 className="w-4 h-4 text-amber-500 mt-0.5 shrink-0 animate-spin" />,
-                  fixing: <Wrench className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />,
-                  resolved: <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />,
-                  failed: <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />,
-                }
-                return (
-                  <Card key={inc.id} padded={false} className={`p-4 border ${statusColors[inc.status] || statusColors.detected}`}>
-                    <div className="flex items-start gap-3">
-                      {statusIcons[inc.status] || statusIcons.detected}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-sm text-earth-800 dark:text-earth-200">{inc.service}</p>
-                          <span className={`text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded ${
-                            inc.status === 'resolved' ? 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30' :
-                            inc.status === 'failed' ? 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/30' :
-                            inc.status === 'investigating' || inc.status === 'fixing' ? 'text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/30' :
-                            'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/30'
-                          }`}>{inc.status}</span>
+                {incidents.map((inc) => {
+                  const statusColors = {
+                    detected: 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800',
+                    investigating: 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800',
+                    fixing: 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800',
+                    resolved: 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800',
+                    failed: 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800',
+                  }
+                  const statusIcons = {
+                    detected: <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />,
+                    investigating: <Loader2 className="w-4 h-4 text-amber-500 mt-0.5 shrink-0 animate-spin" />,
+                    fixing: <Wrench className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />,
+                    resolved: <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />,
+                    failed: <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />,
+                  }
+                  const isRunning = fixing === inc.id
+                  return (
+                    <Card key={inc.id} padded={false} className={`p-4 border ${statusColors[inc.status] || statusColors.detected}`}>
+                      <div className="flex items-start gap-3">
+                        {statusIcons[inc.status] || statusIcons.detected}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm text-earth-800 dark:text-earth-200">{inc.service}</p>
+                            <span className={`text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded ${
+                              inc.status === 'resolved' ? 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30' :
+                              inc.status === 'failed' ? 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/30' :
+                              inc.status === 'investigating' || inc.status === 'fixing' ? 'text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/30' :
+                              'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/30'
+                            }`}>{inc.status}</span>
+                          </div>
+                          <p className="text-xs text-earth-500 dark:text-earth-400 mt-0.5">{inc.detail}</p>
+                          <p className="text-xs text-earth-400 dark:text-earth-500 mt-0.5">{new Date(inc.detectedAt).toLocaleString()}</p>
+                          {inc.status === 'detected' && (
+                            <div className="flex gap-2 mt-2">
+                              <button onClick={async () => { setFixing(inc.id); await runAgent(inc.service, inc.id); setFixing(null); try { setIncidents(JSON.parse(localStorage.getItem('voluntrack:incidents') || '[]')) } catch {} }} disabled={isRunning} className="text-xs font-semibold px-2.5 py-1 rounded bg-green-500 text-white hover:bg-green-600 disabled:opacity-50">
+                                {isRunning ? 'Fixing...' : 'Approve Fix'}
+                              </button>
+                              <button onClick={() => { updateIncidentStatus(inc.id, 'failed'); logAgentAction(`Fix for ${inc.service} rejected by admin`, 'error'); try { setIncidents(JSON.parse(localStorage.getItem('voluntrack:incidents') || '[]')) } catch {} }} className="text-xs font-semibold px-2.5 py-1 rounded bg-red-500/20 text-red-600 hover:bg-red-500/30">Reject</button>
+                            </div>
+                          )}
                         </div>
-                        <p className="text-xs text-earth-500 dark:text-earth-400 mt-0.5">{inc.detail}</p>
-                        <p className="text-xs text-earth-400 dark:text-earth-500 mt-0.5">{new Date(inc.detectedAt).toLocaleString()}</p>
                       </div>
-                    </div>
-                  </Card>
-                )
-              })}
+                    </Card>
+                  )
+                })}
             </div>
           )}
 
