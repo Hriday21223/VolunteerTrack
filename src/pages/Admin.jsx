@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, CreditCard, Download, Calendar, Bell, Star, Heart, Check } from 'lucide-react'
+import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, CreditCard, Download, Calendar, Bell, Star, Heart } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -246,8 +246,8 @@ export default function Admin() {
 
   return (
     <AppLayout
-      title={tab === 'inbox' ? 'Contact inbox' : tab === 'reviews' ? 'Reviews' : tab === 'roles' ? 'User roles' : 'Manage schools'}
-      subtitle={tab === 'inbox' ? `${contacts.length} message${contacts.length === 1 ? '' : 's'} received` : tab === 'reviews' ? `${reviews.length} review${reviews.length === 1 ? '' : 's'} submitted` : tab === 'roles' ? 'Admin, School & Student capabilities' : `${schools.length} school${schools.length === 1 ? '' : 's'} registered`}
+      title={tab === 'inbox' ? 'Contact inbox' : tab === 'reviews' ? 'Reviews' : 'Manage schools'}
+      subtitle={tab === 'inbox' ? `${contacts.length} message${contacts.length === 1 ? '' : 's'} received` : tab === 'reviews' ? `${reviews.length} review${reviews.length === 1 ? '' : 's'} submitted` : `${schools.length} school${schools.length === 1 ? '' : 's'} registered`}
       action={
         <div className="flex gap-2">
           <button onClick={() => setTab('inbox')} className={`btn-sm ${tab === 'inbox' ? 'btn-primary' : 'btn-ghost'}`}>
@@ -255,9 +255,6 @@ export default function Admin() {
           </button>
           <button onClick={() => setTab('reviews')} className={`btn-sm ${tab === 'reviews' ? 'btn-primary' : 'btn-ghost'}`}>
             <Star className="w-3.5 h-3.5 mr-1" /> Reviews
-          </button>
-          <button onClick={() => setTab('roles')} className={`btn-sm ${tab === 'roles' ? 'btn-primary' : 'btn-ghost'}`}>
-            <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Roles
           </button>
           <button onClick={() => { setTab('schools'); loadSchools() }} className={`btn-sm ${tab === 'schools' ? 'btn-primary' : 'btn-ghost'}`}>
             <School className="w-3.5 h-3.5 mr-1" /> Schools
@@ -308,57 +305,6 @@ export default function Admin() {
             ))}
           </div>
         )
-      ) : tab === 'roles' ? (
-        <div className="grid gap-5 sm:grid-cols-3">
-          <Card>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 grid place-items-center text-red-600 dark:text-red-400"><ShieldCheck className="w-5 h-5" /></div>
-              <div>
-                <h3 className="font-display font-semibold">Admin</h3>
-                <p className="text-xs text-earth-500">Full system access</p>
-              </div>
-            </div>
-            <ul className="space-y-1.5 text-sm text-earth-600 dark:text-earth-300">
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> Manage all registered schools</li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> View contact inbox & reviews</li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> Send notifications to schools</li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> Manage payment & due dates</li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> Download school data</li>
-            </ul>
-          </Card>
-          <Card>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 grid place-items-center text-blue-600 dark:text-blue-400"><School className="w-5 h-5" /></div>
-              <div>
-                <h3 className="font-display font-semibold">School</h3>
-                <p className="text-xs text-earth-500">Manage students & tasks</p>
-              </div>
-            </div>
-            <ul className="space-y-1.5 text-sm text-earth-600 dark:text-earth-300">
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> Add & manage students</li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> Create public volunteer tasks</li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> Approve / reject hours</li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> Upload & review PDF reports</li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> View school dashboard</li>
-            </ul>
-          </Card>
-          <Card>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 grid place-items-center text-green-600 dark:text-green-400"><Users className="w-5 h-5" /></div>
-              <div>
-                <h3 className="font-display font-semibold">Student</h3>
-                <p className="text-xs text-earth-500">Track & log hours</p>
-              </div>
-            </div>
-            <ul className="space-y-1.5 text-sm text-earth-600 dark:text-earth-300">
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> Log volunteer hours</li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> Set goals & track progress</li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> Earn achievement badges</li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> Export PDF reports</li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" /> Sign up for school tasks</li>
-            </ul>
-          </Card>
-        </div>
       ) : tab === 'schools' ? (
         loadingSchools ? (
           <Card><p className="text-center text-earth-400 py-8">Loading schools…</p></Card>
