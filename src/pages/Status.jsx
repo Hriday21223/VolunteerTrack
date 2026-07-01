@@ -202,6 +202,25 @@ async function runAgent(service, incidentId) {
     return
   }
 
+  if (service === 'WebGL') {
+    logAgentAction('Attempting WebGL with software rendering fallback...', 'fixing')
+    try {
+      const c = document.createElement('canvas')
+      const gl = c.getContext('webgl', { failIfMajorPerformanceCaveat: false }) || c.getContext('experimental-webgl', { failIfMajorPerformanceCaveat: false })
+      if (gl) {
+        updateIncidentStatus(incidentId, 'resolved')
+        logAgentAction('WebGL recovered with software rendering', 'success')
+      } else {
+        updateIncidentStatus(incidentId, 'failed')
+        logAgentAction('WebGL unavailable — GPU/software rendering not available', 'error')
+      }
+    } catch {
+      updateIncidentStatus(incidentId, 'failed')
+      logAgentAction('WebGL not supported in this browser', 'error')
+    }
+    return
+  }
+
   if (service === 'Application') {
     logAgentAction('Application is reachable — no action needed', 'success')
     updateIncidentStatus(incidentId, 'resolved')
