@@ -1,17 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Activity, CheckCircle2, XCircle, Globe, HardDrive, Smartphone, Clock, Database, Cpu, Monitor, Eye, AlertTriangle, Bell, Bot, Loader2, Wrench, Server, List, FlaskConical } from 'lucide-react'
+import { ArrowLeft, Activity, CheckCircle2, XCircle, Globe, HardDrive, Smartphone, Clock, Database, Cpu, Monitor, Eye, AlertTriangle, Bell, Bot, Loader2, Wrench, Server, List } from 'lucide-react'
 import Card from '@/components/Card.jsx'
-
-const TEST_FLAGS_KEY = 'voluntrack:test_flags'
-function getTestFlags() {
-  try { return JSON.parse(localStorage.getItem(TEST_FLAGS_KEY) || '{}') } catch { return {} }
-}
-function setTestFlag(name, value) {
-  const flags = getTestFlags()
-  if (value) flags[name] = true; else delete flags[name]
-  localStorage.setItem(TEST_FLAGS_KEY, JSON.stringify(flags))
-}
 
 function StatusBadge({ ok, label }) {
   return (
@@ -108,8 +98,7 @@ export default function Status() {
   const cookiesOk = navigator.cookieEnabled
   const workersOk = 'Worker' in window
   const canvasOk = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext && c.getContext('2d')) } catch { return false } })()
-  const testFlags = getTestFlags()
-  const webglOk = testFlags.webgl ? false : (() => { try { const c = document.createElement('canvas'); return !!(c.getContext && (c.getContext('webgl') || c.getContext('experimental-webgl'))) } catch { return false } })()
+  const webglOk = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext && (c.getContext('webgl') || c.getContext('experimental-webgl'))) } catch { return false } })()
   const fileApiOk = 'FileReader' in window
   const clipboardOk = 'clipboard' in navigator
   const touchOk = 'ontouchstart' in window
@@ -282,16 +271,7 @@ export default function Status() {
               <StatusBadge ok={geolocationOk} label={`Geolocation — ${geolocationOk ? 'ready' : 'unavailable'}`} />
               <StatusBadge ok={fileApiOk} label={`File API — ${fileApiOk ? 'ready' : 'unavailable'}`} />
               <StatusBadge ok={canvasOk} label={`Canvas 2D — ${canvasOk ? 'ready' : 'unavailable'}`} />
-              <div className="flex items-center gap-2">
-                <StatusBadge ok={webglOk} label={`WebGL — ${webglOk ? 'ready' : 'unavailable'}`} />
-                <button
-                  onClick={() => { setTestFlag('webgl', !testFlags.webgl); window.location.reload() }}
-                  className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${testFlags.webgl ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'text-earth-400 dark:text-earth-500 hover:text-earth-600 dark:hover:text-earth-300'}`}
-                  title={testFlags.webgl ? 'Restore WebGL' : 'Simulate WebGL failure'}
-                >
-                  <FlaskConical className="w-3 h-3" />
-                </button>
-              </div>
+              <StatusBadge ok={webglOk} label={`WebGL — ${webglOk ? 'ready' : 'unavailable'}`} />
               <StatusBadge ok={workersOk} label={`Web Workers — ${workersOk ? 'ready' : 'unavailable'}`} />
               <StatusBadge ok={clipboardOk} label={`Clipboard — ${clipboardOk ? 'ready' : 'unavailable'}`} />
               <StatusBadge ok={touchOk} label={`Touch Events — ${touchOk ? 'supported' : 'unsupported'}`} />
