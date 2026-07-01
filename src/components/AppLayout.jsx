@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { cn } from '@/utils/cn.js'
 import Sidebar from './Sidebar.jsx'
+import ReviewPopup from './ReviewPopup.jsx'
 
 export default function AppLayout({ children, title, subtitle, action }) {
   const { user, logout } = useAuth()
@@ -82,6 +83,8 @@ export default function AppLayout({ children, title, subtitle, action }) {
           </main>
         </div>
       </div>
+
+      <ReviewPopup />
     </div>
   )
 }

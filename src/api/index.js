@@ -274,6 +274,18 @@ export function clearFired(id) {
   write(keys.fired, getFired().filter((x) => x !== id))
 }
 
+/* ---------- Review ---------- */
+
+export function getReview() {
+  return read(keys.review, null)
+}
+
+export function saveReview(data) {
+  const review = { ...data, submittedAt: new Date().toISOString() }
+  write(keys.review, review)
+  return review
+}
+
 /* ---------- Demo-only password "hash" ---------- */
 // djb2-style — not cryptographic. Documented as such above.
 export function hashPassword(pw) {
