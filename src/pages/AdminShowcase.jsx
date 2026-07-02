@@ -446,7 +446,18 @@ export default function AdminShowcase() {
     const styles = Array.from(document.styleSheets).map((s) => {
       try { return Array.from(s.cssRules || []).map((r) => r.cssText).join('') } catch { return '' }
     }).join('')
-    w.document.write(`<!DOCTYPE html><html><head><title>VolunTrack Showcase</title><style>${styles}body{background:#0a1620;color:#e2e8f0;padding:2rem;font-family:system-ui,sans-serif}@media print{@page{margin:1.5cm}.no-print{display:none!important}.print-only{display:block!important}}</style></head><body>${el.innerHTML}</body></html>`)
+    let bodyHtml = el.innerHTML
+    if (selector === '#showcase-slides') {
+      const clone = el.cloneNode(true)
+      const inner = clone.querySelector('div')
+      if (inner) {
+        inner.style.transform = 'translateX(0)'
+        inner.style.flexDirection = 'column'
+      }
+      clone.style.overflow = 'visible'
+      bodyHtml = clone.innerHTML
+    }
+    w.document.write(`<!DOCTYPE html><html><head><title>VolunTrack Showcase</title><style>${styles}body{background:#0a1620;color:#e2e8f0;padding:2rem;font-family:system-ui,sans-serif}@media print{@page{margin:1.5cm}.no-print{display:none!important}.print-only{display:block!important}.slide-page{break-inside:avoid;page-break-inside:avoid}}</style></head><body>${bodyHtml}</body></html>`)
     w.document.close()
     w.focus()
     setTimeout(() => { w.print(); w.close() }, 500)
