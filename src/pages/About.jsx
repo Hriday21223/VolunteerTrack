@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Target, Trophy, FileText, Calendar, Sparkles, ShieldCheck, Users, Instagram, Clock, ChevronDown, Star, CheckCircle, BarChart3, Building2, Heart, TreePine, BookOpen as Book, Stethoscope, PawPrint, Palette, Dumbbell, Church, Megaphone, Ambulance, Globe, School, GraduationCap, Building, TrendingUp, Smartphone, Download, Lock, Bell, Gift, Zap } from 'lucide-react'
 import Card from '@/components/Card.jsx'
@@ -112,11 +112,28 @@ function FaqItem({ q, a }) {
 }
 
 export default function About() {
+  useEffect(() => {
+    const els = document.querySelectorAll('[data-animate]')
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('animate-visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.08 }
+    )
+    els.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.22),transparent_28%),radial-gradient(circle_at_top_right,rgba(34,197,94,0.18),transparent_20%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.2),transparent_22%),linear-gradient(180deg,#071017_0%,#0a1d25_40%,#0f1f15_100%)] text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.08),transparent_14%),radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.18),transparent_18%),radial-gradient(circle_at_50%_80%,rgba(168,85,247,0.14),transparent_16%)]" />
       <div className="relative px-4 md:px-8 py-5">
-        <header className="flex flex-wrap items-center justify-between gap-3">
+        <header className="flex flex-wrap items-center justify-between gap-3 animate-fade-in-up">
           <Link to="/login" className="flex items-center gap-3">
             <img src={`${import.meta.env.BASE_URL}logo.png`} alt="VolunTrack" className="w-11 h-11 object-contain" />
             <div>
@@ -135,9 +152,9 @@ export default function About() {
 
         <main className="max-w-[1400px] mx-auto px-4 md:px-8 pb-20">
 
-          <section className="mt-16 md:mt-24 text-center max-w-4xl mx-auto">
+          <section data-animate className="mt-16 md:mt-24 text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 rounded-full border border-brand-700/30 bg-brand-900/20 px-4 py-1.5 text-xs font-medium text-brand-300 mb-6">
-              <Zap className="w-3.5 h-3.5" /> Free for students — no credit card needed
+              <Zap className="w-3.5 h-3.5 animate-float" /> Free for students — no credit card needed
             </div>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white leading-tight">
               Track your volunteer hours, earn rewards, and showcase your impact.
@@ -160,7 +177,7 @@ export default function About() {
             </div>
           </section>
 
-          <section className="mt-16 text-center">
+          <section data-animate className="mt-16 text-center">
             <p className="text-sm uppercase tracking-[0.35em] text-brand-600">How it works</p>
             <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">Get started in four simple steps.</h2>
             <p className="mt-3 text-earth-400 max-w-xl mx-auto">
@@ -168,7 +185,7 @@ export default function About() {
             </p>
             <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {STEPS.map(({ icon: Icon, title, body }, i) => (
-                <div key={title} className="relative">
+                <div key={title} className="relative" style={{ animationDelay: `${i * 120}ms` }}>
                   <div className="w-14 h-14 rounded-full bg-brand-900/30 border border-brand-700/30 grid place-items-center text-brand-300 mx-auto mb-4 text-lg font-bold">
                     {i + 1}
                   </div>
@@ -182,7 +199,7 @@ export default function About() {
             </div>
           </section>
 
-          <section className="mt-20">
+          <section data-animate className="mt-20">
             <div className="text-center">
               <p className="text-sm uppercase tracking-[0.35em] text-brand-600">Categories</p>
               <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">Track every type of service.</h2>
@@ -191,8 +208,8 @@ export default function About() {
               </p>
             </div>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              {CATEGORIES.map(({ icon: Icon, label, color }) => (
-                <span key={label} className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${color}`}>
+              {CATEGORIES.map(({ icon: Icon, label, color }, i) => (
+                <span key={label} className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${color}`} style={{ animationDelay: `${i * 60}ms` }}>
                   <Icon className="w-4 h-4" />
                   {label}
                 </span>
@@ -200,7 +217,7 @@ export default function About() {
             </div>
           </section>
 
-          <section className="mt-20">
+          <section data-animate className="mt-20">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="text-sm uppercase tracking-[0.35em] text-brand-600">Core features</p>
@@ -212,8 +229,8 @@ export default function About() {
               </div>
             </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {FEATURES.map(({ icon: Icon, title, body }) => (
-                <Card key={title} className="border border-white/10 bg-slate-900/70 text-white">
+              {FEATURES.map(({ icon: Icon, title, body }, i) => (
+                <Card key={title} className="border border-white/10 bg-slate-900/70 text-white" style={{ animationDelay: `${i * 100}ms` }}>
                   <div className="w-11 h-11 rounded-3xl bg-brand-100 grid place-items-center text-brand-700 mb-4">
                     <Icon className="w-5 h-5" />
                   </div>
@@ -224,7 +241,7 @@ export default function About() {
             </div>
           </section>
 
-          <section className="mt-20">
+          <section data-animate className="mt-20">
             <div className="text-center">
               <p className="text-sm uppercase tracking-[0.35em] text-brand-600">Everything included</p>
               <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">A deeper look at what you get.</h2>
@@ -233,8 +250,8 @@ export default function About() {
               </p>
             </div>
             <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {DETAILED_FEATURES.map(({ icon: Icon, title, body }) => (
-                <Card key={title} className="border border-white/10 bg-slate-900/70 text-white p-6">
+              {DETAILED_FEATURES.map(({ icon: Icon, title, body }, i) => (
+                <Card key={title} className="border border-white/10 bg-slate-900/70 text-white p-6" style={{ animationDelay: `${i * 80}ms` }}>
                   <div className="w-10 h-10 rounded-xl bg-brand-900/40 border border-brand-700/30 grid place-items-center text-brand-300 mb-4">
                     <Icon className="w-5 h-5" />
                   </div>
@@ -245,7 +262,7 @@ export default function About() {
             </div>
           </section>
 
-          <section className="mt-20">
+          <section data-animate className="mt-20">
             <div className="text-center">
               <p className="text-sm uppercase tracking-[0.35em] text-brand-600">Who it&rsquo;s for</p>
               <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">Built for everyone who serves.</h2>
@@ -254,8 +271,8 @@ export default function About() {
               </p>
             </div>
             <div className="mt-10 grid gap-6 md:grid-cols-2">
-              {AUDIENCES.map(({ icon: Icon, title, body, perks }) => (
-                <Card key={title} className="border border-white/10 bg-slate-900/70 text-white p-6">
+              {AUDIENCES.map(({ icon: Icon, title, body, perks }, i) => (
+                <Card key={title} className="border border-white/10 bg-slate-900/70 text-white p-6" style={{ animationDelay: `${i * 100}ms` }}>
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-brand-900/40 border border-brand-700/30 grid place-items-center text-brand-300 shrink-0">
                       <Icon className="w-6 h-6" />
@@ -277,14 +294,14 @@ export default function About() {
             </div>
           </section>
 
-          <section className="mt-20">
+          <section data-animate className="mt-20">
             <div className="text-center">
               <p className="text-sm uppercase tracking-[0.35em] text-brand-600">Testimonials</p>
               <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">What people are saying.</h2>
             </div>
             <div className="mt-10 grid gap-6 md:grid-cols-3">
-              {TESTIMONIALS.map(({ quote, name, role }) => (
-                <Card key={name} className="border border-white/10 bg-slate-900/70 text-white p-6">
+              {TESTIMONIALS.map(({ quote, name, role }, i) => (
+                <Card key={name} className="border border-white/10 bg-slate-900/70 text-white p-6" style={{ animationDelay: `${i * 100}ms` }}>
                   <div className="flex gap-1 mb-4">
                     {[...Array(5)].map((_, i) => (
                       <Star key={i} className="w-4 h-4 fill-brand-400 text-brand-400" />
@@ -301,7 +318,7 @@ export default function About() {
           </section>
 
 
-          <section className="mt-20">
+          <section data-animate className="mt-20">
             <div className="text-center">
               <p className="text-sm uppercase tracking-[0.35em] text-brand-600">FAQ</p>
               <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">Frequently asked questions.</h2>
@@ -315,8 +332,8 @@ export default function About() {
             </div>
           </section>
 
-          <section className="mt-20 rounded-[2rem] bg-gradient-to-br from-brand-600 to-brand-700 p-10 md:p-16 text-center">
-            <Sparkles className="w-10 h-10 text-brand-200 mx-auto" />
+          <section data-animate className="mt-20 rounded-[2rem] bg-gradient-to-br from-brand-600 to-brand-700 p-10 md:p-16 text-center">
+            <Sparkles className="w-10 h-10 text-brand-200 mx-auto animate-float" />
             <h2 className="mt-4 text-3xl md:text-4xl font-bold text-white">Ready to start tracking your impact?</h2>
             <p className="mt-3 text-brand-100 max-w-lg mx-auto leading-7">
               Join thousands of students and organizations already using VolunTrack. It&rsquo;s free to get started.
@@ -331,7 +348,7 @@ export default function About() {
             </div>
           </section>
 
-          <section className="mt-16 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+          <section data-animate className="mt-16 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
             <Card className="p-8">
               <h3 className="text-2xl font-semibold text-earth-950 dark:text-white">Built for fast volunteering workflows</h3>
               <p className="mt-4 text-earth-700 dark:text-earth-300 leading-7">
@@ -356,7 +373,7 @@ export default function About() {
           </section>
         </main>
 
-        <footer className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-8 text-sm text-earth-500 dark:text-earth-400">
+        <footer data-animate className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-8 text-sm text-earth-500 dark:text-earth-400">
           <span>&copy; VolunTrack 2026</span>
           <div className="flex items-center gap-4">
             <Link to="/about" className="hover:text-white">About</Link>

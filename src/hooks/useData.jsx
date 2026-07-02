@@ -57,6 +57,7 @@ export function DataProvider({ children }) {
     setGoals((prev) => prev.filter((g) => g.id !== id))
   }, [])
 
+  const refreshLogs = useCallback(() => setLogs(listLogs()), [])
   const dismissBadges = useCallback(() => setPendingBadges([]), [])
 
   const submitReview = useCallback((rating, comment) => {
@@ -69,7 +70,7 @@ export function DataProvider({ children }) {
     <DataContext.Provider
       value={{
         logs, goals, earned, pendingBadges, dismissBadges,
-        addLog, editLog, removeLog,
+        addLog, editLog, removeLog, refreshLogs,
         saveGoal, removeGoal,
         showReview, reviewSubmitted, submitReview, totalHours,
       }}

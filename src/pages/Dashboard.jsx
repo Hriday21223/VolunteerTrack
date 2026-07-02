@@ -11,6 +11,7 @@ import BarChart from '@/components/BarChart.jsx'
 import { categoryColor } from '@/lib/categories.js'
 import { fmtDate, fmtHours, fromNow } from '@/utils/date.js'
 import { format, startOfWeek, startOfMonth, addDays, parseISO } from 'date-fns'
+import { buildDemoLogs, buildDemoGoals } from '@/lib/demoData.js'
 
 const apiUrl = import.meta.env.VITE_API_URL || '/api'
 
@@ -107,9 +108,16 @@ export default function Dashboard() {
 
   const recent = useMemo(() => logs.slice(0, 5), [logs])
 
+  const [showDemoPrompt, setShowDemoPrompt] = useState(logs.length === 0)
   const closeTour = () => {
     setShowTour(false)
     setHasSeenTour(true)
+  }
+
+  const loadDemoData = () => {
+    buildDemoLogs().forEach((l) => addLog(l))
+    buildDemoGoals().forEach((g) => saveGoal(g))
+    setShowDemoPrompt(false)
   }
 
   return (
@@ -173,6 +181,24 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {showDemoPrompt && !showTour && (
+        <Card className="mb-5 border border-brand-700/30 bg-gradient-to-br from-brand-900/20 to-transparent">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-6 h-6 text-brand-400 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm text-white">Get started with demo data</p>
+              <p className="text-xs text-earth-400 mt-0.5">
+                Populate your dashboard with sample logs and goals to explore the app right away.
+              </p>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <button onClick={() => setShowDemoPrompt(false)} className="btn-ghost text-xs">Skip</button>
+              <button onClick={loadDemoData} className="btn-primary text-xs">Load demo</button>
+            </div>
+          </div>
+        </Card>
       )}
 
       {dashTab === 'volunteer' && user?.role === 'student' ? (

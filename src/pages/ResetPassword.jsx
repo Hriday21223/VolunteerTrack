@@ -38,15 +38,15 @@ export default function ResetPassword() {
   return (
     <div className="min-h-screen grid place-items-center px-4 bg-gradient-to-br from-brand-50 via-earth-50 to-earth-100 dark:from-[#0f1813] dark:via-[#0f1813] dark:to-[#14201a]">
       <div className="w-full max-w-md">
-        <Link to="/login" className="flex items-center gap-2.5 justify-center mb-6">
+        <Link to="/login" className="flex items-center gap-2.5 justify-center mb-6 animate-fade-in-up">
           <img src={`${import.meta.env.BASE_URL}logo.png`} alt="VolunTrack" className="w-10 h-10 object-contain" />
           <span className="font-display font-bold text-2xl">VolunTrack</span>
         </Link>
 
-        <Card padded={false} className="p-7">
+        <Card padded={false} className="p-7 animate-scale-in">
           {done ? (
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-brand-100 dark:bg-brand-900/30 grid place-items-center text-brand-700 mx-auto">
+            <div className="text-center animate-fade-in-up">
+              <div className="w-12 h-12 rounded-full bg-brand-100 dark:bg-brand-900/30 grid place-items-center text-brand-700 mx-auto animate-bounce-in">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <h1 className="text-2xl font-bold mt-3">Password updated</h1>
@@ -55,14 +55,14 @@ export default function ResetPassword() {
               </p>
             </div>
           ) : (
-            <>
+            <div className="animate-fade-in-up">
               <h1 className="text-2xl font-bold mb-1">Choose a new password</h1>
               <p className="text-sm text-earth-500 dark:text-earth-400 mb-6">
                 Make it at least 6 characters. If you requested a reset, use the recovery code sent above.
               </p>
 
               <form onSubmit={onSubmit} className="space-y-4">
-                <div>
+                <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
                   <label className="label">Email</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-earth-400" />
@@ -78,7 +78,7 @@ export default function ResetPassword() {
                 </div>
 
                 {!user && (
-                  <div>
+                  <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
                     <label className="label">Recovery code</label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-earth-400" />
@@ -97,7 +97,7 @@ export default function ResetPassword() {
                   </div>
                 )}
 
-                <div>
+                <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
                   <label className="label">New password</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-earth-400" />
@@ -111,7 +111,7 @@ export default function ResetPassword() {
                     />
                   </div>
                 </div>
-                <div>
+                <div className="animate-fade-in-up" style={{ animationDelay: '400ms' }}>
                   <label className="label">Confirm new password</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-earth-400" />
@@ -126,10 +126,10 @@ export default function ResetPassword() {
                   </div>
                 </div>
 
-                {err && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-300 px-3 py-2 rounded-lg">{err}</div>}
-                <button className="btn-primary w-full" type="submit">Update password</button>
+                {err && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-300 px-3 py-2 rounded-lg animate-shake">{err}</div>}
+                <button className="btn-primary w-full animate-fade-in-up" style={{ animationDelay: '500ms' }} type="submit">Update password</button>
               </form>
-            </>
+            </div>
           )}
         </Card>
       </div>
