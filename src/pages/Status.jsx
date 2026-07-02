@@ -20,6 +20,14 @@ function DetailRow({ label, value }) {
 
 import { getIncidents, getAgentLog, saveIncident, logAgentAction, sendEmailAlert, notify, runAgent, updateIncidentStatus } from '@/lib/agent.js'
 
+const STORAGE_KEYS = [
+  'voluntrack:user', 'voluntrack:users', 'voluntrack:logs', 'voluntrack:goals',
+  'voluntrack:achievements', 'voluntrack:theme', 'voluntrack:reminders',
+  'voluntrack:fired-reminders', 'voluntrack:reviews', 'voluntrack:contacts',
+  'voluntrack:dashboard-tour', 'voluntrack:auth_token', 'voluntrack:incidents',
+  'voluntrack:agent_log',
+]
+
 export default function Status() {
   const storageOk = (() => {
     try {
