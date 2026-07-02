@@ -426,11 +426,6 @@ export default function AdminShowcase() {
     try { setAgentLog(JSON.parse(localStorage.getItem('voluntrack:agent_log') || '[]')) } catch { setAgentLog([]) }
   }, [])
 
-  useEffect(() => { refreshAgent(); const id = setInterval(refreshAgent, 30000); return () => clearInterval(id) }, [refreshAgent])
-  useEffect(() => {
-    window.__agentData = () => ({ incidents, agentLog, incByStatus, totalInc, resolvedInc, failedInc, fixRate, lastActions })
-  }, [incidents, agentLog, incByStatus, totalInc, resolvedInc, failedInc, fixRate, lastActions])
-
   const incByStatus = { detected: 0, investigating: 0, fixing: 0, resolved: 0, failed: 0 }
   incidents.forEach((i) => { incByStatus[i.status] = (incByStatus[i.status] || 0) + 1 })
   const totalInc = incidents.length
@@ -438,6 +433,11 @@ export default function AdminShowcase() {
   const failedInc = incByStatus.failed
   const fixRate = totalInc > 0 ? Math.round((resolvedInc / (resolvedInc + failedInc || 1)) * 100) : 0
   const lastActions = agentLog.slice(-5).reverse()
+
+  useEffect(() => { refreshAgent(); const id = setInterval(refreshAgent, 30000); return () => clearInterval(id) }, [refreshAgent])
+  useEffect(() => {
+    window.__agentData = () => ({ incidents, agentLog, incByStatus, totalInc, resolvedInc, failedInc, fixRate, lastActions })
+  }, [incidents, agentLog, incByStatus, totalInc, resolvedInc, failedInc, fixRate, lastActions])
 
   const printSection = (selector) => {
     const el = document.querySelector(selector)
