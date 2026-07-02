@@ -1,34 +1,82 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Moon, Sun, Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, School, Send } from 'lucide-react'
+import { Moon, Sun, Plus, Trash2, Star, LogOut, Bell, ShieldCheck, Info, Lock, Shield, School, Send, Copy, Eye, EyeOff, QrCode, Upload, Sparkles, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { useTheme } from '@/hooks/useTheme.js'
-import { hashPin } from '@/api/index.js'
+import { hashPin, sendPasswordResetCode, clearPasswordResetCode, createLog } from '@/api/index.js'
+import { buildDemoLogs, buildDemoGoals, buildDemoReminders } from '@/lib/demoData.js'
 import { findPartnerByCode } from '@/lib/partners.js'
 import { sendSchoolReport } from '@/lib/schoolReport.js'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
+import QRCode from 'qrcode'
 
 export default function Settings() {
   const { theme, setTheme, toggle } = useTheme()
-  const { user, logout, deleteAccount, updateProfile } = useAuth()
+  const { user, logout, deleteAccount, updateProfile, setSyncPin: setSyncPinAuth } = useAuth()
   const { goals, saveGoal, removeGoal, logs } = useData()
   const nav = useNavigate()
   const [newGoal, setNewGoal] = useState({ title: '', targetHours: 50, primary: false })
   const [toast, setToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
   const [pin, setPin] = useState('')
   const [pinConfirm, setPinConfirm] = useState('')
   const [pinSaved, setPinSaved] = useState(false)
-
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const [deleteConfirmationText, setDeleteConfirmationText] = useState('')
-
+  const [displaySyncPin, setDisplaySyncPin] = useState('')
+  const [showSyncPin, setShowSyncPin] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [syncPassword, setSyncPassword] = useState('')
+  const [showSyncPasswordPrompt, setShowSyncPasswordPrompt] = useState(false)
+  const [showPwText, setShowPwText] = useState(false)
+  const [syncPasswordBusy, setSyncPasswordBusy] = useState(false)
   const [schoolCode, setSchoolCode] = useState('')
+  const [schoolName, setSchoolName] = useState('')
+  const [schoolBusy, setSchoolBusy] = useState(false)
   const [schoolErr, setSchoolErr] = useState('')
   const [reportBusy, setReportBusy] = useState(false)
   const [reportMsg, setReportMsg] = useState('')
+  const [pdfs, setPdfs] = useState([])
+  const [showSchool, setShowSchool] = useState(false)
+  const [schoolInfo, setSchoolInfo] = useState(null)
+  const [showQR, setShowQR] = useState(false)
+  const qrCanvasRef = useRef(null)
+
+  useEffect(() => {
+    if (showQR && displaySyncPin && qrCanvasRef.current) {
+      QRCode.toCanvas(qrCanvasRef.current, displaySyncPin, {
+        width: 200,
+        margin: 2,
+        color: { dark: '#111827', light: '#ffffff' },
+      })
+    }
+  }, [showQR, displaySyncPin])
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    setIsMobile(mq.matches)
+    const handler = (e) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  // Load sync PIN from user profile on mount
+  useEffect(() => {
+    if (user?.syncPin) {
+      setDisplaySyncPin(user.syncPin)
+      setShowSyncPin(true)
+    }
+  }, [user?.syncPin])
+
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('')
+  const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' })
+  const [showPw, setShowPw] = useState(false)
+  const [pwBusy, setPwBusy] = useState(false)
+  const [pwError, setPwError] = useState('')
+  const [pwDone, setPwDone] = useState(false)
+
   const partner = findPartnerByCode(user?.schoolCode)
 
   const linkSchool = () => {
@@ -72,7 +120,37 @@ export default function Settings() {
     if (!newGoal.title.trim()) return
     saveGoal({ ...newGoal, title: newGoal.title.trim(), targetHours: Number(newGoal.targetHours) || 0 })
     setNewGoal({ title: '', targetHours: 50, primary: false })
+    setToastMessage('Goal added')
     setToast(true)
+  }
+
+  const onChangePassword = async (e) => {
+    e.preventDefault()
+    setPwError('')
+    setPwDone(false)
+    if (!pwForm.current || !pwForm.newPw || !pwForm.confirm) { setPwError('Fill in all fields.'); return }
+    if (pwForm.newPw.length < 6) { setPwError('New password must be at least 6 characters.'); return }
+    if (pwForm.newPw !== pwForm.confirm) { setPwError('Passwords do not match.'); return }
+    setPwBusy(true)
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const apiUrl = import.meta.env.VITE_API_URL || '/api'
+      const res = await fetch(`${apiUrl}/auth/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ email: user.email, currentPassword: pwForm.current, newPassword: pwForm.newPw }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to update password')
+      }
+      setPwForm({ current: '', newPw: '', confirm: '' })
+      setPwDone(true)
+    } catch (err) {
+      setPwError(err.message)
+    } finally {
+      setPwBusy(false)
+    }
   }
 
   const handleDeleteAccount = () => {
@@ -80,6 +158,18 @@ export default function Settings() {
     deleteAccount()
     nav('/login')
   }
+
+  useEffect(() => {
+    if (!user?.schoolId) return
+    ;(async () => {
+      try {
+        const res = await fetch(`${apiUrl}/school/info?id=${user.schoolId}`)
+        if (!res.ok) return
+        const data = await res.json()
+        if (data.school) setSchoolInfo(data.school)
+      } catch {}
+    })()
+  }, [user?.schoolId])
 
   const savePin = () => {
     if (!user) return
@@ -89,11 +179,112 @@ export default function Settings() {
     setPin('')
     setPinConfirm('')
     setPinSaved(true)
+    setToastMessage('PIN saved')
     setToast(true)
   }
 
   const makePrimary = (id) => {
     goals.forEach((g) => saveGoal({ ...g, primary: g.id === id }))
+  }
+
+  const generateSyncPin = async () => {
+    try {
+      const newPin = Math.floor(10000 + Math.random() * 90000).toString()
+
+      const token = localStorage.getItem('voluntrack:auth_token')
+      if (!token) {
+        setSyncPassword('')
+        setShowSyncPasswordPrompt(true)
+        setDisplaySyncPin(newPin)
+        return
+      }
+
+      await setSyncPinAuth(newPin)
+      setDisplaySyncPin(newPin)
+      setShowSyncPin(true)
+      setToastMessage('Sync PIN generated')
+      setToast(true)
+    } catch (error) {
+      setToastMessage(error.message || 'Failed to generate sync PIN')
+      setToast(true)
+    }
+  }
+
+  const confirmSyncPin = async () => {
+    if (!syncPassword) return
+    if (!displaySyncPin) return
+    setSyncPasswordBusy(true)
+    const apiUrl = import.meta.env.VITE_API_URL || '/api'
+    try {
+      const response = await fetch(`${apiUrl}/auth/sync-pin-auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, password: syncPassword, syncPin: displaySyncPin }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Failed to link account')
+
+      localStorage.setItem('voluntrack:auth_token', data.token)
+      setShowSyncPin(true)
+      setShowSyncPasswordPrompt(false)
+      setSyncPassword('')
+      setToastMessage('Account linked! Sync PIN generated.')
+      setToast(true)
+      return
+    } catch (error) {
+      // If password is incorrect, try to sync the database password
+      // using a locally-generated recovery code
+      if (error.message === 'Password is incorrect.') {
+        try {
+          const updated = sendPasswordResetCode(user.email)
+          if (updated && updated.resetPasswordCode) {
+            const code = updated.resetPasswordCode
+            const sendRes = await fetch(`${apiUrl}/send-reset-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: user.email, code, type: 'password' }),
+            })
+            if (sendRes.ok || sendRes.status === 500 || sendRes.status === 503) {
+              const resetRes = await fetch(`${apiUrl}/auth/reset-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: user.email, code, newPassword: syncPassword }),
+              })
+              if (resetRes.ok) {
+                clearPasswordResetCode(user.email)
+                const retryRes = await fetch(`${apiUrl}/auth/sync-pin-auth`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email: user.email, password: syncPassword, syncPin: displaySyncPin }),
+                })
+                const retryData = await retryRes.json()
+                if (retryRes.ok) {
+                  localStorage.setItem('voluntrack:auth_token', retryData.token)
+                  setShowSyncPin(true)
+                  setShowSyncPasswordPrompt(false)
+                  setSyncPassword('')
+                  setToastMessage('Password synced! Sync PIN generated.')
+                  setToast(true)
+                  return
+                }
+              }
+            }
+          }
+        } catch {
+          // fall through to error message below
+        }
+      }
+      setToastMessage(error.message || 'Failed to link account')
+      setToast(true)
+    } finally {
+      setSyncPasswordBusy(false)
+    }
+  }
+
+  const copySyncPin = () => {
+    navigator.clipboard.writeText(displaySyncPin)
+    setToastMessage('PIN copied to clipboard')
+    setToast(true)
   }
 
   return (
@@ -142,31 +333,66 @@ export default function Settings() {
           </form>
         </Card>
 
+
+
+        <Card className="border border-dashed border-brand-700/30 bg-brand-900/5">
+          <h3 className="font-display font-semibold mb-3 flex items-center gap-2"><Sparkles className="w-4 h-4 text-brand-400" /> Demo data</h3>
+          <p className="text-sm text-earth-500 dark:text-earth-400 mb-4">
+            Populate your account with sample logs, goals, and reminders to explore the app before adding your own data.
+          </p>
+          <button
+            onClick={() => {
+              const existing = logs.length
+              if (existing > 0 && !confirm('This will add demo data alongside your existing logs. Continue?')) return
+              buildDemoLogs().forEach((l) => createLog(l))
+              buildDemoGoals().forEach((g) => saveGoal(g))
+              setToastMessage('Demo data loaded! Refresh to see it.')
+              setToast(true)
+            }}
+            className="btn-primary inline-flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4" /> Load demo data
+          </button>
+        </Card>
+
         <Card>
-          <h3 className="font-display font-semibold mb-3">Appearance</h3>
-          <p className="text-sm text-earth-500 dark:text-earth-400 mb-4">Switch between light and dark mode. Your choice is remembered on this device.</p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTheme('light')}
-              className={`btn flex-1 ${theme === 'light' ? 'bg-brand-600 text-white' : 'btn-secondary'}`}
-            >
-              <Sun className="w-4 h-4" /> Light
-            </button>
-            <button
-              onClick={() => setTheme('dark')}
-              className={`btn flex-1 ${theme === 'dark' ? 'bg-brand-600 text-white' : 'btn-secondary'}`}
-            >
-              <Moon className="w-4 h-4" /> Dark
-            </button>
-          </div>
-          <button onClick={toggle} className="btn-ghost mt-3 w-full">Toggle automatically</button>
+          <h3 className="font-display font-semibold mb-3 flex items-center gap-2"><Lock className="w-4 h-4 text-brand-600" /> Change password</h3>
+          <form onSubmit={onChangePassword} className="grid sm:grid-cols-3 gap-4">
+            <div>
+              <label className="label flex items-center gap-1.5"><Lock className="w-4 h-4" /> Current password</label>
+              <input type={showPw ? 'text' : 'password'} className="input" value={pwForm.current} onChange={(e) => setPwForm((f) => ({ ...f, current: e.target.value }))} required />
+            </div>
+            <div>
+              <label className="label flex items-center gap-1.5"><Lock className="w-4 h-4" /> New password</label>
+              <input type={showPw ? 'text' : 'password'} className="input" value={pwForm.newPw} onChange={(e) => setPwForm((f) => ({ ...f, newPw: e.target.value }))} required minLength={6} />
+            </div>
+            <div>
+              <label className="label flex items-center gap-1.5"><Lock className="w-4 h-4" /> Confirm new</label>
+              <div className="flex gap-2">
+                <input type={showPw ? 'text' : 'password'} className="input flex-1" value={pwForm.confirm} onChange={(e) => setPwForm((f) => ({ ...f, confirm: e.target.value }))} required />
+                <button type="button" onClick={() => setShowPw(!showPw)} className="btn-ghost px-2" title={showPw ? 'Hide' : 'Show'}>
+                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            {pwError && <div className="sm:col-span-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-300 px-3 py-2 rounded-lg">{pwError}</div>}
+            {pwDone && <div className="sm:col-span-3 text-sm text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-300 px-3 py-2 rounded-lg flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Password updated</div>}
+            <div className="sm:col-span-3">
+              <button className="btn-primary" type="submit" disabled={pwBusy}>
+                {pwBusy ? 'Updating\u2026' : 'Update password'}
+              </button>
+            </div>
+          </form>
         </Card>
 
         <Card>
           <h3 className="font-display font-semibold mb-3 flex items-center gap-2"><Bell className="w-4 h-4 text-brand-600" /> Reminders</h3>
-          <p className="text-sm text-earth-500 dark:text-earth-400">
-            Reminder scheduling is coming soon. In the meantime, log your hours right after each session — it's the easiest habit to keep.
+          <p className="text-sm text-earth-500 dark:text-earth-400 mb-4">
+            Set up weekly or one-time reminders so you never forget to log your volunteer hours.
           </p>
+          <Link to="/reminders" className="btn-primary inline-flex items-center gap-2">
+            <Bell className="w-4 h-4" /> Manage reminders
+          </Link>
         </Card>
 
         <Card>
@@ -207,8 +433,9 @@ export default function Settings() {
           <p className="text-sm text-earth-500 dark:text-earth-400">
             Your data is stored only on this device. Nothing is uploaded to a server. Sign out below to clear your session.
           </p>
-          <div className="text-xs text-earth-500 dark:text-earth-400 mt-3">
-            Signed in as <span className="font-medium text-earth-800 dark:text-earth-100">{user?.email}</span>
+          <div className="text-xs text-earth-500 dark:text-earth-400 mt-3 space-y-1">
+            <div>Signed in as <span className="font-medium text-earth-800 dark:text-earth-100">{user?.email}</span></div>
+            <div>Role: <span className="font-medium text-earth-800 dark:text-earth-100 capitalize">{user?.role}</span></div>
           </div>
         </Card>
 
@@ -256,6 +483,88 @@ export default function Settings() {
           </div>
         </Card>
 
+        <Card>
+          <div className="flex items-center gap-2 mb-3">
+            <Shield className="w-4 h-4 text-brand-600" />
+            <h3 className="font-display font-semibold">
+              {isMobile ? 'Laptop sync PIN' : 'Mobile sync PIN'}
+            </h3>
+          </div>
+          <p className="text-sm text-earth-500 dark:text-earth-400 mb-4">
+            {isMobile
+              ? 'Generate a 5-digit PIN to sync your account with your laptop. Share this PIN with your computer to access your data.'
+              : 'Generate a 5-digit PIN to sync your account with the mobile app. Share this PIN with your mobile device to access your data.'}
+          </p>
+          {showSyncPasswordPrompt ? (
+            <div className="space-y-3">
+              <div className="p-4 bg-slate-900/80 rounded-xl border border-amber-500/30">
+                <p className="text-xs text-amber-300 mb-2">
+                  To enable cross-device sync, enter your account password to link this device to the server.
+                </p>
+                <div className="relative">
+                  <input
+                    type={showPwText ? 'text' : 'password'}
+                    value={syncPassword}
+                    onChange={(e) => setSyncPassword(e.target.value)}
+                    placeholder="Your password"
+                    className="input w-full bg-slate-900/80 text-white border-white/10 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPwText(!showPwText)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400 hover:text-white"
+                    tabIndex={-1}
+                  >
+                    {showPwText ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={confirmSyncPin}
+                disabled={!syncPassword || syncPasswordBusy}
+                className="btn-primary w-full"
+              >
+                {syncPasswordBusy ? 'Linking…' : 'Link account & generate PIN'}
+              </button>
+              <button
+                onClick={() => { setShowSyncPasswordPrompt(false); setSyncPassword('') }}
+                className="btn-ghost w-full text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : !showSyncPin ? (
+            <button
+              onClick={generateSyncPin}
+              className="btn-primary w-full"
+            >
+              Generate {isMobile ? 'laptop' : 'mobile'} sync PIN
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <div className="p-4 bg-slate-900/80 rounded-xl border border-white/10">
+                <div className="text-xs text-earth-400 mb-1">Your sync PIN</div>
+                <div className="text-2xl font-mono font-bold text-white tracking-wider">{displaySyncPin}</div>
+              </div>
+              {showQR ? (
+                <div className="flex justify-center p-4 bg-white rounded-xl">
+                  <canvas ref={qrCanvasRef} />
+                </div>
+              ) : (
+                <button onClick={() => setShowQR(true)} className="btn-secondary w-full">
+                  <QrCode className="w-4 h-4 mr-2" /> Show QR code
+                </button>
+              )}
+              <button onClick={copySyncPin} className="btn-secondary w-full">
+                <Copy className="w-4 h-4 mr-2" /> Copy PIN
+              </button>
+              <button onClick={generateSyncPin} className="btn-ghost w-full text-sm">
+                Generate new PIN
+              </button>
+            </div>
+          )}
+        </Card>
+
         <Card className="border-red-500/30 bg-red-950/10">
           <div className="inline-flex items-center gap-3 rounded-3xl border border-red-500/40 bg-red-600/10 px-4 py-3 text-sm font-semibold text-red-100 shadow-sm shadow-red-500/10 mb-4">
             <span className="inline-flex h-3 w-3 rounded-full bg-red-400 shadow-red-500/30 shadow-md" />
@@ -299,20 +608,99 @@ export default function Settings() {
           )}
         </Card>
 
-        <Card className="lg:col-span-2">
-          <Link to="/admin" className="block p-4 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition">
-            <div className="flex items-center gap-2 mb-1">
-              <ShieldCheck className="w-4 h-4 text-brand-600" />
-              <span className="font-semibold text-earth-900 dark:text-earth-100">Admin inbox</span>
+        {user?.role !== 'school' && user?.role !== 'admin' && (
+          <Card>
+            <div className="flex items-center gap-2 mb-3">
+              <School className="w-4 h-4 text-brand-600" />
+              <h3 className="font-display font-semibold">School</h3>
             </div>
-            <p className="text-sm text-earth-500 dark:text-earth-400">Review contact form submissions.</p>
-          </Link>
-        </Card>
+            {user.schoolId ? (
+              <div className="space-y-3">
+                {schoolInfo && (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
+                    <p className="font-medium">{schoolInfo.name}</p>
+                    <p className="text-earth-400">Code: <span className="font-mono">{schoolInfo.pin}</span></p>
+                  </div>
+                )}
+                <p className="text-sm text-earth-500 dark:text-earth-400">Upload verification PDFs for approval.</p>
+                <Link to="/school/dashboard" className="btn-secondary w-full flex items-center justify-center">
+                  <Upload className="w-4 h-4 mr-2" /> Upload & view PDFs
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-earth-500 dark:text-earth-400">Enter your school code to link your account.</p>
+                <input
+                  type="text"
+                  value={schoolCode}
+                  onChange={(e) => setSchoolCode(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  placeholder="cisd-12345"
+                  className="input w-full"
+                />
+                <button
+                  onClick={async () => {
+                    if (!schoolCode) return
+                    setSchoolBusy(true)
+                    try {
+                      const token = localStorage.getItem('voluntrack:auth_token')
+                      const apiUrl = import.meta.env.VITE_API_URL || '/api'
+                      const res = await fetch(`${apiUrl}/school/join`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ pin: schoolCode }),
+                      })
+                      const data = await res.json()
+                      if (!res.ok) throw new Error(data.error || 'Failed to join')
+                      setToastMessage('School linked!')
+                      setToast(true)
+                      setSchoolCode('')
+                      window.location.reload()
+                    } catch (e) {
+                      setToastMessage(e.message)
+                      setToast(true)
+                    } finally {
+                      setSchoolBusy(false)
+                    }
+                  }}
+                  disabled={!schoolCode || schoolBusy}
+                  className="btn-primary w-full"
+                >
+                  {schoolBusy ? 'Joining…' : 'Join school'}
+                </button>
+              </div>
+            )}
+          </Card>
+        )}
+
+        {user?.role === 'school' && (
+          <Card>
+            <div className="flex items-center gap-2 mb-3">
+              <School className="w-4 h-4 text-brand-600" />
+              <h3 className="font-display font-semibold">School dashboard</h3>
+            </div>
+            <p className="text-sm text-earth-500 dark:text-earth-400 mb-4">View students, review uploaded PDFs, and manage approvals.</p>
+            <Link to="/school/dashboard" className="btn-primary w-full flex items-center justify-center">
+              Open school dashboard
+            </Link>
+          </Card>
+        )}
+
+        {user?.role === 'admin' && (
+          <Card className="lg:col-span-2">
+            <Link to="/admin" className="block p-4 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition">
+              <div className="flex items-center gap-2 mb-1">
+                <ShieldCheck className="w-4 h-4 text-brand-600" />
+                <span className="font-semibold text-earth-900 dark:text-earth-100">Admin inbox</span>
+              </div>
+              <p className="text-sm text-earth-500 dark:text-earth-400">Review contact form submissions.</p>
+            </Link>
+          </Card>
+        )}
 
         <Card className="lg:col-span-2">
           <h3 className="font-display font-semibold mb-3 flex items-center gap-2"><Info className="w-4 h-4 text-brand-600" /> About</h3>
           <p className="text-sm text-earth-500 dark:text-earth-400">
-            VolunTrack is built by Noothen's Workspace. Visit the <Link to="/about" className="text-brand-700 dark:text-brand-300 hover:underline">About page</Link> or <Link to="/contact" className="text-brand-700 dark:text-brand-300 hover:underline">get in touch</Link>.
+            VolunTrack co. Visit the <Link to="/about" className="text-brand-700 dark:text-brand-300 hover:underline">About page</Link> or <Link to="/contact" className="text-brand-700 dark:text-brand-300 hover:underline">get in touch</Link>.
           </p>
         </Card>
 
@@ -326,7 +714,7 @@ export default function Settings() {
         </Card>
       </div>
 
-      <Toast open={toast} onClose={() => setToast(false)}>Goal added</Toast>
+      <Toast open={toast} onClose={() => setToast(false)}>{toastMessage}</Toast>
     </AppLayout>
   )
 }

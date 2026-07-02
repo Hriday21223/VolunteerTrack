@@ -7,6 +7,8 @@ import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
 import { fmtHours } from '@/utils/date.js'
 
+const apiUrl = import.meta.env.VITE_API_URL || '/api'
+
 export default function Profile() {
   const { user, updateProfile } = useAuth()
   const { logs } = useData()
@@ -19,6 +21,7 @@ export default function Profile() {
     avatar: user?.avatar || '',
   })
   const [toast, setToast] = useState(false)
+  const [toastMsg, setToastMsg] = useState('Profile saved')
   const [error, setError] = useState('')
 
   const onChange = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
@@ -41,6 +44,7 @@ export default function Profile() {
       grade: form.grade.trim(),
       avatar: form.avatar,
     })
+    setToastMsg('Profile saved')
     setToast(true)
   }
 
@@ -99,7 +103,7 @@ export default function Profile() {
         </Card>
       </div>
 
-      <Toast open={toast} onClose={() => setToast(false)}>Profile saved</Toast>
+      <Toast open={toast} onClose={() => setToast(false)}>{toastMsg}</Toast>
     </AppLayout>
   )
 }

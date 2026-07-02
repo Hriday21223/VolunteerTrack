@@ -2,6 +2,8 @@
 // password / PIN recovery. Both pages use this so the user always
 // sees the same delivery status, error, and fallback behavior.
 
+const apiUrl = import.meta.env.VITE_API_URL || '/api'
+
 const NO_BACKEND_HINTS = [
   'Email backend returned 404',
   'backend returned 404',
@@ -33,11 +35,15 @@ export async function sendRecoveryEmail({ email, code, type }) {
     return { ok: false, reason: 'Missing recovery details.', backendAvailable: false }
   }
   try {
-    const response = await fetch('/api/send-reset-email', {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 8000)
+    const response = await fetch(`${apiUrl}/send-reset-email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, code, type }),
+      signal: controller.signal,
     })
+    clearTimeout(timer)
     if (response.ok) return { ok: true, backendAvailable: true }
 
     let reason = `Email backend returned ${response.status}.`
@@ -54,11 +60,9 @@ export async function sendRecoveryEmail({ email, code, type }) {
     const backendAvailable = response.status !== 404 && !reasonLooksLikeMissingBackend(reason)
     return { ok: false, reason, missingVars, backendAvailable }
   } catch (err) {
-    return {
-      ok: false,
-      reason: err?.message || 'Could not reach the email server.',
-      backendAvailable: false,
-    }
+    const isTimeout = err?.name === 'AbortError'
+    const reason = isTimeout ? 'Email timed out.' : err?.message || 'Could not reach the email server.'
+    return { ok: false, reason, backendAvailable: !isTimeout }
   }
 }
 
@@ -68,7 +72,7 @@ export async function sendRecoveryEmail({ email, code, type }) {
  */
 export async function getRecoveryStatus() {
   try {
-    const response = await fetch('/api/recovery-status')
+    const response = await fetch(`${apiUrl}/recovery-status`)
     if (!response.ok) {
       return { ok: false, backendAvailable: response.status !== 404 }
     }
@@ -94,7 +98,7 @@ export async function getRecoveryStatus() {
 export async function fetchDevRecoveryCode(email) {
   if (!email) return { ok: false, reason: 'Missing email.', backendAvailable: false }
   try {
-    const response = await fetch(`/api/dev-recovery-code?email=${encodeURIComponent(email)}`)
+    const response = await fetch(`${apiUrl}/dev-recovery-code?email=${encodeURIComponent(email)}`)
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
       const backendAvailable = response.status !== 404

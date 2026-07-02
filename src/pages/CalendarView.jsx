@@ -112,6 +112,8 @@ export default function CalendarView() {
 }
 
 function DayModal({ day, logs, onClose, onEdit, onDelete }) {
+  const [confirmId, setConfirmId] = useState(null)
+
   return (
     <div className="fixed inset-0 z-50 grid place-items-center px-4 bg-black/30 animate-fade-in" onClick={onClose}>
       <Card
@@ -146,7 +148,14 @@ function DayModal({ day, logs, onClose, onEdit, onDelete }) {
                   </div>
                   <div className="flex flex-col gap-1">
                     <button onClick={() => onEdit(l.id)} className="p-1.5 rounded-lg hover:bg-earth-100 dark:hover:bg-[#1b2a22]" title="Edit"><Edit2 className="w-4 h-4" /></button>
-                    <button onClick={() => onDelete(l.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 dark:hover:bg-red-900/20" title="Delete"><X className="w-4 h-4" /></button>
+                    {confirmId === l.id ? (
+                      <div className="flex gap-1">
+                        <button onClick={() => { onDelete(l.id); setConfirmId(null) }} className="px-2 py-1 rounded-lg bg-red-600 text-white text-xs font-semibold" title="Confirm delete">Yes</button>
+                        <button onClick={() => setConfirmId(null)} className="px-2 py-1 rounded-lg bg-earth-200 dark:bg-[#243529] text-xs font-semibold" title="Cancel">No</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setConfirmId(l.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 dark:hover:bg-red-900/20" title="Delete"><X className="w-4 h-4" /></button>
+                    )}
                   </div>
                 </div>
               </li>

@@ -1,24 +1,67 @@
 import { NavLink, useLocation, Link } from 'react-router-dom'
-import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell, Plus } from 'lucide-react'
+import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Plus, Shield, HelpCircle, ClipboardList, School, Activity } from 'lucide-react'
 import { cn } from '@/utils/cn.js'
+import { useAuth } from '@/hooks/useAuth.jsx'
 
-const ITEMS = [
-  { to: '/',             label: 'Home',     icon: Home },
-  { to: '/log',          label: 'Log',      icon: Clock },
-  { to: '/calendar',     label: 'Calendar', icon: Calendar },
-  { to: '/achievements', label: 'Awards',   icon: Trophy },
-  { to: '/reports',      label: 'Reports',  icon: FileText },
-  { to: '/profile',      label: 'Profile',  icon: User },
-  { to: '/settings',     label: 'Settings', icon: Settings },
-]
+const ROLE_ITEMS = {
+  student: [
+    { to: '/',             label: 'Home',     icon: Home },
+    { to: '/log',          label: 'Log',      icon: Clock },
+    { to: '/calendar',     label: 'Calendar', icon: Calendar },
+    { to: '/achievements', label: 'Awards',   icon: Trophy },
+    { to: '/reports',      label: 'Reports',  icon: FileText },
+    { to: '/profile',      label: 'Profile',  icon: User },
+    { to: '/settings',     label: 'Settings', icon: Settings },
+    { to: '/help',         label: 'Help',     icon: HelpCircle },
+    { to: '/status',       label: 'Status',   icon: Activity },
+  ],
+  volunteer: [
+    { to: '/',             label: 'Home',     icon: Home },
+    { to: '/my-tasks',     label: 'Tasks',    icon: ClipboardList },
+    { to: '/log',          label: 'Log',      icon: Clock },
+    { to: '/calendar',     label: 'Calendar', icon: Calendar },
+    { to: '/achievements', label: 'Awards',   icon: Trophy },
+    { to: '/reports',      label: 'Reports',  icon: FileText },
+    { to: '/profile',      label: 'Profile',  icon: User },
+    { to: '/settings',     label: 'Settings', icon: Settings },
+    { to: '/help',         label: 'Help',     icon: HelpCircle },
+    { to: '/status',       label: 'Status',   icon: Activity },
+  ],
+  school: [
+    { to: '/',             label: 'Home',     icon: Home },
+    { to: '/school/dashboard', label: 'School', icon: School },
+    { to: '/log',          label: 'Log',      icon: Clock },
+    { to: '/calendar',     label: 'Calendar', icon: Calendar },
+    { to: '/reports',      label: 'Reports',  icon: FileText },
+    { to: '/profile',      label: 'Profile',  icon: User },
+    { to: '/settings',     label: 'Settings', icon: Settings },
+    { to: '/help',         label: 'Help',     icon: HelpCircle },
+    { to: '/status',       label: 'Status',   icon: Activity },
+  ],
+  admin: [
+    { to: '/',             label: 'Home',     icon: Home },
+    { to: '/admin',        label: 'Admin',    icon: Shield },
+    { to: '/log',          label: 'Log',      icon: Clock },
+    { to: '/calendar',     label: 'Calendar', icon: Calendar },
+    { to: '/reports',      label: 'Reports',  icon: FileText },
+    { to: '/profile',      label: 'Profile',  icon: User },
+    { to: '/settings',     label: 'Settings', icon: Settings },
+    { to: '/help',         label: 'Help',     icon: HelpCircle },
+    { to: '/status',       label: 'Status',   icon: Activity },
+  ],
+}
 
 export default function MobileTabBar() {
   const { pathname } = useLocation()
+  const { user } = useAuth()
+  const role = user?.role || 'student'
+  const items = ROLE_ITEMS[role] || ROLE_ITEMS.student
+
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-30">
       <div className="mx-4 mb-4 rounded-[1.5rem] bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-xl border border-earth-200/50 dark:border-white/10 shadow-2xl shadow-black/5 dark:shadow-black/20">
-        <ul className="grid grid-cols-7 px-1 pt-1">
-          {ITEMS.map(({ to, label, icon: Icon }) => {
+        <ul className="grid px-1 pt-1" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}>
+          {items.map(({ to, label, icon: Icon }) => {
             const active = to === '/' ? pathname === '/' : pathname.startsWith(to)
             return (
               <li key={to}>

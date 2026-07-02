@@ -10,6 +10,7 @@ export const keys = {
   theme:        `${NS}theme`,
   reminders:    `${NS}reminders`,
   fired:        `${NS}fired-reminders`, // dedupe list of reminder ids that already fired this cycle
+  reviews:      `${NS}reviews`,          // list of review submissions
 }
 
 export function read(key, fallback = null) {

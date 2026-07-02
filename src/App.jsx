@@ -11,6 +11,7 @@ import Register from '@/pages/Register.jsx'
 import ForgotPassword from '@/pages/ForgotPassword.jsx'
 import ResetPassword from '@/pages/ResetPassword.jsx'
 import ResetPin from '@/pages/ResetPin.jsx'
+import SyncLogin from '@/pages/SyncLogin.jsx'
 import About from '@/pages/About.jsx'
 import Contact from '@/pages/Contact.jsx'
 import Dashboard from '@/pages/Dashboard.jsx'
@@ -22,6 +23,13 @@ import Profile from '@/pages/Profile.jsx'
 import Settings from '@/pages/Settings.jsx'
 import Reminders from '@/pages/Reminders.jsx'
 import Admin from '@/pages/Admin.jsx'
+import SchoolDashboard from '@/pages/SchoolDashboard.jsx'
+import SchoolRegister from '@/pages/SchoolRegister.jsx'
+import Help from '@/pages/Help.jsx'
+import MyTasks from '@/pages/MyTasks.jsx'
+import Status from '@/pages/Status.jsx'
+
+const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
 
 function Protected({ children }) {
   const { user } = useAuth()
@@ -33,6 +41,16 @@ function Protected({ children }) {
 function PublicOnly({ children }) {
   const { user } = useAuth()
   if (user) return <Navigate to="/" replace />
+  return children
+}
+
+function AdminProtected({ children }) {
+  const { user } = useAuth()
+  const loc = useLocation()
+  if (!user) return <Navigate to="/login" state={{ from: loc }} replace />
+  if (user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    return <Navigate to="/" replace />
+  }
   return children
 }
 
@@ -51,8 +69,11 @@ function Shell() {
         <Route path="/forgot-password" element={<PublicOnly><ForgotPassword /></PublicOnly>} />
         <Route path="/reset-password"  element={<PublicOnly><ResetPassword /></PublicOnly>} />
         <Route path="/reset-pin"       element={<PublicOnly><ResetPin /></PublicOnly>} />
+        <Route path="/sync-login"      element={<PublicOnly><SyncLogin /></PublicOnly>} />
+        <Route path="/school/register" element={<SchoolRegister />} />
         <Route path="/about"           element={<About />} />
         <Route path="/contact"         element={<Contact />} />
+        <Route path="/status"         element={<Status />} />
 
         <Route path="/"             element={<Home />} />
         <Route path="/log"          element={<Protected><LogHours /></Protected>} />
@@ -62,7 +83,10 @@ function Shell() {
         <Route path="/reports"      element={<Protected><Reports /></Protected>} />
         <Route path="/profile"      element={<Protected><Profile /></Protected>} />
         <Route path="/settings"     element={<Protected><Settings /></Protected>} />
-        <Route path="/admin"         element={<Protected><Admin /></Protected>} />
+        <Route path="/help"         element={<Help />} />
+        <Route path="/my-tasks"    element={<Protected><MyTasks /></Protected>} />
+        <Route path="/admin"        element={<AdminProtected><Admin /></AdminProtected>} />
+        <Route path="/school/dashboard" element={<Protected><SchoolDashboard /></Protected>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

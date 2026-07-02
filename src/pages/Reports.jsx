@@ -1,17 +1,23 @@
 import { useMemo, useState } from 'react'
-import { FileText, Download, Printer, FileDown, Filter } from 'lucide-react'
+import { FileText, Download, Printer, FileDown, Filter, Send, School } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
+import Toast from '@/components/Toast.jsx'
 import { fmtDate, fmtHours } from '@/utils/date.js'
 import { exportLogsPDF, exportLogsCSV, printCertificate } from '@/lib/export.js'
 import { categoryColor } from '@/lib/categories.js'
 import { deriveAchievementState } from '@/lib/achievements.js'
 
+const apiUrl = import.meta.env.VITE_API_URL || '/api'
+
 export default function Reports() {
   const { user } = useAuth()
   const { logs, goals } = useData()
+  const [submitting, setSubmitting] = useState(false)
+  const [toastMsg, setToastMsg] = useState('')
+  const [toastOpen, setToastOpen] = useState(false)
   const [category, setCategory] = useState('all')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
@@ -26,6 +32,30 @@ export default function Reports() {
   }, [logs, category, from, to])
 
   const total = filtered.reduce((s, l) => s + (Number(l.hours) || 0), 0)
+  const submitToSchool = async () => {
+    setSubmitting(true)
+    try {
+      const blob = exportLogsPDF({ user, logs: filtered, returnBlob: true })
+      const reader = new FileReader()
+      reader.onload = async () => {
+        const base64 = reader.result.split(',')[1]
+        const token = localStorage.getItem('voluntrack:auth_token')
+        const res = await fetch(`${apiUrl}/school/upload`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ filename: `report-${Date.now()}.pdf`, fileData: base64, fileType: 'application/pdf' }),
+        })
+        if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Upload failed') }
+        setToastMsg('Report submitted to school!')
+        setToastOpen(true)
+      }
+      reader.readAsDataURL(blob)
+    } catch (e) {
+      setToastMsg(e.message)
+      setToastOpen(true)
+    } finally { setSubmitting(false) }
+  }
+
   const byCategory = useMemo(() => {
     const m = new Map()
     for (const l of filtered) {
@@ -83,6 +113,11 @@ export default function Reports() {
               <button className="btn-ghost w-full" onClick={() => printCertificate({ user, totalHours: state.totalHours, goalReached: state.goalReached })}>
                 <Printer className="w-4 h-4" /> Print certificate
               </button>
+              {user?.schoolId && (
+                <button className="btn-primary w-full" onClick={submitToSchool} disabled={submitting}>
+                  <Send className="w-4 h-4" /> {submitting ? 'Sending…' : 'Submit to school'}
+                </button>
+              )}
             </div>
           </div>
         </Card>
@@ -153,6 +188,7 @@ export default function Reports() {
           </Card>
         </div>
       </div>
+      <Toast open={toastOpen} onClose={() => setToastOpen(false)}>{toastMsg}</Toast>
     </AppLayout>
   )
 }

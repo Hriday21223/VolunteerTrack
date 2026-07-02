@@ -12,7 +12,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
-        enabled: true,
+        enabled: false,
       },
 
       includeAssets: [
@@ -62,16 +62,16 @@ export default defineConfig({
   ],
 
   resolve: {
-    alias: {
-      '@': resolve('./src'),
-    },
+    alias: [
+      { find: '@', replacement: resolve('./src') },
+    ],
   },
 
   server: {
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:5174',
+        target: 'http://localhost:10000',
         changeOrigin: true,
         secure: false,
       },

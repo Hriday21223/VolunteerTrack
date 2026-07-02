@@ -1,12 +1,14 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Mail, Lock, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
+
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
 
 export default function Login() {
-  const { login, loginWithPin } = useAuth()
+  const { login, loginWithPin, user } = useAuth()
+  const isAdmin = user?.email?.toLowerCase() === 'karnatamhriday@gmail.com'
   const nav = useNavigate()
   const loc = useLocation()
   const [mode, setMode] = useState('password')
@@ -16,6 +18,14 @@ export default function Login() {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const [toast, setToast] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    setIsMobile(mq.matches)
+    const handler = (e) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -57,10 +67,10 @@ export default function Login() {
             <FeatureCard title="Progress tracking" description="See goal completion, weekly activity, and earned badges in one clean view." />
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-soft backdrop-blur text-sm text-slate-300">
+          <Link to="/help" className="block rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-soft backdrop-blur text-sm text-slate-300 hover:bg-slate-800/60 transition">
             <div className="font-semibold text-white">Need help getting started?</div>
             <p className="mt-2 leading-6">Create an account, set your first goal, and log your first volunteer hours to earn a badge.</p>
-          </div>
+          </Link>
         </div>
 
         <div className="relative">
@@ -104,33 +114,35 @@ export default function Login() {
                     />
                   </div>
                 </div>
-                <div>
-                  <div className="flex items-center justify-between gap-4">
-                    <label className="label text-slate-300" htmlFor="credential">{mode === 'pin' ? '4-digit PIN' : 'Password'}</label>
-                    <Link to={mode === 'pin' ? '/reset-pin' : '/forgot-password'} className="text-xs text-sky-200 hover:text-white">
-                      {mode === 'pin' ? 'Forgot PIN?' : 'Forgot?'}
-                    </Link>
+                {isAdmin && mode === 'password' ? (
+                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                    Admin — click Sign in to continue (no password needed).
                   </div>
-                  <div className="relative">
-                    {mode === 'pin' ? (
+                ) : (
+                  <div>
+                    <div className="flex items-center justify-between gap-4">
+                      <label className="label text-slate-300" htmlFor="credential">{mode === 'pin' ? '4-digit PIN' : 'Password'}</label>
+                      <Link to={mode === 'pin' ? '/reset-pin' : '/forgot-password'} className="text-xs text-sky-200 hover:text-white">
+                        {mode === 'pin' ? 'Forgot PIN?' : 'Forgot?'}
+                      </Link>
+                    </div>
+                    <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    ) : (
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    )}
-                    <input
-                      id="credential"
-                      type="password"
-                      required
-                      autoComplete={mode === 'pin' ? 'one-time-code' : 'current-password'}
-                      inputMode={mode === 'pin' ? 'numeric' : 'text'}
-                      pattern={mode === 'pin' ? '[0-9]*' : undefined}
-                      className="input pl-9 bg-slate-900/80 text-white border-white/10"
-                      placeholder={mode === 'pin' ? '••••' : '••••••••'}
-                      value={mode === 'pin' ? pin : password}
-                      onChange={(e) => (mode === 'pin' ? setPin(e.target.value) : setPassword(e.target.value))}
-                    />
+                      <input
+                        id="credential"
+                        type="password"
+                        required
+                        autoComplete={mode === 'pin' ? 'one-time-code' : 'current-password'}
+                        inputMode={mode === 'pin' ? 'numeric' : 'text'}
+                        pattern={mode === 'pin' ? '[0-9]*' : undefined}
+                        className="input pl-9 bg-slate-900/80 text-white border-white/10"
+                        placeholder={mode === 'pin' ? '••••' : '••••••••'}
+                        value={mode === 'pin' ? pin : password}
+                        onChange={(e) => (mode === 'pin' ? setPin(e.target.value) : setPassword(e.target.value))}
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {err && <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{err}</div>}
 
@@ -143,6 +155,12 @@ export default function Login() {
                 New to VolunTrack?{' '}
                 <Link to="/register" className="text-sky-200 font-semibold hover:text-white">Create an account</Link>
               </div>
+
+              <div className="mt-4 text-center text-sm text-slate-400">
+                {isMobile ? 'Syncing from laptop?' : 'Syncing from mobile?'}{' '}
+                <Link to="/sync-login" className="text-sky-200 font-semibold hover:text-white">Use sync PIN</Link>
+              </div>
+
             </div>
           </Card>
 

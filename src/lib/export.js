@@ -2,8 +2,8 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { fmtDate, fmtHours, hoursBetween } from '@/utils/date.js'
 
-/** Generate a printable PDF report for the user's logs. */
-export function exportLogsPDF({ user, logs }) {
+/** Generate a printable PDF report for the user's logs. When `returnBlob` is true, returns the PDF blob instead of downloading. */
+export function exportLogsPDF({ user, logs, returnBlob }) {
   const doc = new jsPDF({ unit: 'pt' })
   const total = logs.reduce((s, l) => s + (Number(l.hours) || 0), 0)
 
@@ -34,6 +34,9 @@ export function exportLogsPDF({ user, logs }) {
     alternateRowStyles: { fillColor: [241, 248, 241] },
   })
 
+  if (returnBlob) {
+    return doc.output('blob')
+  }
   doc.save('volunteer-log.pdf')
 }
 

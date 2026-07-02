@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X } from 'lucide-react'
+import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X, School, Users, Hand, FileText, MessageSquare, Bell, Calendar } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
 import { useLocalStorage } from '@/hooks/useLocalStorage.js'
@@ -10,13 +10,28 @@ import ProgressRing from '@/components/ProgressRing.jsx'
 import BarChart from '@/components/BarChart.jsx'
 import { categoryColor } from '@/lib/categories.js'
 import { fmtDate, fmtHours, fromNow } from '@/utils/date.js'
-import { format, startOfWeek, startOfMonth, addDays, parseISO, isSameMonth } from 'date-fns'
+import { format, startOfWeek, startOfMonth, addDays, parseISO } from 'date-fns'
+
+const apiUrl = import.meta.env.VITE_API_URL || '/api'
+
+const fmtDist = (km) => {
+  if (km === null || km === undefined) return null
+  const n = Number(km)
+  if (n < 1) return `${Math.round(n * 1000)}m`
+  return `${n.toFixed(1)}km`
+}
 
 export default function Dashboard() {
   const { user } = useAuth()
   const { logs, goals, earned } = useData()
   const [hasSeenTour, setHasSeenTour] = useLocalStorage('voluntrack:dashboard-tour', false)
   const [showTour, setShowTour] = useState(!hasSeenTour)
+  const [schoolInfo, setSchoolInfo] = useState(null)
+  const [publicTasks, setPublicTasks] = useState([])
+  const [dashTab, setDashTab] = useState('home')
+  const [userLoc, setUserLoc] = useState(null)
+  const [schoolMessages, setSchoolMessages] = useState([])
+  const [adminNotifs, setAdminNotifs] = useState([])
 
   const total = useMemo(() => logs.reduce((s, l) => s + (Number(l.hours) || 0), 0), [logs])
 
@@ -47,6 +62,49 @@ export default function Dashboard() {
     })
   }, [logs])
 
+  useEffect(() => {
+    if (!user?.schoolId) return
+    ;    (async () => {
+      try {
+        const infoRes = await fetch(`${apiUrl}/school/info?id=${user.schoolId}`)
+        if (infoRes.ok) { const d = await infoRes.json(); if (d.school) setSchoolInfo(d.school) }
+        const token = localStorage.getItem('voluntrack:auth_token')
+        const msgRes = await fetch(`${apiUrl}/school/messages`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (msgRes.ok) { const d = await msgRes.json(); setSchoolMessages(d.messages || []) }
+        const notifRes = await fetch(`${apiUrl}/school/admin/notifications?schoolId=${user.schoolId}`, { headers })
+        if (notifRes.ok) { const d = await notifRes.json(); setAdminNotifs(d.notifications || []) }
+      } catch {}
+    })()
+  }, [user?.schoolId])
+
+  const loadPublicTasks = useCallback(async (lat, lng) => {
+    try {
+      let url = `${apiUrl}/school/public-tasks`
+      if (lat != null && lng != null) url += `?lat=${lat}&lng=${lng}`
+      const res = await fetch(url)
+      if (res.ok) { const d = await res.json(); setPublicTasks(d.tasks || []) }
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    // Get user location only for students
+    if (user?.role === 'student' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+          setUserLoc(loc)
+          loadPublicTasks(loc.lat, loc.lng)
+        },
+        () => loadPublicTasks(),
+        { enableHighAccuracy: true, timeout: 10000 },
+      )
+    } else {
+      loadPublicTasks()
+    }
+  }, [user?.role, loadPublicTasks])
+
   const recent = useMemo(() => logs.slice(0, 5), [logs])
 
   const closeTour = () => {
@@ -59,9 +117,18 @@ export default function Dashboard() {
       title={`Hi, ${user?.name?.split(' ')[0] || 'there'} 👋`}
       subtitle={user?.school ? `${user.school} · ${user.grade || 'Volunteer'}` : 'Welcome back to VolunTrack.'}
       action={
-        <Link to="/log" className="btn-primary">
-          <Plus className="w-4 h-4" /> Log hours
-        </Link>
+        <div className="flex gap-2">
+          {user?.role === 'student' && (
+            <button onClick={() => setDashTab(dashTab === 'volunteer' ? 'home' : 'volunteer')} className={`btn-sm ${dashTab === 'volunteer' ? 'btn-primary' : 'btn-ghost'}`}>
+              <Hand className="w-3.5 h-3.5 mr-1" /> Volunteer
+            </button>
+          )}
+          {dashTab === 'home' && (
+            <Link to="/log" className="btn-primary">
+              <Plus className="w-4 h-4" /> Log hours
+            </Link>
+          )}
+        </div>
       }
     >
       {showTour && (
@@ -106,6 +173,190 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {dashTab === 'volunteer' && user?.role === 'student' ? (
+        <div className="max-w-2xl mx-auto space-y-4">
+          <h2 className="text-xl font-bold">Needed volunteers</h2>
+
+          {publicTasks.length === 0 ? (
+            <Card><p className="text-center text-earth-500 py-8">No volunteer opportunities available right now.</p></Card>
+          ) : publicTasks.map((t) => {
+            const filled = Number(t.slots_filled)
+            const total = Number(t.slots_total)
+            const full = filled >= total
+            const approved = t.my_signup_status === 'approved'
+            return (
+              <Card key={t.id} padded={false} className="p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">{t.title}</p>
+                    <p className="text-sm text-earth-400 mt-1">{t.description}</p>
+                    <div className="flex flex-wrap gap-3 mt-2 text-xs text-earth-500">
+                      <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {t.location}</span>
+                      <span className="flex items-center gap-1"><CalIcon className="w-3 h-3" /> {new Date(t.date).toLocaleDateString()}{t.time ? ` · ${t.time}` : ''}</span>
+                      <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {filled}/{total} needed</span>
+                      {t.distance != null && (
+                        <span className="flex items-center gap-1 text-brand-400">{fmtDist(t.distance)} away</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-earth-600 mt-1">Posted by {t.creator_name}</p>
+                    {approved && t.phone && (
+                      <p className="text-xs text-emerald-400 mt-1 font-medium">Contact: {t.phone}</p>
+                    )}
+                    {t.my_signup_status === 'pending' && (
+                      <p className="text-xs text-amber-400 mt-1">Awaiting organizer approval</p>
+                    )}
+                    {t.my_signup_status === 'rejected' && (
+                      <p className="text-xs text-red-400 mt-1">Signup rejected</p>
+                    )}
+                  </div>
+                  <div className="shrink-0">
+                    {t.my_signup_status === 'approved' ? (
+                      <span className="text-xs text-emerald-400 font-medium">Approved</span>
+                    ) : t.my_signup_status === 'pending' ? (
+                      <span className="text-xs text-amber-400 font-medium">Pending</span>
+                    ) : t.my_signup_status === 'rejected' ? (
+                      <span className="text-xs text-red-400 font-medium">Rejected</span>
+                    ) : full ? (
+                      <span className="text-xs text-red-400 font-medium">Full</span>
+                    ) : (
+                      <button onClick={async () => {
+                        try {
+                          const token = localStorage.getItem('voluntrack:auth_token')
+                          const res = await fetch(`${apiUrl}/school/public-tasks/${t.id}/signup`, {
+                            method: 'POST',
+                            headers: { Authorization: `Bearer ${token}` },
+                          })
+                          if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
+                          setToastMsg('Signed up — awaiting organizer approval'); setToast(true); loadPublicTasks()
+                        } catch (e) { setToastMsg(e.message); setToast(true) }
+                      }} className="btn-primary text-sm">Sign up</button>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            )
+          })}
+        </div>
+      ) : (
+      <>
+          {!user?.schoolId && user?.role !== 'school' && user?.role !== 'admin' && (
+            <Card className="mb-5 border border-dashed border-brand-700/40 bg-brand-900/10">
+              <div className="flex items-center gap-3">
+                <School className="w-5 h-5 text-brand-400" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm text-white">Join a school or organization</p>
+                  <p className="text-xs text-earth-400 mt-0.5">Link your account to unlock school features.</p>
+                </div>
+                <Link to="/settings" className="btn-sm btn-primary text-xs">Go to Settings</Link>
+              </div>
+            </Card>
+          )}
+          {schoolInfo && (
+        <>
+          <Card className="mb-5">
+            <div className="flex items-center gap-3">
+              <School className="w-5 h-5 text-brand-600" />
+              <div>
+                <p className="font-medium text-sm">{schoolInfo.name}</p>
+                <p className="text-xs text-earth-400">Code: <span className="font-mono">{schoolInfo.pin}</span></p>
+                {schoolInfo.paymentStatus && (
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    schoolInfo.paymentStatus === 'paid'
+                      ? 'bg-emerald-500/10 text-emerald-400'
+                      : 'bg-amber-500/10 text-amber-400'
+                  }`}>
+                    {schoolInfo.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
+                  </span>
+                )}
+              </div>
+              <Link to="/school/dashboard" className="btn-secondary ml-auto text-sm">Dashboard</Link>
+            </div>
+          </Card>
+
+          {schoolInfo?.paymentDueDate && (() => {
+            const daysLeft = Math.ceil((new Date(schoolInfo.paymentDueDate) - new Date()) / (1000 * 60 * 60 * 24))
+            if (daysLeft <= 10 && daysLeft >= 0) {
+              return (
+                <Card className="mb-5">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-amber-500" />
+                    <p className="text-sm text-amber-600 dark:text-amber-400">
+                      Payment due in <strong>{daysLeft} day{daysLeft === 1 ? '' : 's'}</strong>
+                    </p>
+                  </div>
+                </Card>
+              )
+            }
+            return null
+          })()}
+
+          {adminNotifs.length > 0 && (
+            <Card className="mb-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Bell className="w-4 h-4 text-brand-600" />
+                <h3 className="font-display font-semibold">Payment notices</h3>
+              </div>
+              <div className="space-y-2">
+                {adminNotifs.map((n) => (
+                  <div key={n.id} className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3">
+                    <p className="text-sm">{n.message}</p>
+                    <p className="text-xs text-earth-500 mt-1">{new Date(n.created_at).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {schoolMessages.length > 0 && (
+            <Card className="mb-5">
+              <div className="flex items-center gap-2 mb-3">
+                <MessageSquare className="w-4 h-4 text-brand-600" />
+                <h3 className="font-display font-semibold">School announcements</h3>
+              </div>
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {schoolMessages.slice(0, 10).map((m) => (
+                  <div key={m.id} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-sm">{m.message}</p>
+                    <p className="text-xs text-earth-500 mt-1">{m.sender_name} · {new Date(m.created_at).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {user?.role === 'student' && publicTasks.length > 0 && (
+            <Card className="mb-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="w-4 h-4 text-brand-600" />
+                <h3 className="font-display font-semibold">Volunteer opportunities</h3>
+              </div>
+              <div className="space-y-3">
+                {publicTasks.slice(0, 5).map((t) => {
+                  const filled = Number(t.slots_filled)
+                  const total = Number(t.slots_total)
+                  return (
+                    <div key={t.id} className="flex items-start justify-between gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium">{t.title}</p>
+                        <p className="text-xs text-earth-400 mt-0.5">
+                          <MapPin className="w-3 h-3 inline mr-1" />{t.location}
+                          {' · '}<CalIcon className="w-3 h-3 inline mr-1" />{new Date(t.date).toLocaleDateString()}
+                        </p>
+                        <p className="text-xs text-earth-500 mt-0.5">{filled}/{total} filled{t.distance != null ? ` · ${fmtDist(t.distance)} away` : ''}</p>
+                      </div>
+                      <button onClick={() => setDashTab('volunteer')} className="btn-ghost text-xs shrink-0">View</button>
+                    </div>
+                  )
+                })}
+                {publicTasks.length > 5 && (
+                  <button onClick={() => setDashTab('volunteer')} className="block text-xs text-brand-400 hover:underline">View all {publicTasks.length} tasks →</button>
+                )}
+              </div>
+            </Card>
+          )}
+        </>
       )}
 
       {/* Mobile-first summary cards */}
@@ -266,6 +517,8 @@ export default function Dashboard() {
           )}
         </Card>
       </div>
+      </>
+      )}
     </AppLayout>
   )
 }

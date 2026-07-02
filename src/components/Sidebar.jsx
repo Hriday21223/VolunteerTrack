@@ -1,19 +1,61 @@
-import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Bell } from 'lucide-react'
+import { Home, Clock, Calendar, Trophy, FileText, User, Settings, Shield, HelpCircle, ClipboardList, School, Activity } from 'lucide-react'
 import { NavLink, Link } from 'react-router-dom'
 import { cn } from '@/utils/cn.js'
+import { useAuth } from '@/hooks/useAuth.jsx'
 
-const ITEMS = [
-  { to: '/',           label: 'Dashboard',   icon: Home },
-  { to: '/log',        label: 'Log Hours',   icon: Clock },
-  { to: '/calendar',   label: 'Calendar',    icon: Calendar },
-  { to: '/achievements', label: 'Achievements', icon: Trophy },
-  { to: '/reminders',  label: 'Reminders',   icon: Bell },
-  { to: '/reports',    label: 'Reports',     icon: FileText },
-  { to: '/profile',    label: 'Profile',     icon: User },
-  { to: '/settings',   label: 'Settings',    icon: Settings },
-]
+const ROLE_ITEMS = {
+  student: [
+    { to: '/',             label: 'Dashboard',   icon: Home },
+    { to: '/log',          label: 'Log Hours',   icon: Clock },
+    { to: '/calendar',     label: 'Calendar',    icon: Calendar },
+    { to: '/achievements', label: 'Achievements', icon: Trophy },
+    { to: '/reports',      label: 'Reports',     icon: FileText },
+    { to: '/profile',      label: 'Profile',     icon: User },
+    { to: '/settings',     label: 'Settings',    icon: Settings },
+    { to: '/help',         label: 'Help',        icon: HelpCircle },
+    { to: '/status',       label: 'Status',      icon: Activity },
+  ],
+  volunteer: [
+    { to: '/',             label: 'Dashboard',   icon: Home },
+    { to: '/my-tasks',     label: 'My Tasks',    icon: ClipboardList },
+    { to: '/log',          label: 'Log Hours',   icon: Clock },
+    { to: '/calendar',     label: 'Calendar',    icon: Calendar },
+    { to: '/achievements', label: 'Achievements', icon: Trophy },
+    { to: '/reports',      label: 'Reports',     icon: FileText },
+    { to: '/profile',      label: 'Profile',     icon: User },
+    { to: '/settings',     label: 'Settings',    icon: Settings },
+    { to: '/help',         label: 'Help',             icon: HelpCircle },
+    { to: '/status',       label: 'Status',           icon: Activity },
+  ],
+  school: [
+    { to: '/',             label: 'Dashboard',        icon: Home },
+    { to: '/school/dashboard', label: 'School Dashboard', icon: School },
+    { to: '/log',          label: 'Log Hours',        icon: Clock },
+    { to: '/calendar',     label: 'Calendar',         icon: Calendar },
+    { to: '/reports',      label: 'Reports',          icon: FileText },
+    { to: '/profile',      label: 'Profile',          icon: User },
+    { to: '/settings',     label: 'Settings',         icon: Settings },
+    { to: '/help',         label: 'Help',             icon: HelpCircle },
+    { to: '/status',       label: 'Status',           icon: Activity },
+  ],
+  admin: [
+    { to: '/',             label: 'Dashboard',   icon: Home },
+    { to: '/admin',        label: 'Admin',       icon: Shield },
+    { to: '/log',          label: 'Log Hours',   icon: Clock },
+    { to: '/calendar',     label: 'Calendar',    icon: Calendar },
+    { to: '/reports',      label: 'Reports',     icon: FileText },
+    { to: '/profile',      label: 'Profile',     icon: User },
+    { to: '/settings',     label: 'Settings',    icon: Settings },
+    { to: '/help',         label: 'Help',             icon: HelpCircle },
+    { to: '/status',       label: 'Status',           icon: Activity },
+  ],
+}
 
 export default function Sidebar() {
+  const { user } = useAuth()
+  const role = user?.role || 'student'
+  const items = ROLE_ITEMS[role] || ROLE_ITEMS.student
+
   return (
     <aside className="hidden md:flex md:flex-col w-72 shrink-0 border-r border-earth-900/80 bg-[#06141a] text-earth-200 sticky top-0 h-screen">
       <div className="px-6 py-6">
@@ -27,7 +69,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="px-4 py-3 flex-1 space-y-1">
-        {ITEMS.map(({ to, label, icon: Icon }) => (
+        {items.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -54,8 +96,9 @@ export default function Sidebar() {
         <div className="mt-4 flex gap-3">
           <Link to="/about" className="text-earth-300 hover:text-white">About</Link>
           <Link to="/contact" className="text-earth-300 hover:text-white">Contact</Link>
+          <Link to="/status" className="text-earth-300 hover:text-white">Status</Link>
         </div>
-        <div className="mt-4 text-earth-500">© {new Date().getFullYear()}</div>
+        <div className="mt-4 text-earth-500">© VolunTrack 2026</div>
       </div>
     </aside>
   )

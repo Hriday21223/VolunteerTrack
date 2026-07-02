@@ -30,7 +30,37 @@ export function findUserByEmail(email) {
   return getUsers().find((u) => u.email.toLowerCase() === email.toLowerCase()) || null
 }
 
-export function createUser({ name, email, password, pin = '', school = '', grade = '' }) {
+export function findUserBySyncPin(syncPin) {
+  console.log('Looking for user with sync PIN:', syncPin)
+  const users = getUsers()
+  console.log('All users sync PINs:', users.map(u => ({ email: u.email, syncPin: u.syncPin })))
+  const found = users.find((u) => u.syncPin === syncPin) || null
+  console.log('Found user:', found ? found.email : 'none')
+  return found
+}
+
+export function updateSyncPin(userId, syncPin) {
+  const users = getUsers()
+  const idx = users.findIndex((u) => u.id === userId)
+  if (idx === -1) return null
+  
+  // Validate PIN format
+  if (!/^\d{5}$/.test(syncPin)) {
+    throw new Error('Sync PIN must be exactly 5 digits.')
+  }
+  
+  // Check if PIN is already taken by another user
+  const existing = users.find((u) => u.syncPin === syncPin && u.id !== userId)
+  if (existing) {
+    throw new Error('This sync PIN is already in use.')
+  }
+  
+  users[idx] = { ...users[idx], syncPin }
+  write(keys.users, users)
+  return users[idx]
+}
+
+export function createUser({ name, email, password, pin = '', school = '', grade = '', role = 'student' }) {
   const users = getUsers()
   if (findUserByEmail(email)) {
     throw new Error('An account with that email already exists.')
@@ -43,8 +73,10 @@ export function createUser({ name, email, password, pin = '', school = '', grade
     email: email.trim().toLowerCase(),
     school: school.trim(),
     grade: grade.trim(),
+    role: role.trim(),
     passwordHash: hashPassword(password),
     pinHash: pin ? hashPin(pin) : null,
+    syncPin: null,
     resetPinCode: null,
     resetPinCodeExpiresAt: null,
     resetPasswordCode: null,
@@ -241,6 +273,20 @@ export function markFired(id) {
 
 export function clearFired(id) {
   write(keys.fired, getFired().filter((x) => x !== id))
+}
+
+/* ---------- Reviews ---------- */
+
+export function getReviews() {
+  return read(keys.reviews, [])
+}
+
+export function saveReview(data) {
+  const review = { id: uid('rev'), ...data, submittedAt: new Date().toISOString() }
+  const reviews = getReviews()
+  reviews.push(review)
+  write(keys.reviews, reviews)
+  return review
 }
 
 /* ---------- Demo-only password "hash" ---------- */

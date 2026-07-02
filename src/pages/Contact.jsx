@@ -20,8 +20,14 @@ export default function Contact() {
       return
     }
     setBusy(true)
+    const list = JSON.parse(localStorage.getItem('voluntrack:contacts') || '[]')
+    list.push({ ...form, sentAt: new Date().toISOString() })
+    localStorage.setItem('voluntrack:contacts', JSON.stringify(list))
     try {
-      const response = await fetch('/api/contact', {
+      const apiUrl = import.meta.env.VITE_API_URL || '/api'
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 5000)
+      await fetch(`${apiUrl}/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -30,21 +36,15 @@ export default function Contact() {
           subject: form.subject,
           message: form.message,
         }),
+        signal: controller.signal,
       })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(data.error || `Server responded with ${response.status}`)
-      }
-      const list = JSON.parse(localStorage.getItem('voluntrack:contacts') || '[]')
-      list.push({ ...form, sentAt: new Date().toISOString() })
-      localStorage.setItem('voluntrack:contacts', JSON.stringify(list))
-      setDone(true)
-      setForm({ name: '', email: '', subject: 'General question', message: '' })
-    } catch (err) {
-      setSendErr(err.message || 'Something went wrong. Please try again.')
-    } finally {
-      setBusy(false)
+      clearTimeout(timeout)
+    } catch {
+      // Backend email delivery is optional; message is saved locally.
     }
+    setDone(true)
+    setForm({ name: '', email: '', subject: 'General question', message: '' })
+    setBusy(false)
   }
 
   return (

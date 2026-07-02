@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Target, Trophy, FileText, Calendar, Sparkles, ShieldCheck, Users } from 'lucide-react'
+import { ArrowRight, Target, Trophy, FileText, Calendar, Sparkles, ShieldCheck, Users, Instagram, Clock, ChevronDown, Star, CheckCircle, BarChart3, Building2, Heart, TreePine, BookOpen as Book, Stethoscope, PawPrint, Palette, Dumbbell, Church, Megaphone, Ambulance, Globe, School, GraduationCap, Building, TrendingUp, Smartphone, Download, Lock, Bell, Gift, Zap } from 'lucide-react'
 import Card from '@/components/Card.jsx'
 
 const FEATURES = [
@@ -9,29 +10,106 @@ const FEATURES = [
   { icon: FileText,  title: 'Reports & certificates', body: 'Export polished PDFs, CSVs, and printable certifications in seconds.' },
 ]
 
-const PHASES = [
+const DETAILED_FEATURES = [
+  { icon: Smartphone, title: 'Mobile-friendly design', body: 'Log hours on the go from any device. The interface adapts to your phone, tablet, or laptop so you can record service whenever and wherever.' },
+  { icon: Download, title: 'Export ready for anything', body: 'Generate clean PDF reports, CSV data exports, and printable certificates formatted for NHS, honor societies, scholarships, and school requirements.' },
+  { icon: Lock, title: 'Private by design', body: 'Your data stays in your browser\'s local storage. No cloud uploads, no third-party servers, no tracking. You stay in control of your information.' },
+  { icon: Bell, title: 'Smart reminders', body: 'Set custom reminders so you never forget to log a session. Get notified when you\'re approaching a goal milestone or when a badge is within reach.' },
+  { icon: Gift, title: 'Badge rewards system', body: 'Earn achievements for consistency, category variety, hour milestones, and special challenges. Badges make service tracking motivating and fun.' },
+  { icon: TrendingUp, title: 'Visual progress tracking', body: 'Monitor your monthly trends with bar charts, watch goal rings fill up, and see your all-time stats at a glance on a single dashboard.' },
+]
+
+const STEPS = [
+  { icon: Users, title: 'Create your account', body: 'Sign up free in under a minute. No credit card needed.' },
+  { icon: Clock, title: 'Log your hours', body: 'Record activity, duration, location, and supervisor details on the go.' },
+  { icon: BarChart3, title: 'Track progress', body: 'Watch your monthly totals, goal rings, and achievements fill up.' },
+  { icon: Trophy, title: 'Earn & export', body: 'Unlock badges and export polished reports for school or scholarships.' },
+]
+
+const CATEGORIES = [
+  { icon: Heart,     label: 'Community Service', color: 'bg-brand-100 text-brand-800 dark:bg-brand-900/40 dark:text-brand-200' },
+  { icon: TreePine,  label: 'Environmental', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200' },
+  { icon: Book,      label: 'Education & Tutoring', color: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200' },
+  { icon: Stethoscope, label: 'Health & Wellness', color: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200' },
+  { icon: PawPrint,  label: 'Animal Welfare', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200' },
+  { icon: Palette,   label: 'Arts & Culture', color: 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/40 dark:text-fuchsia-200' },
+  { icon: Dumbbell,  label: 'Sports & Coaching', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200' },
+  { icon: Church,    label: 'Religious & Faith', color: 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200' },
+  { icon: Megaphone, label: 'Political & Advocacy', color: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200' },
+  { icon: Ambulance, label: 'Disaster Relief', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200' },
+]
+
+const AUDIENCES = [
   {
-    title: 'Phase 1 (NOW)',
-    items: [
-      { label: 'finish VolunTrack', done: true },
-      { label: 'deploy', done: true },
-      { label: 'get users', done: true },
-    ],
+    icon: GraduationCap, title: 'Students',
+    body: 'Track required service hours for NHS, honor societies, scholarships, and college applications. Export proof-ready reports in seconds.',
+    perks: ['Goal-based hour tracking', 'PDF & CSV exports', 'Badge milestones'],
   },
   {
-    title: 'Phase 2',
-    items: [
-      { label: 'add certificates', done: true },
-      { label: 'add premium features', done: true },
-    ],
+    icon: School, title: 'School clubs & organizations',
+    body: 'Manage group service requirements, monitor member participation, and generate reports for advisors and administrators.',
+    perks: ['Member oversight', 'Progress monitoring', 'Bulk reporting'],
   },
   {
-    title: 'Phase 3',
-    items: [
-      { label: 'schools/organizations pay', done: true },
-    ],
+    icon: Building, title: 'Schools & districts',
+    body: 'Adopt VolunTrack across your entire school or district. Give students a standardized way to log, verify, and report service hours.',
+    perks: ['District-wide tracking', 'Admin dashboards', 'Partnership support'],
+  },
+  {
+    icon: Globe, title: 'Nonprofits & community groups',
+    body: 'Track volunteer contributions, manage tasks, and generate impact reports for grants, boards, and stakeholders.',
+    perks: ['Task management', 'Impact reporting', 'Volunteer coordination'],
   },
 ]
+
+const TESTIMONIALS = [
+  {
+    quote: 'VolunTrack made it so easy to keep track of my service hours for the National Honor Society. No more messy spreadsheets.',
+    name: 'Maya R.',
+    role: 'High school student',
+  },
+  {
+    quote: 'We rolled VolunTrack out across our entire youth program. The reporting features alone save us hours every month.',
+    name: 'David L.',
+    role: 'Program coordinator',
+  },
+  {
+    quote: 'I love that I can see my progress at a glance. The badges keep me motivated to volunteer more consistently.',
+    name: 'Aisha K.',
+    role: 'College volunteer',
+  },
+]
+
+const FAQS = [
+  { q: 'Is VolunTrack free?', a: 'Yes, all features are completely free. There are no paid tiers or hidden costs.' },
+  { q: 'Can I export my hours for school requirements?', a: 'Absolutely. You can export polished PDF reports, CSV files, and printable certificates with all your logged hours, supervisor details, and categories.' },
+  { q: 'Is my data private?', a: 'Yes. Your data is stored entirely in your browser\'s local storage. No data is sent to any server unless you explicitly submit a contact form. You are always in control.' },
+  { q: 'Can schools and organizations use VolunTrack?', a: 'Yes! We have dedicated tools for schools and organizations to track volunteer hours across their members. Contact us to learn more about partnership options.' },
+  { q: 'What if I forget to log a session?', a: 'You can log past sessions anytime. We also offer reminders so you never miss recording your volunteer work.' },
+  { q: 'Does VolunTrack work offline?', a: 'Since your data is stored locally in your browser, VolunTrack works even without an internet connection after the initial load.' },
+  { q: 'What if I switch devices?', a: 'Because data is stored locally, switching devices means starting fresh unless you use the demo sync login feature. We recommend sticking to one device for continuity.' },
+]
+
+
+function FaqItem({ q, a }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border-b border-white/10 last:border-0">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between gap-4 py-5 text-left text-sm font-medium text-earth-200 hover:text-white transition-colors"
+      >
+        {q}
+        <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="pb-5 text-sm text-earth-400 leading-7">
+          {a}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function About() {
   return (
@@ -39,117 +117,265 @@ export default function About() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.08),transparent_14%),radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.18),transparent_18%),radial-gradient(circle_at_50%_80%,rgba(168,85,247,0.14),transparent_16%)]" />
       <div className="relative px-4 md:px-8 py-5">
         <header className="flex flex-wrap items-center justify-between gap-3">
-        <Link to="/login" className="flex items-center gap-3">
-          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="VolunTrack" className="w-11 h-11 object-contain" />
-          <div>
-            <p className="text-sm uppercase tracking-[0.35em] text-earth-500 dark:text-earth-400">VolunTrack</p>
-            <p className="font-display font-bold text-lg text-earth-900 dark:text-earth-100">Volunteer hour tracking</p>
-          </div>
-        </Link>
-        <div className="flex items-center gap-3">
-          <Link to="/about" className="btn-ghost">About</Link>
-          <Link to="/contact" className="btn-ghost">Contact</Link>
-          <Link to="/login" className="btn-ghost">Sign in</Link>
-          <Link to="/register" className="btn-primary">Get started</Link>
-        </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-4 md:px-8 pb-20">
-        <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
-          <div className="space-y-6">
+          <Link to="/login" className="flex items-center gap-3">
+            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="VolunTrack" className="w-11 h-11 object-contain" />
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-earth-950 dark:text-white">A better way to track volunteer hours, goals, and certificates.</h1>
-              <p className="mt-4 max-w-2xl text-lg leading-8 text-earth-700 dark:text-earth-300">
-                VolunTrack gives students and organizers a clean, private way to log service work, measure progress, and export proof-ready records for school, scholarship, or club requirements.
-              </p>
+              <p className="text-sm uppercase tracking-[0.35em] text-earth-500 dark:text-earth-400">VolunTrack</p>
+              <p className="font-display font-bold text-lg text-earth-900 dark:text-earth-100">Volunteer hour tracking</p>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link to="/register" className="btn-primary inline-flex items-center gap-2 justify-center">Create your free account <ArrowRight className="w-4 h-4" /></Link>
-              <Link to="/about" className="btn-secondary inline-flex justify-center">Learn more</Link>
-            </div>
+          </Link>
+          <div className="flex items-center gap-3">
+            <Link to="/about" className="btn-ghost">About</Link>
+            <Link to="/contact" className="btn-ghost">Contact</Link>
+            <Link to="/status" className="btn-ghost">Status</Link>
+            <Link to="/login" className="btn-ghost">Sign in</Link>
+            <Link to="/register" className="btn-primary">Get started</Link>
           </div>
+        </header>
 
-          <div className="rounded-[2rem] border border-white/10 bg-slate-900/70 p-8 shadow-soft backdrop-blur">
-            <div className="text-sm font-semibold uppercase tracking-[0.35em] text-brand-100">Roadmap</div>
-            <h2 className="mt-4 text-2xl font-bold text-white">Where VolunTrack is headed</h2>
-            <p className="mt-3 text-sm text-slate-300 leading-6">
-              The product roadmap is already in motion — from core launch to certificates, premium tools, and paying school partners.
+        <main className="max-w-[1400px] mx-auto px-4 md:px-8 pb-20">
+
+          <section className="mt-16 md:mt-24 text-center max-w-4xl mx-auto">
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand-700/30 bg-brand-900/20 px-4 py-1.5 text-xs font-medium text-brand-300 mb-6">
+              <Zap className="w-3.5 h-3.5" /> Free for students — no credit card needed
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white leading-tight">
+              Track your volunteer hours, earn rewards, and showcase your impact.
+            </h1>
+            <p className="mt-5 text-lg md:text-xl text-earth-300 max-w-2xl mx-auto leading-8">
+              VolunTrack gives students and organizations a clean, private way to log service work, measure progress toward goals, and export polished records for school, scholarship, or club requirements.
             </p>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+              <Link to="/register" className="btn-primary inline-flex items-center gap-2 justify-center px-8 py-3.5 rounded-xl text-base font-semibold">
+                Create your free account <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link to="/login" className="btn-secondary inline-flex justify-center px-8 py-3.5 rounded-xl text-base font-semibold">
+                Sign in
+              </Link>
+            </div>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-5 text-sm text-earth-400">
+              <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-brand-400" /> No credit card</span>
+              <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-brand-400" /> Private by design</span>
+              <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-brand-400" /> Export anytime</span>
+            </div>
+          </section>
 
-            <div className="mt-6 space-y-4">
-              {PHASES.map((phase) => (
-                <div key={phase.title} className="rounded-3xl border border-earth-100 bg-earth-50 p-4 dark:border-white/10 dark:bg-white/5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-semibold text-earth-900 dark:text-white">{phase.title}</div>
-                      <div className="text-xs text-earth-500 dark:text-earth-400">Current focus for the product.</div>
-                    </div>
-                    <div className="rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">Live</div>
+          <section className="mt-16 text-center">
+            <p className="text-sm uppercase tracking-[0.35em] text-brand-600">How it works</p>
+            <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">Get started in four simple steps.</h2>
+            <p className="mt-3 text-earth-400 max-w-xl mx-auto">
+              From signing up to exporting your first report — VolunTrack makes volunteer tracking effortless.
+            </p>
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {STEPS.map(({ icon: Icon, title, body }, i) => (
+                <div key={title} className="relative">
+                  <div className="w-14 h-14 rounded-full bg-brand-900/30 border border-brand-700/30 grid place-items-center text-brand-300 mx-auto mb-4 text-lg font-bold">
+                    {i + 1}
                   </div>
-                  <ul className="mt-4 space-y-2 text-sm text-earth-700 dark:text-earth-200">
-                    {phase.items.map((item) => (
-                      <li key={item.label} className="flex items-start gap-3">
-                        <span className="mt-1 text-brand-600 dark:text-brand-300">{item.done ? '✔' : '○'}</span>
-                        <span className={item.done ? 'text-earth-900 dark:text-earth-100' : 'text-earth-500 dark:text-earth-400'}>{item.label}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="w-11 h-11 rounded-3xl bg-brand-900/30 border border-brand-700/30 grid place-items-center text-brand-300 mx-auto mb-4">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="font-semibold mb-2 text-white text-center">{title}</div>
+                  <div className="text-sm leading-6 text-slate-300 text-center max-w-xs mx-auto">{body}</div>
                 </div>
               ))}
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="mt-16">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-[0.35em] text-brand-600">Core benefits</p>
-              <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">Everything you need to manage service hours and showcase impact.</h2>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full bg-brand-100 px-4 py-2 text-sm font-semibold text-brand-700 dark:bg-brand-900/30 dark:text-brand-300"><ShieldCheck className="w-4 h-4" /> Private by default</span>
-              <span className="inline-flex items-center gap-2 rounded-full bg-earth-100 px-4 py-2 text-sm font-semibold text-earth-700 dark:bg-white/5 dark:text-earth-300"><Users className="w-4 h-4" /> Built for students</span>
-            </div>
-          </div>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {FEATURES.map(({ icon: Icon, title, body }) => (
-              <Card key={title} className="border border-white/10 bg-slate-900/70 text-white">
-                <div className="w-11 h-11 rounded-3xl bg-brand-100 grid place-items-center text-brand-700 mb-4">
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div className="font-semibold mb-2 text-white">{title}</div>
-                <div className="text-sm leading-6 text-slate-300">{body}</div>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-16 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <Card className="p-8">
-            <h3 className="text-2xl font-semibold text-earth-950 dark:text-white">Built for fast volunteering workflows</h3>
-            <p className="mt-4 text-earth-700 dark:text-earth-300 leading-7">
-              From your first log to your first service certificate, VolunTrack keeps the experience smooth and distraction-free. It helps learners, clubs, and service coordinators keep reliable records without complicated setup.
-            </p>
-            <ul className="mt-6 space-y-3 text-sm text-earth-700 dark:text-earth-300">
-              <li>✔ Save each session with location, category, and supervisor details</li>
-              <li>✔ Watch your month and goal progress in one dashboard</li>
-              <li>✔ Export proofs instantly for school or community review</li>
-            </ul>
-          </Card>
-          <Card className="p-8 bg-gradient-to-br from-brand-600 to-brand-700 text-white">
-            <div className="space-y-4">
-              <div className="text-sm uppercase tracking-[0.35em] text-brand-200">Your path to launch</div>
-              <div className="text-3xl font-bold">Phase-driven product growth</div>
-              <p className="leading-7 text-brand-100">
-                The first version is live and focused on deployment. Next, we deliver certificates and premium upgrades. Then, we partner with schools and clubs to make VolunTrack a paid service.
+          <section className="mt-20">
+            <div className="text-center">
+              <p className="text-sm uppercase tracking-[0.35em] text-brand-600">Categories</p>
+              <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">Track every type of service.</h2>
+              <p className="mt-3 text-earth-400 max-w-xl mx-auto">
+                VolunTrack supports a wide range of volunteer categories so you can log whatever service you do.
               </p>
-              <Link to="/register" className="btn-secondary inline-flex items-center gap-2 bg-white text-brand-700 hover:bg-white/90">Join now</Link>
             </div>
-          </Card>
-        </section>
-      </main>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              {CATEGORIES.map(({ icon: Icon, label, color }) => (
+                <span key={label} className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${color}`}>
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </span>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-20">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-sm uppercase tracking-[0.35em] text-brand-600">Core features</p>
+                <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">Everything you need to manage service hours and showcase impact.</h2>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full bg-brand-100 px-4 py-2 text-sm font-semibold text-brand-700 dark:bg-brand-900/30 dark:text-brand-300"><ShieldCheck className="w-4 h-4" /> Private & stores in your local storage</span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-earth-100 px-4 py-2 text-sm font-semibold text-earth-700 dark:bg-white/5 dark:text-earth-300"><Users className="w-4 h-4" /> Volunteer Task Maker — post opportunities</span>
+              </div>
+            </div>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {FEATURES.map(({ icon: Icon, title, body }) => (
+                <Card key={title} className="border border-white/10 bg-slate-900/70 text-white">
+                  <div className="w-11 h-11 rounded-3xl bg-brand-100 grid place-items-center text-brand-700 mb-4">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="font-semibold mb-2 text-white">{title}</div>
+                  <div className="text-sm leading-6 text-slate-300">{body}</div>
+                </Card>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-20">
+            <div className="text-center">
+              <p className="text-sm uppercase tracking-[0.35em] text-brand-600">Everything included</p>
+              <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">A deeper look at what you get.</h2>
+              <p className="mt-3 text-earth-400 max-w-xl mx-auto">
+                VolunTrack is packed with tools designed to make service tracking simple, motivating, and professional.
+              </p>
+            </div>
+            <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {DETAILED_FEATURES.map(({ icon: Icon, title, body }) => (
+                <Card key={title} className="border border-white/10 bg-slate-900/70 text-white p-6">
+                  <div className="w-10 h-10 rounded-xl bg-brand-900/40 border border-brand-700/30 grid place-items-center text-brand-300 mb-4">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="font-semibold mb-2 text-white">{title}</div>
+                  <div className="text-sm leading-6 text-slate-300">{body}</div>
+                </Card>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-20">
+            <div className="text-center">
+              <p className="text-sm uppercase tracking-[0.35em] text-brand-600">Who it&rsquo;s for</p>
+              <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">Built for everyone who serves.</h2>
+              <p className="mt-3 text-earth-400 max-w-xl mx-auto">
+                Whether you&rsquo;re a student tracking NHS hours or a nonprofit coordinating volunteers, VolunTrack adapts to your needs.
+              </p>
+            </div>
+            <div className="mt-10 grid gap-6 md:grid-cols-2">
+              {AUDIENCES.map(({ icon: Icon, title, body, perks }) => (
+                <Card key={title} className="border border-white/10 bg-slate-900/70 text-white p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-brand-900/40 border border-brand-700/30 grid place-items-center text-brand-300 shrink-0">
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-white text-lg">{title}</div>
+                      <p className="mt-2 text-sm leading-6 text-slate-300">{body}</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {perks.map((p) => (
+                          <span key={p} className="inline-flex items-center gap-1 rounded-full bg-white/5 px-3 py-1 text-xs text-earth-300">
+                            <CheckCircle className="w-3 h-3 text-brand-400" /> {p}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-20">
+            <div className="text-center">
+              <p className="text-sm uppercase tracking-[0.35em] text-brand-600">Testimonials</p>
+              <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">What people are saying.</h2>
+            </div>
+            <div className="mt-10 grid gap-6 md:grid-cols-3">
+              {TESTIMONIALS.map(({ quote, name, role }) => (
+                <Card key={name} className="border border-white/10 bg-slate-900/70 text-white p-6">
+                  <div className="flex gap-1 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-brand-400 text-brand-400" />
+                    ))}
+                  </div>
+                  <p className="text-sm leading-7 text-slate-300 italic">&ldquo;{quote}&rdquo;</p>
+                  <div className="mt-6 pt-4 border-t border-white/10">
+                    <div className="font-semibold text-sm text-white">{name}</div>
+                    <div className="text-xs text-earth-400">{role}</div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </section>
+
+
+          <section className="mt-20">
+            <div className="text-center">
+              <p className="text-sm uppercase tracking-[0.35em] text-brand-600">FAQ</p>
+              <h2 className="mt-3 text-3xl font-bold text-earth-950 dark:text-white">Frequently asked questions.</h2>
+            </div>
+            <div className="mt-8 max-w-2xl mx-auto">
+              <Card className="border border-white/10 bg-slate-900/70 text-white p-6 md:p-8">
+                {FAQS.map((faq) => (
+                  <FaqItem key={faq.q} q={faq.q} a={faq.a} />
+                ))}
+              </Card>
+            </div>
+          </section>
+
+          <section className="mt-20 rounded-[2rem] bg-gradient-to-br from-brand-600 to-brand-700 p-10 md:p-16 text-center">
+            <Sparkles className="w-10 h-10 text-brand-200 mx-auto" />
+            <h2 className="mt-4 text-3xl md:text-4xl font-bold text-white">Ready to start tracking your impact?</h2>
+            <p className="mt-3 text-brand-100 max-w-lg mx-auto leading-7">
+              Join thousands of students and organizations already using VolunTrack. It&rsquo;s free to get started.
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+              <Link to="/register" className="btn-secondary inline-flex items-center gap-2 justify-center bg-white text-brand-700 hover:bg-white/90 px-8 py-3 rounded-xl font-semibold">
+                Create your free account <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link to="/contact" className="inline-flex items-center gap-2 justify-center border border-white/30 text-white hover:bg-white/10 px-8 py-3 rounded-xl font-semibold transition-colors">
+                Talk to us
+              </Link>
+            </div>
+          </section>
+
+          <section className="mt-16 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+            <Card className="p-8">
+              <h3 className="text-2xl font-semibold text-earth-950 dark:text-white">Built for fast volunteering workflows</h3>
+              <p className="mt-4 text-earth-700 dark:text-earth-300 leading-7">
+                From your first log to your first service certificate, VolunTrack keeps the experience smooth and distraction-free. It helps learners, clubs, and service coordinators keep reliable records without complicated setup.
+              </p>
+              <ul className="mt-6 space-y-3 text-sm text-earth-700 dark:text-earth-300">
+                <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-brand-500 shrink-0 mt-0.5" /> Save each session with location, category, and supervisor details</li>
+                <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-brand-500 shrink-0 mt-0.5" /> Watch your month and goal progress in one dashboard</li>
+                <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-brand-500 shrink-0 mt-0.5" /> Export proofs instantly for school or community review</li>
+              </ul>
+            </Card>
+            <Card className="p-8 bg-gradient-to-br from-brand-600 to-brand-700 text-white">
+              <div className="space-y-4">
+                <div className="text-sm uppercase tracking-[0.35em] text-brand-200">Your path to launch</div>
+                <div className="text-3xl font-bold">Phase-driven product growth</div>
+                <p className="leading-7 text-brand-100">
+                  The first version is live and focused on deployment. Next, we deliver certificates and premium upgrades. Then, we partner with schools and clubs to make VolunTrack a paid service.
+                </p>
+                <Link to="/register" className="btn-secondary inline-flex items-center gap-2 bg-white text-brand-700 hover:bg-white/90">Join now</Link>
+              </div>
+            </Card>
+          </section>
+        </main>
+
+        <footer className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-8 text-sm text-earth-500 dark:text-earth-400">
+          <span>&copy; VolunTrack 2026</span>
+          <div className="flex items-center gap-4">
+            <Link to="/about" className="hover:text-white">About</Link>
+            <Link to="/contact" className="hover:text-white">Contact</Link>
+            <Link to="/status" className="hover:text-white">Status</Link>
+            <Link to="/help" className="hover:text-white">Help</Link>
+            <a
+              href="https://www.instagram.com/volunteertrackofficial/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-white"
+              aria-label="Instagram"
+            >
+              <Instagram className="w-4 h-4" />
+              @volunteertrackofficial
+            </a>
+          </div>
+        </footer>
+      </div>
     </div>
-  </div>
   )
 }

@@ -1,0 +1,27 @@
+# Render blueprint: one Node web service using external Neon database.
+# Deploy by connecting this repo in the Render dashboard (New > Blueprint).
+# After the first deploy, set ADMIN_EMAIL and ADMIN_PASSWORD in the Environment tab.
+services:
+  - type: web
+    name: voluntrack-backend
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: "postgresql://neondb_owner:npg_7uZriwmaDz1p@ep-misty-recipe-adiolyhv-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=verify-full"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USER
+        value: karnatamhriday@gmail.com
+      - key: EMAIL_PASSWORD
+        value: "kulo nteg plkx obdo"
+      - key: EMAIL_FROM
+        value: volunteertrack@googlegroups.com
