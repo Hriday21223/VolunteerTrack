@@ -392,7 +392,7 @@ const slides = [
         </div>
         <div className="rounded-2xl border border-earth-800/40 bg-earth-900/20 p-5 text-sm text-earth-400">
           <p className="font-medium text-white mb-1">Contact</p>
-          <p>Email: karnatamhriday@gmail.com</p>
+          <p>Email: volunteertrack@googlegroups.com</p>
           <p>GitHub: Hriday21223</p>
         </div>
       </div>
@@ -499,32 +499,34 @@ export default function AdminShowcase() {
       </div>
 
       {/* Slide container */}
-      <div id="showcase-slides" className="relative overflow-hidden rounded-[2rem] border border-earth-800/50 bg-[#0a1620] shadow-2xl">
-        <div
-          className="flex transition-transform duration-500 ease-in-out"
-          style={{ transform: `translateX(-${slide * 100}%)` }}
-        >
-          {slides.map((s, i) => {
-            const Icon = s.icon
-            return (
-              <div key={i} className="min-w-0 w-full shrink-0 p-8 md:p-12">
-                <div className="flex flex-col items-center text-center mb-8">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-600 to-sky-500 grid place-items-center mb-4 shadow-lg">
-                    <Icon className="w-7 h-7 text-white" />
+      <div className="relative rounded-[2rem] border border-earth-800/50 bg-[#0a1620] shadow-2xl overflow-x-hidden" style={{ overflowY: showNotes ? 'auto' : 'hidden' }}>
+        <div id="showcase-slides">
+          <div
+            className="flex transition-transform duration-500 ease-in-out"
+            style={{ transform: `translateX(-${slide * 100}%)` }}
+          >
+            {slides.map((s, i) => {
+              const Icon = s.icon
+              return (
+                <div key={i} className="min-w-0 w-full shrink-0 p-8 md:p-12">
+                  <div className="flex flex-col items-center text-center mb-8">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-600 to-sky-500 grid place-items-center mb-4 shadow-lg">
+                      <Icon className="w-7 h-7 text-white" />
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-white">{s.title}</h2>
+                    <p className="text-sm text-brand-300 mt-1 uppercase tracking-widest">{s.subtitle}</p>
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white">{s.title}</h2>
-                  <p className="text-sm text-brand-300 mt-1 uppercase tracking-widest">{s.subtitle}</p>
+                  <s.content />
+                  {showNotes && speakerNotes[i] && (
+                    <div className="mt-6 rounded-xl border border-earth-700/50 bg-earth-900/40 p-4 text-xs text-earth-400 italic leading-relaxed">
+                      <p className="font-medium text-earth-300 not-italic mb-1 text-[10px] uppercase tracking-wider">Speaker Notes</p>
+                      {speakerNotes[i]}
+                    </div>
+                  )}
                 </div>
-                <s.content />
-                {showNotes && speakerNotes[i] && (
-                  <div className="mt-6 rounded-xl border border-earth-700/50 bg-earth-900/40 p-4 text-xs text-earth-400 italic leading-relaxed">
-                    <p className="font-medium text-earth-300 not-italic mb-1 text-[10px] uppercase tracking-wider">Speaker Notes</p>
-                    {speakerNotes[i]}
-                  </div>
-                )}
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       </div>
 
