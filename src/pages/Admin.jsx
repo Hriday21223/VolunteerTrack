@@ -279,6 +279,9 @@ export default function Admin() {
               <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-bold">{incidents.length > 9 ? '9+' : incidents.length}</span>
             )}
           </button>
+          <Link to="/admin/showcase" className="btn-sm btn-ghost">
+            <Sparkles className="w-3.5 h-3.5 mr-1" /> Showcase
+          </Link>
         </div>
       }
     >

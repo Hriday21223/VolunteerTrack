@@ -23,6 +23,7 @@ import Profile from '@/pages/Profile.jsx'
 import Settings from '@/pages/Settings.jsx'
 import Reminders from '@/pages/Reminders.jsx'
 import Admin from '@/pages/Admin.jsx'
+import AdminShowcase from '@/pages/AdminShowcase.jsx'
 import SchoolDashboard from '@/pages/SchoolDashboard.jsx'
 import SchoolRegister from '@/pages/SchoolRegister.jsx'
 import Help from '@/pages/Help.jsx'
@@ -85,7 +86,8 @@ function Shell() {
         <Route path="/settings"     element={<Protected><Settings /></Protected>} />
         <Route path="/help"         element={<Help />} />
         <Route path="/my-tasks"    element={<Protected><MyTasks /></Protected>} />
-        <Route path="/admin"        element={<AdminProtected><Admin /></AdminProtected>} />
+        <Route path="/admin"                element={<AdminProtected><Admin /></AdminProtected>} />
+        <Route path="/admin/showcase"       element={<AdminProtected><AdminShowcase /></AdminProtected>} />
         <Route path="/school/dashboard" element={<Protected><SchoolDashboard /></Protected>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
