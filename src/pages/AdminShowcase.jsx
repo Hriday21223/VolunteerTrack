@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ChevronLeft, ChevronRight, Sparkles, School, ShieldCheck, TrendingUp, Award, Phone, Server, Lock, BarChart3, Smartphone, Globe, DollarSign } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Sparkles, School, ShieldCheck, TrendingUp, Award, Phone, Server, Lock, BarChart3, Smartphone, Globe, DollarSign, Download, MessageSquareText, CheckCircle2, XCircle, Loader2, Wrench, AlertTriangle } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 
@@ -246,43 +246,62 @@ const slides = [
     icon: BarChart3,
     title: 'AI-Powered Monitoring',
     subtitle: 'Automatic Incident Detection & Fixing',
-    content: () => (
-      <div className="space-y-5 max-w-2xl mx-auto">
-        <p className="text-sm text-earth-400 text-center">
-          VolunTrack includes a built-in AI agent that monitors system health, detects outages,
-          and attempts automatic fixes — all manageable from the admin panel.
-        </p>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 rounded-xl border border-earth-800/40 bg-earth-900/20 p-4">
-            <div className="w-8 h-8 rounded-full bg-amber-900/30 grid place-items-center text-amber-400 shrink-0">
-              <span className="text-xs font-bold">1</span>
+    content: () => {
+      const s = window.__agentData ? window.__agentData() : { incidents: [], agentLog: [], incByStatus: { detected: 0, investigating: 0, fixing: 0, resolved: 0, failed: 0 }, totalInc: 0, resolvedInc: 0, failedInc: 0, fixRate: 0, lastActions: [] }
+      return (
+        <div className="space-y-5 max-w-2xl mx-auto">
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="rounded-xl border border-earth-800/40 bg-earth-900/20 p-3">
+              <div className="text-2xl font-bold text-white">{s.totalInc}</div>
+              <div className="text-xs text-earth-400 mt-1">Total Incidents</div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-white">Detect</p>
-              <p className="text-xs text-earth-400">Agent automatically detects service failures and logs incidents</p>
+            <div className="rounded-xl border border-earth-800/40 bg-earth-900/20 p-3">
+              <div className="text-2xl font-bold text-emerald-400">{s.resolvedInc}</div>
+              <div className="text-xs text-earth-400 mt-1">Resolved</div>
             </div>
-          </div>
-          <div className="flex items-center gap-3 rounded-xl border border-earth-800/40 bg-earth-900/20 p-4">
-            <div className="w-8 h-8 rounded-full bg-blue-900/30 grid place-items-center text-blue-400 shrink-0">
-              <span className="text-xs font-bold">2</span>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-white">Review</p>
-              <p className="text-xs text-earth-400">Admin reviews incidents and approves or rejects fixes</p>
+            <div className="rounded-xl border border-earth-800/40 bg-earth-900/20 p-3">
+              <div className="text-2xl font-bold text-brand-400">{s.fixRate}%</div>
+              <div className="text-xs text-earth-400 mt-1">Fix Rate</div>
             </div>
           </div>
-          <div className="flex items-center gap-3 rounded-xl border border-earth-800/40 bg-earth-900/20 p-4">
-            <div className="w-8 h-8 rounded-full bg-green-900/30 grid place-items-center text-green-400 shrink-0">
-              <span className="text-xs font-bold">3</span>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-white">Fix</p>
-              <p className="text-xs text-earth-400">AI agent runs the fix automatically; incidents resolve with full audit log</p>
+          <div className="space-y-3">
+            <p className="text-xs font-medium text-earth-500 uppercase tracking-wider">Status Breakdown</p>
+            <div className="grid grid-cols-5 gap-2 text-center text-xs">
+              {[
+                { label: 'Detected', count: s.incByStatus.detected, color: 'text-red-400', bg: 'bg-red-900/20' },
+                { label: 'Investigating', count: s.incByStatus.investigating, color: 'text-amber-400', bg: 'bg-amber-900/20' },
+                { label: 'Fixing', count: s.incByStatus.fixing, color: 'text-blue-400', bg: 'bg-blue-900/20' },
+                { label: 'Resolved', count: s.incByStatus.resolved, color: 'text-emerald-400', bg: 'bg-emerald-900/20' },
+                { label: 'Failed', count: s.incByStatus.failed, color: 'text-red-500', bg: 'bg-red-900/30' },
+              ].map((st) => (
+                <div key={st.label} className={`rounded-lg ${st.bg} p-2 ${st.color}`}>
+                  <div className="font-bold text-base">{st.count}</div>
+                  <div className="text-[10px] opacity-80">{st.label}</div>
+                </div>
+              ))}
             </div>
           </div>
+          {s.lastActions.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-earth-500 uppercase tracking-wider mb-2">Recent Agent Actions</p>
+              <div className="space-y-1.5">
+                {s.lastActions.map((a) => {
+                  const typeColors = { info: 'text-blue-400', fixing: 'text-amber-400', success: 'text-emerald-400', error: 'text-red-400' }
+                  const icons = { info: <Loader2 className="w-3 h-3" />, fixing: <Wrench className="w-3 h-3" />, success: <CheckCircle2 className="w-3 h-3" />, error: <XCircle className="w-3 h-3" /> }
+                  return (
+                    <div key={a.id} className="flex items-center gap-2 text-xs">
+                      <span className={typeColors[a.type] || 'text-earth-400'}>{icons[a.type] || icons.info}</span>
+                      <span className="text-earth-300 truncate">{a.message}</span>
+                      <span className="text-earth-600 shrink-0">{new Date(a.timestamp).toLocaleString()}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
-    ),
+      )
+    },
   },
   {
     icon: DollarSign,
@@ -381,18 +400,77 @@ const slides = [
   },
 ]
 
+const speakerNotes = [
+  "Welcome to VolunTrack. This is a privacy-first, open-source PWA that lets students log volunteer hours, set goals, earn achievement badges, and generate verified PDF reports — all without needing an account or server. The app works offline, installs on any device, and is completely free for individual students.",
+  "Schools today rely on paper logs or spreadsheets to track volunteer hours. Paper is easy to forge, spreadsheets don't scale, and counselors spend hours compiling reports for scholarships like Bright Futures. Students lose motivation without goals or progress tracking. VolunTrack solves all three problems in one platform.",
+  "VolunTrack serves three audiences. For students: a fast, private way to log hours and track progress. For schools: student rosters, a volunteer task board, and PDF verification workflows. For admins: a full dashboard with school management, payment tracking, and AI-powered system monitoring. Each role gets exactly what they need.",
+  "Core features include hour logging with supervisor details, goal setting with real-time progress rings, 12 achievement badges that gamify volunteering, a calendar heatmap view, PDF report exports, weekly charts, push reminders, and full dark mode. Everything is designed to be fast and intuitive.",
+  "The school hub is where VolunTrack becomes a platform. Schools register with a unique PIN code. Students join by entering the code — no CSV uploads needed. Schools can post volunteer opportunities with location, time, and slot limits. Students sign up with one click, and organizers approve or reject signups. PDF verification forms can be uploaded, reviewed, and approved inline. Payment tracking with due dates and notifications is built in.",
+  "Privacy is the foundation. Core data stays in the browser's localStorage — no server communication required. Optional accounts use JWT tokens with bcrypt passwords and SHA-256 PIN hashing. The app is a fully offline-capable PWA. Email recovery flows via SMTP for both password and PIN resets. No tracking, no telemetry, no data harvesting.",
+  "The frontend is React 18 with Vite and Tailwind CSS. The backend is Express.js with SQLite for development and PostgreSQL via Neon for production. Authentication uses JWT with bcrypt. Emails go through Nodemailer over SMTP. The PWA is powered by vite-plugin-pwa. Frontend deploys to GitHub Pages via GitHub Actions; backend runs on Render.",
+  "VolunTrack includes a unique AI agent that monitors system health. It detects service failures, logs incidents with timestamps, and attempts automatic fixes. The admin reviews each incident and approves or rejects the fix. Every action is recorded in an audit log. This slide shows live data from the actual monitoring system running right now.",
+  "VolunTrack is free for individual students. Schools subscribe for administrative features: rosters, task board, PDF verification, payment tracking, and support. The payment infrastructure is already fully built — admins can mark schools paid or unpaid, set global due dates, send bulk notifications, and export CSV reports for accounting.",
+  "Phases 1 through 3 are complete: core app, authentication and recovery, and school partnerships. Phase 4 will bring native iOS and Android apps. Phase 5 adds district-level analytics and cross-school reporting. Phase 6 opens a public API for third-party integrations and automation tools like Zapier.",
+  "VolunTrack is live right now at the URL on screen. No sign-up required — just open it and start logging. The full source code is on GitHub under an MIT license. Schools can self-host, customize, and extend without vendor lock-in. I'm open to partnerships, feedback, and contributions.",
+]
+
 export default function AdminShowcase() {
   const [slide, setSlide] = useState(0)
+  const [showNotes, setShowNotes] = useState(false)
+  const [incidents, setIncidents] = useState([])
+  const [agentLog, setAgentLog] = useState([])
   const total = slides.length
+
+  const refreshAgent = useCallback(() => {
+    try { setIncidents(JSON.parse(localStorage.getItem('voluntrack:incidents') || '[]')) } catch { setIncidents([]) }
+    try { setAgentLog(JSON.parse(localStorage.getItem('voluntrack:agent_log') || '[]')) } catch { setAgentLog([]) }
+  }, [])
+
+  useEffect(() => { refreshAgent(); const id = setInterval(refreshAgent, 30000); return () => clearInterval(id) }, [refreshAgent])
+  useEffect(() => {
+    window.__agentData = () => ({ incidents, agentLog, incByStatus, totalInc, resolvedInc, failedInc, fixRate, lastActions })
+  }, [incidents, agentLog, incByStatus, totalInc, resolvedInc, failedInc, fixRate, lastActions])
+
+  const incByStatus = { detected: 0, investigating: 0, fixing: 0, resolved: 0, failed: 0 }
+  incidents.forEach((i) => { incByStatus[i.status] = (incByStatus[i.status] || 0) + 1 })
+  const totalInc = incidents.length
+  const resolvedInc = incByStatus.resolved
+  const failedInc = incByStatus.failed
+  const fixRate = totalInc > 0 ? Math.round((resolvedInc / (resolvedInc + failedInc || 1)) * 100) : 0
+  const lastActions = agentLog.slice(-5).reverse()
+
+  const printSection = (selector) => {
+    const el = document.querySelector(selector)
+    if (!el) return
+    const w = window.open('', '_blank', 'width=1024,height=768')
+    const styles = Array.from(document.styleSheets).map((s) => {
+      try { return Array.from(s.cssRules || []).map((r) => r.cssText).join('') } catch { return '' }
+    }).join('')
+    w.document.write(`<!DOCTYPE html><html><head><title>VolunTrack Showcase</title><style>${styles}body{background:#0a1620;color:#e2e8f0;padding:2rem;font-family:system-ui,sans-serif}@media print{@page{margin:1.5cm}.no-print{display:none!important}.print-only{display:block!important}}</style></head><body>${el.innerHTML}</body></html>`)
+    w.document.close()
+    w.focus()
+    setTimeout(() => { w.print(); w.close() }, 500)
+  }
 
   return (
     <AppLayout
       title="VolunTrack Showcase"
       subtitle="Pitch deck & technical overview"
       action={
-        <Link to="/admin" className="btn-ghost text-sm">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Back to Admin
-        </Link>
+        <div className="flex gap-2 flex-wrap">
+          <button onClick={() => setShowNotes(!showNotes)} className={`btn-sm ${showNotes ? 'btn-primary' : 'btn-ghost'}`}>
+            <MessageSquareText className="w-3.5 h-3.5 mr-1" /> Notes
+          </button>
+          <button onClick={() => printSection('#showcase-slides')} className="btn-sm btn-ghost">
+            <Download className="w-3.5 h-3.5 mr-1" /> Slides (PDF)
+          </button>
+          <button onClick={() => printSection('#showcase-document')} className="btn-sm btn-ghost">
+            <Download className="w-3.5 h-3.5 mr-1" /> Overview (PDF)
+          </button>
+          <Link to="/admin" className="btn-ghost text-sm">
+            <ArrowLeft className="w-4 h-4 mr-1" /> Back
+          </Link>
+        </div>
       }
     >
       {/* Slide navigation */}
@@ -410,7 +488,7 @@ export default function AdminShowcase() {
       </div>
 
       {/* Slide container */}
-      <div className="relative overflow-hidden rounded-[2rem] border border-earth-800/50 bg-[#0a1620] shadow-2xl">
+      <div id="showcase-slides" className="relative overflow-hidden rounded-[2rem] border border-earth-800/50 bg-[#0a1620] shadow-2xl">
         <div
           className="flex transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${slide * 100}%)` }}
@@ -427,6 +505,12 @@ export default function AdminShowcase() {
                   <p className="text-sm text-brand-300 mt-1 uppercase tracking-widest">{s.subtitle}</p>
                 </div>
                 <s.content />
+                {showNotes && speakerNotes[i] && (
+                  <div className="mt-6 rounded-xl border border-earth-700/50 bg-earth-900/40 p-4 text-xs text-earth-400 italic leading-relaxed">
+                    <p className="font-medium text-earth-300 not-italic mb-1 text-[10px] uppercase tracking-wider">Speaker Notes</p>
+                    {speakerNotes[i]}
+                  </div>
+                )}
               </div>
             )
           })}
@@ -453,7 +537,7 @@ export default function AdminShowcase() {
       </div>
 
       {/* Full Document Section */}
-      <div className="mt-16">
+      <div id="showcase-document" className="mt-16">
         <h2 className="text-2xl font-bold text-white text-center mb-2">Full Overview</h2>
         <p className="text-sm text-earth-400 text-center mb-8">Technical deep-dive and business overview</p>
 
@@ -662,6 +746,42 @@ export default function AdminShowcase() {
                 </div>
               </div>
             </div>
+          </Card>
+
+          <Card>
+            <h3 className="text-lg font-bold text-white mb-4">Live Agent Activity</h3>
+            <p className="text-xs text-earth-400 mb-4">Real-time data from the AI monitoring system. Refreshes every 30 seconds.</p>
+            <div className="grid grid-cols-3 gap-3 mb-4 text-center">
+              <div className="rounded-xl border border-earth-800/40 bg-earth-900/20 p-3">
+                <div className="text-lg font-bold text-white">{totalInc}</div>
+                <div className="text-xs text-earth-400">Incidents</div>
+              </div>
+              <div className="rounded-xl border border-earth-800/40 bg-earth-900/20 p-3">
+                <div className="text-lg font-bold text-emerald-400">{resolvedInc}</div>
+                <div className="text-xs text-earth-400">Resolved</div>
+              </div>
+              <div className="rounded-xl border border-earth-800/40 bg-earth-900/20 p-3">
+                <div className="text-lg font-bold text-brand-400">{fixRate}%</div>
+                <div className="text-xs text-earth-400">Fix Rate</div>
+              </div>
+            </div>
+            {agentLog.length === 0 ? (
+              <p className="text-xs text-earth-500 text-center py-4">No recent agent activity.</p>
+            ) : (
+              <div className="space-y-1 max-h-48 overflow-y-auto">
+                {agentLog.slice(-10).reverse().map((a) => {
+                  const typeColors = { info: 'text-blue-400', fixing: 'text-amber-400', success: 'text-emerald-400', error: 'text-red-400' }
+                  const icons = { info: <Loader2 className="w-3 h-3" />, fixing: <Wrench className="w-3 h-3" />, success: <CheckCircle2 className="w-3 h-3" />, error: <AlertTriangle className="w-3 h-3" /> }
+                  return (
+                    <div key={a.id} className="flex items-center gap-2 text-xs py-1">
+                      <span className={typeColors[a.type] || 'text-earth-400'}>{icons[a.type] || icons.info}</span>
+                      <span className="text-earth-300 truncate flex-1">{a.message}</span>
+                      <span className="text-earth-600 shrink-0">{new Date(a.timestamp).toLocaleString()}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </Card>
 
           <Card>
