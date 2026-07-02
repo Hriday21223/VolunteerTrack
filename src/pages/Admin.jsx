@@ -1,12 +1,12 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, CreditCard, Download, Calendar, Bell, Star, Heart, AlertTriangle, Bot, Loader2, Wrench, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, Trash2, Mail, MessageSquare, ShieldCheck, XCircle, Sparkles, School, Users, CreditCard, Download, Calendar, Bell, Star, Heart, AlertTriangle, Bot, Loader2, Wrench, CheckCircle2, PauseCircle, PlayCircle, Plus, Settings, Activity, Globe, Code, Clock, Trash } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { getReviews } from '@/api/index.js'
-import { runAgent, updateIncidentStatus, getAgentLog, logAgentAction } from '@/lib/agent.js'
+import { runAgent, updateIncidentStatus, getAgentLog, logAgentAction, getAgentStatus, toggleAgentPause, getCustomAgents, saveCustomAgent, deleteCustomAgent, runCustomAgent } from '@/lib/agent.js'
 
 const apiUrl = import.meta.env.VITE_API_URL || '/api'
 
@@ -72,6 +72,12 @@ export default function Admin() {
   const [incidents, setIncidents] = useState([])
   const [agentLog, setAgentLog] = useState([])
   const [fixing, setFixing] = useState(null)
+  const [agentPaused, setAgentPaused] = useState(() => getAgentStatus().paused)
+  const [customAgents, setCustomAgents] = useState(() => getCustomAgents())
+  const [showAddAgent, setShowAddAgent] = useState(false)
+  const [newAgent, setNewAgent] = useState({ name: '', checkType: 'url', target: '', interval: 60, critical: true })
+  const [agentServices, setAgentServices] = useState([])
+  const [runningCustom, setRunningCustom] = useState(null)
   useEffect(() => {
     try { setIncidents(JSON.parse(localStorage.getItem('voluntrack:incidents') || '[]')) } catch { setIncidents([]) }
     try { setAgentLog(JSON.parse(localStorage.getItem('voluntrack:agent_log') || '[]')) } catch { setAgentLog([]) }
@@ -260,8 +266,8 @@ export default function Admin() {
 
   return (
     <AppLayout
-      title={tab === 'inbox' ? 'Contact inbox' : tab === 'reviews' ? 'Reviews' : tab === 'incidents' ? 'Incidents' : 'Manage schools'}
-      subtitle={tab === 'inbox' ? `${contacts.length} message${contacts.length === 1 ? '' : 's'} received` : tab === 'reviews' ? `${reviews.length} review${reviews.length === 1 ? '' : 's'} submitted` : tab === 'incidents' ? `${incidents.length} incident${incidents.length === 1 ? '' : 's'} logged` : `${schools.length} school${schools.length === 1 ? '' : 's'} registered`}
+      title={tab === 'inbox' ? 'Contact inbox' : tab === 'reviews' ? 'Reviews' : tab === 'incidents' ? 'Incidents' : tab === 'agent' ? 'Agent Dashboard' : 'Manage schools'}
+      subtitle={tab === 'inbox' ? `${contacts.length} message${contacts.length === 1 ? '' : 's'} received` : tab === 'reviews' ? `${reviews.length} review${reviews.length === 1 ? '' : 's'} submitted` : tab === 'incidents' ? `${incidents.length} incident${incidents.length === 1 ? '' : 's'} logged` : tab === 'agent' ? `${agentPaused ? 'Paused' : 'Active'} · ${customAgents.length} custom agent${customAgents.length === 1 ? '' : 's'}` : `${schools.length} school${schools.length === 1 ? '' : 's'} registered`}
       action={
         <div className="flex gap-2">
           <button onClick={() => setTab('inbox')} className={`btn-sm ${tab === 'inbox' ? 'btn-primary' : 'btn-ghost'}`}>
@@ -278,6 +284,9 @@ export default function Admin() {
             {incidents.length > 0 && (
               <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-bold">{incidents.length > 9 ? '9+' : incidents.length}</span>
             )}
+          </button>
+          <button onClick={() => setTab('agent')} className={`btn-sm ${tab === 'agent' ? 'btn-primary' : 'btn-ghost'}`}>
+            <Activity className="w-3.5 h-3.5 mr-1" /> Agent
           </button>
           <Link to="/admin/showcase" className="btn-sm btn-ghost">
             <Sparkles className="w-3.5 h-3.5 mr-1" /> Showcase
@@ -508,6 +517,149 @@ export default function Admin() {
               </div>
             )}
           </Card>
+        </>
+      ) : tab === 'agent' ? (
+        <>
+          {/* Agent status card */}
+          <Card className="mb-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {agentPaused ? (
+                  <PauseCircle className="w-8 h-8 text-amber-400" />
+                ) : (
+                  <Activity className="w-8 h-8 text-emerald-400" />
+                )}
+                <div>
+                  <p className="font-medium text-white">Agent {agentPaused ? 'Paused' : 'Active'}</p>
+                  <p className="text-xs text-earth-400 mt-0.5">
+                    {agentPaused
+                      ? 'Auto-fix is disabled. Incidents are logged but won\'t be resolved automatically.'
+                      : 'Monitoring services and auto-fixing detected issues.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  const next = toggleAgentPause()
+                  setAgentPaused(next)
+                  setToastMessage(next ? 'Agent paused' : 'Agent resumed')
+                  setToast(true)
+                }}
+                className={`btn-sm ${agentPaused ? 'btn-primary' : 'btn-ghost'}`}
+              >
+                {agentPaused ? <PlayCircle className="w-3.5 h-3.5 mr-1" /> : <PauseCircle className="w-3.5 h-3.5 mr-1" />}
+                {agentPaused ? 'Resume' : 'Pause'}
+              </button>
+            </div>
+          </Card>
+
+          {/* Custom agents */}
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display font-semibold text-base flex items-center gap-2">
+                <Bot className="w-4 h-4 text-brand-600" /> Custom Agents
+              </h3>
+              <button onClick={() => { setNewAgent({ name: '', checkType: 'url', target: '', interval: 60, critical: true }); setShowAddAgent(true) }} className="btn-sm btn-primary">
+                <Plus className="w-3.5 h-3.5 mr-1" /> Add Agent
+              </button>
+            </div>
+            {customAgents.length === 0 ? (
+              <p className="text-sm text-earth-500 dark:text-earth-400 text-center py-6">
+                No custom agents configured. Add one to monitor a URL or run a JS check.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {customAgents.map((a) => (
+                  <div key={a.id} className="flex items-center justify-between gap-3 rounded-xl border border-earth-800/40 bg-earth-900/20 p-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      {a.checkType === 'url' ? <Globe className="w-4 h-4 text-brand-400 shrink-0" /> : <Code className="w-4 h-4 text-sky-400 shrink-0" />}
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-white">{a.name}</p>
+                        <p className="text-xs text-earth-500 truncate">{a.target}</p>
+                        <div className="flex gap-2 mt-0.5">
+                          <span className="text-[10px] uppercase tracking-wider text-earth-600">{a.checkType === 'url' ? 'URL Ping' : 'JS Check'}</span>
+                          {a.critical && <span className="text-[10px] uppercase tracking-wider text-amber-500">Critical</span>}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={async () => {
+                          setRunningCustom(a.id)
+                          await runCustomAgent(a)
+                          setRunningCustom(null)
+                          setCustomAgents(getCustomAgents())
+                        }}
+                        disabled={runningCustom === a.id}
+                        className="btn-ghost text-xs"
+                      >
+                        {runningCustom === a.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Activity className="w-3 h-3" />}
+                      </button>
+                      <button
+                        onClick={() => { deleteCustomAgent(a.id); setCustomAgents(getCustomAgents()); setToastMessage(`Deleted ${a.name}`); setToast(true) }}
+                        className="text-red-400 hover:text-red-300 p-1"
+                      >
+                        <Trash className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          {/* Add Agent Modal */}
+          {showAddAgent && (
+            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="relative w-full max-w-md rounded-[2rem] border border-earth-900 bg-[#07131a] shadow-2xl p-6">
+                <h3 className="text-lg font-bold text-white mb-4">Add Custom Agent</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs text-earth-400 mb-1 block">Agent Name</label>
+                    <input value={newAgent.name} onChange={(e) => setNewAgent({ ...newAgent, name: e.target.value })} placeholder="e.g. Backend API" className="w-full rounded-xl border border-earth-800 bg-earth-900/50 px-3 py-2 text-sm text-white placeholder-earth-600 focus:outline-none focus:border-brand-500" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-earth-400 mb-1 block">Check Type</label>
+                    <select value={newAgent.checkType} onChange={(e) => setNewAgent({ ...newAgent, checkType: e.target.value })} className="w-full rounded-xl border border-earth-800 bg-earth-900/50 px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                      <option value="url">URL Ping (HEAD request)</option>
+                      <option value="js">JS Expression</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-earth-400 mb-1 block">
+                      {newAgent.checkType === 'url' ? 'URL' : 'JavaScript Expression'}
+                    </label>
+                    {newAgent.checkType === 'url' ? (
+                      <input value={newAgent.target} onChange={(e) => setNewAgent({ ...newAgent, target: e.target.value })} placeholder="https://your-backend.onrender.com/api/health" className="w-full rounded-xl border border-earth-800 bg-earth-900/50 px-3 py-2 text-sm text-white placeholder-earth-600 focus:outline-none focus:border-brand-500" />
+                    ) : (
+                      <textarea value={newAgent.target} onChange={(e) => setNewAgent({ ...newAgent, target: e.target.value })} placeholder="navigator.onLine" rows={2} className="w-full rounded-xl border border-earth-800 bg-earth-900/50 px-3 py-2 text-sm text-white placeholder-earth-600 focus:outline-none focus:border-brand-500 font-mono" />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="agent-critical" checked={newAgent.critical} onChange={(e) => setNewAgent({ ...newAgent, critical: e.target.checked })} className="rounded border-earth-800" />
+                    <label htmlFor="agent-critical" className="text-xs text-earth-400">Critical (creates incidents on failure)</label>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-6">
+                  <button onClick={() => setShowAddAgent(false)} className="btn-ghost flex-1">Cancel</button>
+                  <button
+                    onClick={() => {
+                      if (!newAgent.name.trim() || !newAgent.target.trim()) return
+                      saveCustomAgent(newAgent)
+                      setCustomAgents(getCustomAgents())
+                      setShowAddAgent(false)
+                      setToastMessage(`Agent "${newAgent.name}" added`)
+                      setToast(true)
+                    }}
+                    className="btn-primary flex-1"
+                    disabled={!newAgent.name.trim() || !newAgent.target.trim()}
+                  >
+                    Save Agent
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       ) : contacts.length === 0 ? (
         <Card>

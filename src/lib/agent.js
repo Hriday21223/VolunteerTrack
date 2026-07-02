@@ -1,5 +1,68 @@
 const INCIDENTS_KEY = 'voluntrack:incidents'
 const AGENT_LOG_KEY = 'voluntrack:agent_log'
+const AGENT_PAUSED_KEY = 'voluntrack:agent_paused'
+const CUSTOM_AGENTS_KEY = 'voluntrack:custom_agents'
+
+export function getAgentStatus() {
+  return { paused: localStorage.getItem(AGENT_PAUSED_KEY) === 'true' }
+}
+
+export function toggleAgentPause() {
+  const paused = localStorage.getItem(AGENT_PAUSED_KEY) === 'true'
+  localStorage.setItem(AGENT_PAUSED_KEY, paused ? 'false' : 'true')
+  return !paused
+}
+
+export function getCustomAgents() {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_AGENTS_KEY) || '[]') } catch { return [] }
+}
+
+export function saveCustomAgent(agent) {
+  const agents = getCustomAgents()
+  const existing = agents.findIndex((a) => a.id === agent.id)
+  const entry = { ...agent, id: agent.id || Date.now(), updatedAt: new Date().toISOString() }
+  if (existing !== -1) agents[existing] = entry
+  else agents.push(entry)
+  localStorage.setItem(CUSTOM_AGENTS_KEY, JSON.stringify(agents))
+  return entry
+}
+
+export function deleteCustomAgent(id) {
+  const agents = getCustomAgents().filter((a) => a.id !== id)
+  localStorage.setItem(CUSTOM_AGENTS_KEY, JSON.stringify(agents))
+}
+
+export async function runCustomAgent(agent) {
+  logAgentAction(`Running custom agent: ${agent.name}`, 'info')
+  try {
+    if (agent.checkType === 'url') {
+      const res = await fetch(agent.target, { method: 'HEAD', signal: AbortSignal.timeout(10000) })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      logAgentAction(`${agent.name} — ${agent.target} responded OK`, 'success')
+      return { ok: true }
+    }
+    if (agent.checkType === 'js') {
+      const fn = new Function(`"use strict"; return (${agent.target})`)
+      const result = fn()
+      if (result) {
+        logAgentAction(`${agent.name} — check passed`, 'success')
+        return { ok: true }
+      }
+      throw new Error('Expression returned false')
+    }
+    throw new Error(`Unknown check type: ${agent.checkType}`)
+  } catch (e) {
+    logAgentAction(`${agent.name} — ${e.message}`, 'error')
+    if (agent.critical) {
+      const incs = getIncidents()
+      const existing = incs.find((i) => i.service === agent.name && i.status !== 'resolved')
+      if (!existing) {
+        saveIncident(agent.name, `${agent.target} — ${e.message}`)
+      }
+    }
+    return { ok: false, error: e.message }
+  }
+}
 
 export function getIncidents() {
   try { return JSON.parse(localStorage.getItem(INCIDENTS_KEY) || '[]') } catch { return [] }

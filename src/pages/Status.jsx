@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Activity, CheckCircle2, XCircle, Globe, HardDrive, Smartphone, Clock, Database, Cpu, Monitor, Eye, AlertTriangle, Bell, Bot, Loader2, Wrench, Server, List } from 'lucide-react'
+import { ArrowLeft, Activity, CheckCircle2, XCircle, Globe, HardDrive, Smartphone, Clock, Database, Cpu, Monitor, Eye, AlertTriangle, Bell, Bot, Loader2, Wrench, Server, List, PauseCircle, PlayCircle } from 'lucide-react'
 import Card from '@/components/Card.jsx'
+import { getAgentStatus } from '@/lib/agent.js'
 
 function StatusBadge({ ok, label }) {
   return (
@@ -159,7 +160,8 @@ export default function Status() {
     prevRef.current = services.reduce((acc, { name, ok }) => ({ ...acc, [name]: ok }), {})
     setIncidents(getIncidents())
 
-    if (toFix.length > 0) {
+    const agentStatus = getAgentStatus()
+    if (toFix.length > 0 && !agentStatus.paused) {
       setAgentRunning(true)
       logAgentAction(`AI Agent activated — ${toFix.length} issue(s) detected`, 'info')
       const incs = getIncidents()
@@ -216,9 +218,16 @@ export default function Status() {
           <h1 className="text-2xl font-bold text-earth-800 dark:text-earth-100">
             {allOk ? 'All Systems Operational' : 'Issues Detected'}
           </h1>
-          <p className="text-sm text-earth-500 dark:text-earth-400 mt-1">
-            {allOk ? 'VolunTrack is running normally.' : `${active.length} active issue(s) — AI agent is ${agentRunning ? 'working' : 'idle'}`}
-          </p>
+          <div className="flex items-center justify-center gap-2 mt-1">
+            <p className="text-sm text-earth-500 dark:text-earth-400">
+              {allOk ? 'VolunTrack is running normally.' : `${active.length} active issue(s) — AI agent is ${agentRunning ? 'working' : 'idle'}`}
+            </p>
+            {getAgentStatus().paused && (
+              <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                <PauseCircle className="w-3 h-3" /> Agent Paused
+              </span>
+            )}
+          </div>
         </div>
 
         {!allOk && (
