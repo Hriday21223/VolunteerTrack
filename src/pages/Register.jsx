@@ -71,26 +71,27 @@ export default function Register() {
   return (
     <div className="min-h-screen grid place-items-center px-4 py-8 bg-gradient-to-br from-brand-50 via-earth-50 to-earth-100 dark:from-[#0f1813] dark:via-[#0f1813] dark:to-[#14201a]">
       <div className="w-full max-w-lg">
-        <Link to="/about" className="flex items-center gap-2.5 justify-center mb-6">
+        <Link to="/about" className="flex items-center gap-2.5 justify-center mb-6 animate-fade-in-up">
           <img src={`${import.meta.env.BASE_URL}logo.png`} alt="VolunTrack" className="w-10 h-10 object-contain" />
           <span className="font-display font-bold text-2xl">VolunTrack</span>
         </Link>
 
-        <Card padded={false} className="p-7">
-          <h1 className="text-2xl font-bold mb-1">Create your account</h1>
-          <p className="text-sm text-earth-500 dark:text-earth-400 mb-6">Choose your account type to get started.</p>
+        <Card padded={false} className="p-7 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+          <h1 className="text-2xl font-bold mb-1 animate-fade-in-up" style={{ animationDelay: '150ms' }}>Create your account</h1>
+          <p className="text-sm text-earth-500 dark:text-earth-400 mb-6 animate-fade-in-up" style={{ animationDelay: '200ms' }}>Choose your account type to get started.</p>
 
           <div className="grid gap-3 mb-6">
-            {ROLES.map((r) => (
+            {ROLES.map((r, i) => (
               <button
                 key={r.id}
                 type="button"
                 onClick={() => setRole(r.id)}
-                className={`flex items-start gap-3 p-4 rounded-2xl border-2 text-left transition ${
+                className={`flex items-start gap-3 p-4 rounded-2xl border-2 text-left transition animate-fade-in-up ${
                   role === r.id
                     ? 'border-brand-500 bg-brand-500/10'
                     : 'border-earth-200 dark:border-earth-800 hover:border-earth-300 dark:hover:border-earth-700'
                 }`}
+                style={{ animationDelay: `${250 + i * 100}ms` }}
               >
                 <div className={`w-10 h-10 rounded-xl grid place-items-center shrink-0 ${
                   role === r.id ? 'bg-brand-500 text-white' : 'bg-earth-100 dark:bg-earth-800 text-earth-500'
@@ -109,22 +110,36 @@ export default function Register() {
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4">
-            <Field icon={UserIcon}  label="Full name" value={form.name} onChange={onChange('name')} placeholder="Jane Doe" required />
-            <Field icon={Mail}      label="Email" type="email" value={form.email} onChange={onChange('email')} placeholder="you@email.com" autoComplete="email" required />
-            <Field icon={Lock}      label="Password" type="password" value={form.password} onChange={onChange('password')} placeholder="6+ characters" autoComplete="new-password" required />
-            <Field icon={Lock}      label="Optional PIN" type="password" value={form.pin} onChange={onChange('pin')} placeholder="4-digit PIN" autoComplete="one-time-code" />
+            <div className="animate-fade-in-up" style={{ animationDelay: '450ms' }}>
+              <Field icon={UserIcon}  label="Full name" value={form.name} onChange={onChange('name')} placeholder="Jane Doe" required />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '500ms' }}>
+              <Field icon={Mail}      label="Email" type="email" value={form.email} onChange={onChange('email')} placeholder="you@email.com" autoComplete="email" required />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '550ms' }}>
+              <Field icon={Lock}      label="Password" type="password" value={form.password} onChange={onChange('password')} placeholder="6+ characters" autoComplete="new-password" required />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '600ms' }}>
+              <Field icon={Lock}      label="Optional PIN" type="password" value={form.pin} onChange={onChange('pin')} placeholder="4-digit PIN" autoComplete="one-time-code" />
+            </div>
 
             {role === 'student' && (
               <>
-                <Field icon={School}        label="School / Organization" value={form.school} onChange={onChange('school')} placeholder="Lincoln High School" />
-                <Field icon={Hash}          label="School code (optional)" value={form.schoolCode} onChange={onChange('schoolCode')} placeholder="cisd-12345" />
-                <Field icon={GraduationCap} label="Grade or Role" value={form.grade} onChange={onChange('grade')} placeholder="11th grade / Volunteer lead" />
+                <div className="animate-fade-in-up" style={{ animationDelay: '650ms' }}>
+                  <Field icon={School}        label="School / Organization" value={form.school} onChange={onChange('school')} placeholder="Lincoln High School" />
+                </div>
+                <div className="animate-fade-in-up" style={{ animationDelay: '700ms' }}>
+                  <Field icon={Hash}          label="School code (optional)" value={form.schoolCode} onChange={onChange('schoolCode')} placeholder="cisd-12345" />
+                </div>
+                <div className="animate-fade-in-up" style={{ animationDelay: '750ms' }}>
+                  <Field icon={GraduationCap} label="Grade or Role" value={form.grade} onChange={onChange('grade')} placeholder="11th grade / Volunteer lead" />
+                </div>
               </>
             )}
 
-            {err && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-300 px-3 py-2 rounded-lg">{err}</div>}
+            {err && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-300 px-3 py-2 rounded-lg animate-shake">{err}</div>}
 
-            <button type="submit" className="btn-primary w-full" disabled={busy}>
+            <button type="submit" className="btn-primary w-full animate-fade-in-up" style={{ animationDelay: '800ms' }} disabled={busy}>
               {busy ? 'Creating account…' : <>Create account <ArrowRight className="w-4 h-4" /></>}
             </button>
           </form>

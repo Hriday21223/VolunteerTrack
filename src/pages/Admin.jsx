@@ -422,17 +422,17 @@ export default function Admin() {
         )
       ) : tab === 'incidents' ? (
         <>
-          {incidents.length === 0 ? (
+          {incidents.filter((i) => i.status !== 'resolved').length === 0 ? (
             <Card>
               <div className="text-center py-12 text-earth-500">
                 <AlertTriangle className="w-10 h-10 mx-auto mb-3 opacity-50" />
-                <p className="font-medium text-earth-900 dark:text-earth-100">No incidents</p>
+                <p className="font-medium text-earth-900 dark:text-earth-100">No active incidents</p>
                 <p className="text-sm mt-1">All services are running normally.</p>
               </div>
             </Card>
           ) : (
             <div className="space-y-3 mb-6">
-                {incidents.map((inc) => {
+                {incidents.filter((i) => i.status !== 'resolved').map((inc) => {
                   const statusColors = {
                     detected: 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800',
                     investigating: 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800',

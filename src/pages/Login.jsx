@@ -49,34 +49,34 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.18),transparent_24%),radial-gradient(circle_at_top_right,rgba(34,197,94,0.18),transparent_18%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.16),transparent_18%),linear-gradient(180deg,#08161b_0%,#0b1c24_45%,#0f1e16_100%)] text-white px-4 py-8">
       <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.2fr_0.8fr] items-center">
-        <div className="space-y-8">
+        <div className="space-y-8 animate-fade-in-up">
           <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-slate-900/60 px-4 py-2 text-sm text-brand-100 shadow-soft backdrop-blur">
             <img src={`${import.meta.env.BASE_URL}logo.png`} alt="VolunTrack" className="w-5 h-5 object-contain" />
             VolunTrack login
           </div>
 
           <div className="space-y-4">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl text-white">Welcome back to the volunteer dashboard.</h1>
-            <p className="max-w-2xl text-lg text-slate-300">
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl text-white animate-fade-in-up" style={{ animationDelay: '100ms' }}>Welcome back to the volunteer dashboard.</h1>
+            <p className="max-w-2xl text-lg text-slate-300 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
               Sign in and pick up where you left off—track hours, keep goals moving, and export your service record with confidence.
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
             <FeatureCard title="Fast logging" description="Jump straight to the hours form and save every session with proof and supervisor details." />
             <FeatureCard title="Progress tracking" description="See goal completion, weekly activity, and earned badges in one clean view." />
           </div>
 
-          <Link to="/help" className="block rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-soft backdrop-blur text-sm text-slate-300 hover:bg-slate-800/60 transition">
+          <Link to="/help" className="block rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-soft backdrop-blur text-sm text-slate-300 hover:bg-slate-800/60 transition animate-fade-in-up" style={{ animationDelay: '400ms' }}>
             <div className="font-semibold text-white">Need help getting started?</div>
             <p className="mt-2 leading-6">Create an account, set your first goal, and log your first volunteer hours to earn a badge.</p>
           </Link>
         </div>
 
-        <div className="relative">
+        <div className="relative animate-scale-in">
           <Card padded={false} className="overflow-hidden border border-white/10 bg-slate-950/80 shadow-soft">
             <div className="bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_25%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.14),transparent_25%)] p-8">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-6 animate-fade-in-up">
                 <div>
                   <p className="text-sm text-brand-200 uppercase tracking-[0.3em]">Secure sign in</p>
                   <h2 className="text-3xl font-bold text-white">Welcome back</h2>
@@ -84,7 +84,7 @@ export default function Login() {
                 <img src={`${import.meta.env.BASE_URL}logo.png`} alt="VolunTrack" className="w-12 h-12 object-contain" />
               </div>
 
-              <div className="mb-4 inline-flex rounded-full bg-white/10 p-1">
+              <div className="mb-4 inline-flex rounded-full bg-white/10 p-1 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
                 <button
                   type="button"
                   className={`rounded-full px-4 py-2 text-sm font-semibold transition ${mode === 'password' ? 'bg-slate-900 text-white' : 'text-slate-300 hover:text-white'}`}
@@ -102,7 +102,7 @@ export default function Login() {
               </div>
 
               <form onSubmit={onSubmit} className="space-y-5">
-                <div>
+                <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
                   <label className="label text-slate-300" htmlFor="email">Email</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -115,11 +115,11 @@ export default function Login() {
                   </div>
                 </div>
                 {isAdmin && mode === 'password' ? (
-                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
                     Admin — click Sign in to continue (no password needed).
                   </div>
                 ) : (
-                  <div>
+                  <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
                     <div className="flex items-center justify-between gap-4">
                       <label className="label text-slate-300" htmlFor="credential">{mode === 'pin' ? '4-digit PIN' : 'Password'}</label>
                       <Link to={mode === 'pin' ? '/reset-pin' : '/forgot-password'} className="text-xs text-sky-200 hover:text-white">
@@ -144,9 +144,9 @@ export default function Login() {
                   </div>
                 )}
 
-                {err && <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{err}</div>}
+                {err && <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100 animate-shake">{err}</div>}
 
-                <button type="submit" className="btn-primary w-full py-3 text-sm font-semibold" disabled={busy}>
+                <button type="submit" className="btn-primary w-full py-3 text-sm font-semibold animate-fade-in-up" style={{ animationDelay: '400ms' }} disabled={busy}>
                   {busy ? (mode === 'pin' ? 'Unlocking…' : 'Signing in…') : (mode === 'pin' ? <>Unlock <ArrowRight className="w-4 h-4" /></> : <>Sign in <ArrowRight className="w-4 h-4" /></>)}
                 </button>
               </form>
