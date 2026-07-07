@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/hooks/useAuth.jsx'
 import { DataProvider, useData } from '@/hooks/useData.jsx'
 import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import MobileTabBar from '@/components/MobileTabBar.jsx'
 import BadgeToasts from '@/components/BadgeToasts.jsx'
 import ReminderToasts from '@/components/ReminderToasts.jsx'
@@ -105,6 +106,7 @@ export default function App() {
       <DataProvider>
         <Shell />
         <Analytics />
+        <SpeedInsights />
       </DataProvider>
     </AuthProvider>
   )
