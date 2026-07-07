@@ -176,11 +176,28 @@ export function AuthProvider({ children }) {
     setUser(null)
   }, [])
 
-  const deleteAccount = useCallback(() => {
+  const deleteAccount = useCallback(async () => {
     if (!user) return
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      if (token) {
+        const apiUrl = import.meta.env.VITE_API_URL || '/api'
+        const response = await fetch(`${apiUrl}/auth/account`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}))
+          console.warn('Server delete failed:', err.error || response.statusText)
+        }
+      }
+    } catch (error) {
+      console.log('Server delete unavailable, cleaning local data only:', error.message)
+    }
     deleteUser(user.id)
     clearUserData()
     remove(SESSION_KEY)
+    localStorage.removeItem('voluntrack:auth_token')
     setUser(null)
   }, [user])
 

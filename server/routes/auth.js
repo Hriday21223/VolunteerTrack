@@ -281,6 +281,20 @@ router.post('/sync-login', authLimiter, requireDb, async (req, res) => {
   }
 })
 
+// Delete account and all associated data
+router.delete('/account', requireDb, requireAuth(), async (req, res) => {
+  try {
+    const { rows } = await query('SELECT * FROM users WHERE id = $1', [req.auth.sub])
+    if (rows.length === 0) return res.status(404).json({ error: 'Account not found.' })
+
+    await query('DELETE FROM users WHERE id = $1', [req.auth.sub])
+    return res.json({ ok: true })
+  } catch (error) {
+    console.error('delete account failed:', error)
+    return res.status(500).json({ error: 'Could not delete account.' })
+  }
+})
+
 // Grant admin role to the ADMIN_EMAIL user (self-service promotion)
 router.post('/grant-admin', authLimiter, requireDb, requireAuth(), async (req, res) => {
   const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase()

@@ -153,9 +153,9 @@ export default function Settings() {
     }
   }
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     if (!user) return
-    deleteAccount()
+    await deleteAccount()
     nav('/login')
   }
 
