@@ -1,0 +1,520 @@
+{"kind":"deck","id":"pr/36842f","name":"Deck"}
+{"kind":"layout","layoutId":"91611818-7f17-4a25-a6a1-68e60c5621ac","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"c416e55b-fba9-4ec6-a933-5117c93a3da2","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/cqbwq9","slide":1,"title":"VOLUNTRACK","textShapes":16}
+{"kind":"shape","id":"sh/hk3q5o7q","slide":1,"bbox":[720,0,560,720]}
+{"kind":"shape","id":"sh/6xkf6dcb","slide":1,"bbox":[760,60,360,360]}
+{"kind":"shape","id":"sh/zed8v6ps","slide":1,"bbox":[774,74,360,360]}
+{"kind":"shape","id":"sh/obm58z25","slide":1,"bbox":[788,88,360,360]}
+{"kind":"shape","id":"sh/hwfyxobm","slide":1,"bbox":[802,102,360,360]}
+{"kind":"shape","id":"sh/65wjudg7","slide":1,"bbox":[816,116,360,360]}
+{"kind":"shape","id":"sh/zqtcj6to","slide":1,"bbox":[830,130,360,360]}
+{"kind":"textbox","id":"sh/h0fepkzu","slide":1,"text":"VOLUNTRACK","textPreview":"VOLUNTRACK","textChars":10,"textLines":1,"bbox":[80,170,560,30]}
+{"kind":"textbox","id":"sh/5wjudg7a","slide":1,"text":"The volunteer hour\ntracker students\nactually keep open.","textPreview":"The volunteer hour | tracker students | actually keep open.","textChars":55,"textLines":3,"bbox":[80,210,600,240]}
+{"kind":"textbox","id":"sh/gbq1oryt","slide":1,"text":"A privacy-first PWA for logging service hours, hitting goals, and exporting\nreports that survive a college application. Built for students, schools, and clubs.","textPreview":"A privacy-first PWA for logging service hours, hitting goals, and exporting | reports that survive a college application. Built for stude...","textChars":159,"textLines":2,"bbox":[80,470,600,70]}
+{"kind":"shape","id":"sh/nuxc3ylc","slide":1,"bbox":[80,560,130,32]}
+{"kind":"textbox","id":"sh/y90je9cv","slide":1,"text":"React 18 + Vite","textPreview":"React 18 + Vite","textChars":15,"textLines":1,"bbox":[80,560,130,32]}
+{"kind":"shape","id":"sh/58z25kb6","slide":1,"bbox":[220,560,152.8,32]}
+{"kind":"textbox","id":"sh/gn29gr2p","slide":1,"text":"PWA, offline-first","textPreview":"PWA, offline-first","textChars":18,"textLines":1,"bbox":[220,560,152.8,32]}
+{"kind":"shape","id":"sh/n29gr2p8","slide":1,"bbox":[382.8,560,168,32]}
+{"kind":"textbox","id":"sh/yhgn29gr","slide":1,"text":"localStorage private","textPreview":"localStorage private","textChars":20,"textLines":1,"bbox":[382.8,560,168,32]}
+{"kind":"shape","id":"sh/5kb6xkf6","slide":1,"bbox":[560.8,560,107.2,32]}
+{"kind":"textbox","id":"sh/czed8v6p","slide":1,"text":"MIT licensed","textPreview":"MIT licensed","textChars":12,"textLines":1,"bbox":[560.8,560,107.2,32]}
+{"kind":"textbox","id":"sh/8bat47y1","slide":1,"text":"LIVE","textPreview":"LIVE","textChars":4,"textLines":1,"bbox":[760,100,200,24]}
+{"kind":"textbox","id":"sh/1w7mp0bi","slide":1,"text":"hriday21223.github.io\n/VolunteerTrack","textPreview":"hriday21223.github.io | /VolunteerTrack","textChars":37,"textLines":2,"bbox":[760,130,460,100]}
+{"kind":"shape","id":"sh/q5o7qpg3","slide":1,"bbox":[760,290,460,90]}
+{"kind":"textbox","id":"sh/jqh0fepk","slide":1,"text":"12","textPreview":"12","textChars":2,"textLines":1,"bbox":[780,302,120,60]}
+{"kind":"textbox","id":"sh/8nqxs72x","slide":1,"text":"auto-earning\nbadges","textPreview":"auto-earning | badges","textChars":19,"textLines":2,"bbox":[910,308,290,60]}
+{"kind":"shape","id":"sh/18jqh0fe","slide":1,"bbox":[760,395,460,90]}
+{"kind":"textbox","id":"sh/qh0fepkz","slide":1,"text":"PWA","textPreview":"PWA","textChars":3,"textLines":1,"bbox":[780,407,120,60]}
+{"kind":"textbox","id":"sh/j2t83itg","slide":1,"text":"installs on\nany device","textPreview":"installs on | any device","textChars":22,"textLines":2,"bbox":[910,413,290,60]}
+{"kind":"shape","id":"sh/crmhk3q5","slide":1,"bbox":[760,500,460,90]}
+{"kind":"textbox","id":"sh/1cfa9w3m","slide":1,"text":"0","textPreview":"0","textChars":1,"textLines":1,"bbox":[780,512,120,60]}
+{"kind":"textbox","id":"sh/7y1kre1w","slide":1,"text":"account server\nneeded","textPreview":"account server | needed","textChars":21,"textLines":2,"bbox":[910,518,290,60]}
+{"kind":"textbox","id":"sh/ed8v6psf","slide":1,"text":"Showcase + pitch · v2.0","textPreview":"Showcase + pitch · v2.0","textChars":23,"textLines":1,"bbox":[80,670,600,20]}
+{"kind":"image","id":"im/94fu18jq","slide":1,"name":"","alt":"VolunTrack logo","bbox":[80,80,80,80]}
+{"kind":"notes","id":"nt/cqbwq9","slide":1,"text":""}
+{"kind":"slide","id":"sl/vy6bch","slide":2,"title":"WHAT IT IS","textShapes":13}
+{"kind":"textbox","id":"sh/0nuxc3yl","slide":2,"text":"WHAT IT IS","textPreview":"WHAT IT IS","textChars":10,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/72x4nap4","slide":2,"text":"A real product, not a mockup.","textPreview":"A real product, not a mockup.","textChars":29,"textLines":1,"bbox":[80,96,1120,60]}
+{"kind":"textbox","id":"sh/ih4byhgn","slide":2,"text":"VolunTrack is already live, already deployed, and already in use. It runs as an installable PWA, ships with a school/admin layer, and exports PDF reports a counselor will actually accept.","textPreview":"VolunTrack is already live, already deployed, and already in use. It runs as an installable PWA, ships with a school/admin layer, and exp...","textChars":187,"textLines":1,"bbox":[80,168,1120,50]}
+{"kind":"shape","id":"sh/pkzupwb2","slide":2,"bbox":[80,270,360,240]}
+{"kind":"shape","id":"sh/0z61032l","slide":2,"bbox":[80,270,6,240]}
+{"kind":"textbox","id":"sh/7ed8bat4","slide":2,"text":"5 user roles","textPreview":"5 user roles","textChars":12,"textLines":1,"bbox":[104,296,320,60]}
+{"kind":"textbox","id":"sh/itgfmlkj","slide":2,"text":"Student, supervisor, school admin, district admin, and platform admin. Each gets the right surface — nothing more.","textPreview":"Student, supervisor, school admin, district admin, and platform admin. Each gets the right surface — nothing more.","textChars":114,"textLines":1,"bbox":[104,366,320,130]}
+{"kind":"shape","id":"sh/pwb2hwfy","slide":2,"bbox":[460,270,360,240]}
+{"kind":"shape","id":"sh/0bi9s36h","slide":2,"bbox":[460,270,6,240]}
+{"kind":"textbox","id":"sh/u18jqh0f","slide":2,"text":"12 badges","textPreview":"12 badges","textChars":9,"textLines":1,"bbox":[484,296,320,60]}
+{"kind":"textbox","id":"sh/jm1cfa9w","slide":2,"text":"Auto-earning achievements turn consistency into something students can see, share, and feel good about.","textPreview":"Auto-earning achievements turn consistency into something students can see, share, and feel good about.","textChars":103,"textLines":1,"bbox":[484,366,320,130]}
+{"kind":"shape","id":"sh/c7u54zid","slide":2,"bbox":[840,270,360,240]}
+{"kind":"shape","id":"sh/1orytsvu","slide":2,"bbox":[840,270,6,240]}
+{"kind":"textbox","id":"sh/u9knih4b","slide":2,"text":"PWA install","textPreview":"PWA install","textChars":11,"textLines":1,"bbox":[864,296,320,60]}
+{"kind":"textbox","id":"sh/judg7ads","slide":2,"text":"Installs on iOS, Android, Windows, macOS, and Linux. Works offline after the first visit. No app store gate.","textPreview":"Installs on iOS, Android, Windows, macOS, and Linux. Works offline after the first visit. No app store gate.","textChars":108,"textLines":1,"bbox":[864,366,320,130]}
+{"kind":"shape","id":"sh/cfa9w3m9","slide":2,"bbox":[80,555,1120,90]}
+{"kind":"textbox","id":"sh/1032lszq","slide":2,"text":"THE POINT","textPreview":"THE POINT","textChars":9,"textLines":1,"bbox":[100,572,200,20]}
+{"kind":"textbox","id":"sh/udg7adsj","slide":2,"text":"Take the friction out of proving you showed up — and the data lives on the student's own device, not in someone else's system.","textPreview":"Take the friction out of proving you showed up — and the data lives on the student's own device, not in someone else's system.","textChars":126,"textLines":1,"bbox":[100,596,1080,40]}
+{"kind":"textbox","id":"sh/nyd0z610","slide":2,"text":"voluntrack.app","textPreview":"voluntrack.app","textChars":14,"textLines":1,"bbox":[80,670,400,20]}
+{"kind":"textbox","id":"sh/fu18jqh0","slide":2,"text":"Slide 2","textPreview":"Slide 2","textChars":7,"textLines":1,"bbox":[1180,670,80,20]}
+{"kind":"notes","id":"nt/vy6bch","slide":2,"text":""}
+{"kind":"slide","id":"sl/lns233","slide":3,"title":"THE WORKFLOW","textShapes":20}
+{"kind":"textbox","id":"sh/pg3ex0nu","slide":3,"text":"THE WORKFLOW","textPreview":"THE WORKFLOW","textChars":12,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/epkzupwb","slide":3,"text":"Five minutes from service hour to verified record.","textPreview":"Five minutes from service hour to verified record.","textChars":50,"textLines":1,"bbox":[80,96,1120,60]}
+{"kind":"shape","id":"sh/7adsji5s","slide":3,"bbox":[96,230,200,320]}
+{"kind":"shape","id":"sh/w7mp0bi9","slide":3,"bbox":[120,254,56,56]}
+{"kind":"textbox","id":"sh/psfil0rq","slide":3,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[120,254,56,56]}
+{"kind":"textbox","id":"sh/e1w7mp0b","slide":3,"text":"Log it","textPreview":"Log it","textChars":6,"textLines":1,"bbox":[120,330,152,40]}
+{"kind":"textbox","id":"sh/7mp0bi9s","slide":3,"text":"Activity, hours, supervisor, notes — and a photo of proof — in one form.","textPreview":"Activity, hours, supervisor, notes — and a photo of proof — in one form.","textChars":72,"textLines":1,"bbox":[120,378,152,150]}
+{"kind":"shape","id":"sh/wfyxobm5","slide":3,"bbox":[300,268,14,14]}
+{"kind":"shape","id":"sh/l0rqd4vm","slide":3,"bbox":[318,230,200,320]}
+{"kind":"shape","id":"sh/hk3q5o7q","slide":3,"bbox":[342,254,56,56]}
+{"kind":"textbox","id":"sh/oza1gvy9","slide":3,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[342,254,56,56]}
+{"kind":"textbox","id":"sh/zed8v6ps","slide":3,"text":"Track it","textPreview":"Track it","textChars":8,"textLines":1,"bbox":[342,330,152,40]}
+{"kind":"textbox","id":"sh/6xkf6dcb","slide":3,"text":"Progress ring, weekly chart, and 12 badges keep momentum visible.","textPreview":"Progress ring, weekly chart, and 12 badges keep momentum visible.","textChars":65,"textLines":1,"bbox":[342,378,152,150]}
+{"kind":"shape","id":"sh/hwfyxobm","slide":3,"bbox":[522,268,14,14]}
+{"kind":"shape","id":"sh/obm58z25","slide":3,"bbox":[540,230,200,320]}
+{"kind":"shape","id":"sh/zqtcj6to","slide":3,"bbox":[564,254,56,56]}
+{"kind":"textbox","id":"sh/65wjudg7","slide":3,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[564,254,56,56]}
+{"kind":"textbox","id":"sh/h0fepkzu","slide":3,"text":"Prove it","textPreview":"Prove it","textChars":8,"textLines":1,"bbox":[564,330,152,40]}
+{"kind":"textbox","id":"sh/sfil0rqd","slide":3,"text":"PDF report, CSV export, or a printable certificate in one click.","textPreview":"PDF report, CSV export, or a printable certificate in one click.","textChars":64,"textLines":1,"bbox":[564,378,152,150]}
+{"kind":"shape","id":"sh/onyd0z61","slide":3,"bbox":[744,268,14,14]}
+{"kind":"shape","id":"sh/d8v6psfi","slide":3,"bbox":[762,230,200,320]}
+{"kind":"shape","id":"sh/6hcrmhk3","slide":3,"bbox":[786,254,56,56]}
+{"kind":"textbox","id":"sh/z25kb6xk","slide":3,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[786,254,56,56]}
+{"kind":"textbox","id":"sh/ovahoza1","slide":3,"text":"Verify it","textPreview":"Verify it","textChars":9,"textLines":1,"bbox":[786,330,152,40]}
+{"kind":"textbox","id":"sh/dg7adsji","slide":3,"text":"Optional school dashboard with PIN join, rosters, and PDF review.","textPreview":"Optional school dashboard with PIN join, rosters, and PDF review.","textChars":65,"textLines":1,"bbox":[786,378,152,150]}
+{"kind":"shape","id":"sh/6tovahoz","slide":3,"bbox":[966,268,14,14]}
+{"kind":"shape","id":"sh/vahoza1g","slide":3,"bbox":[984,230,200,320]}
+{"kind":"shape","id":"sh/o7qpg3ex","slide":3,"bbox":[1008,254,56,56]}
+{"kind":"textbox","id":"sh/dsji5sne","slide":3,"text":"5","textPreview":"5","textChars":1,"textLines":1,"bbox":[1008,254,56,56]}
+{"kind":"textbox","id":"sh/3q5o7qpg","slide":3,"text":"Own it","textPreview":"Own it","textChars":6,"textLines":1,"bbox":[1008,330,152,40]}
+{"kind":"textbox","id":"sh/e9cvixcz","slide":3,"text":"Data stays in the student's browser. No account server, no data harvesting.","textPreview":"Data stays in the student's browser. No account server, no data harvesting.","textChars":75,"textLines":1,"bbox":[1008,378,152,150]}
+{"kind":"textbox","id":"sh/lwval87e","slide":3,"text":"Every step fits on one screen. Every record stays portable. That's the whole product.","textPreview":"Every step fits on one screen. Every record stays portable. That's the whole product.","textChars":85,"textLines":1,"bbox":[80,600,1120,30]}
+{"kind":"textbox","id":"sh/wb2hwfyx","slide":3,"text":"voluntrack.app","textPreview":"voluntrack.app","textChars":14,"textLines":1,"bbox":[80,670,400,20]}
+{"kind":"textbox","id":"sh/3itgfmlk","slide":3,"text":"Slide 3","textPreview":"Slide 3","textChars":7,"textLines":1,"bbox":[1180,670,80,20]}
+{"kind":"notes","id":"nt/lns233","slide":3,"text":""}
+{"kind":"slide","id":"sl/h3e1o1","slide":4,"title":"THE PRODUCT","textShapes":36}
+{"kind":"textbox","id":"sh/7ed8bat4","slide":4,"text":"THE PRODUCT","textPreview":"THE PRODUCT","textChars":11,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/0z61032l","slide":4,"text":"Calm UI, dense info, no clutter.","textPreview":"Calm UI, dense info, no clutter.","textChars":32,"textLines":1,"bbox":[80,96,1120,60]}
+{"kind":"shape","id":"sh/pkzupwb2","slide":4,"bbox":[80,200,720,420]}
+{"kind":"shape","id":"sh/ih4byhgn","slide":4,"bbox":[80,200,720,44]}
+{"kind":"shape","id":"sh/72x4nap4","slide":4,"bbox":[80,226,720,18]}
+{"kind":"textbox","id":"sh/0nuxc3yl","slide":4,"text":"voluntrack","textPreview":"voluntrack","textChars":10,"textLines":1,"bbox":[98,212,200,22]}
+{"kind":"textbox","id":"sh/p8nqxs72","slide":4,"text":"Dashboard","textPreview":"Dashboard","textChars":9,"textLines":1,"bbox":[300,212,200,22]}
+{"kind":"textbox","id":"sh/ed8v6psf","slide":4,"text":"Alex · Senior · Lincoln High","textPreview":"Alex · Senior · Lincoln High","textChars":28,"textLines":1,"bbox":[520,214,260,20]}
+{"kind":"shape","id":"sh/7y1kre1w","slide":4,"bbox":[104,270,220,200]}
+{"kind":"textbox","id":"sh/rmhk3q5o","slide":4,"text":"TOTAL HOURS","textPreview":"TOTAL HOURS","textChars":11,"textLines":1,"bbox":[120,290,180,18]}
+{"kind":"textbox","id":"sh/y1kre1w7","slide":4,"text":"62.5","textPreview":"62.5","textChars":4,"textLines":1,"bbox":[120,316,180,60]}
+{"kind":"textbox","id":"sh/9s36hcrm","slide":4,"text":"of 100 hour goal","textPreview":"of 100 hour goal","textChars":16,"textLines":1,"bbox":[120,378,180,20]}
+{"kind":"shape","id":"sh/g7adsji5","slide":4,"bbox":[120,410,180,10]}
+{"kind":"shape","id":"sh/rytsvu9k","slide":4,"bbox":[120,410,112,10]}
+{"kind":"shape","id":"sh/yd0z6103","slide":4,"bbox":[340,270,200,95]}
+{"kind":"textbox","id":"sh/90je9cvi","slide":4,"text":"THIS MONTH","textPreview":"THIS MONTH","textChars":10,"textLines":1,"bbox":[356,284,160,16]}
+{"kind":"textbox","id":"sh/gfmlkjm1","slide":4,"text":"12.5","textPreview":"12.5","textChars":4,"textLines":1,"bbox":[356,302,160,44]}
+{"kind":"textbox","id":"sh/r65wjudg","slide":4,"text":"+3.5 vs last month","textPreview":"+3.5 vs last month","textChars":18,"textLines":1,"bbox":[356,344,160,18]}
+{"kind":"shape","id":"sh/ylc7u54z","slide":4,"bbox":[556,270,220,95]}
+{"kind":"textbox","id":"sh/6tovahoz","slide":4,"text":"BADGES EARNED","textPreview":"BADGES EARNED","textChars":13,"textLines":1,"bbox":[572,284,180,16]}
+{"kind":"textbox","id":"sh/vahoza1g","slide":4,"text":"7 / 12","textPreview":"7 / 12","textChars":6,"textLines":1,"bbox":[572,302,180,44]}
+{"kind":"shape","id":"sh/ovahoza1","slide":4,"bbox":[572,352,10,10]}
+{"kind":"shape","id":"sh/dg7adsji","slide":4,"bbox":[588,352,10,10]}
+{"kind":"shape","id":"sh/6hcrmhk3","slide":4,"bbox":[604,352,10,10]}
+{"kind":"shape","id":"sh/z25kb6xk","slide":4,"bbox":[620,352,10,10]}
+{"kind":"shape","id":"sh/onyd0z61","slide":4,"bbox":[636,352,10,10]}
+{"kind":"shape","id":"sh/d8v6psfi","slide":4,"bbox":[652,352,10,10]}
+{"kind":"shape","id":"sh/6dcbulwv","slide":4,"bbox":[668,352,10,10]}
+{"kind":"shape","id":"sh/vy90je9c","slide":4,"bbox":[684,352,10,10]}
+{"kind":"shape","id":"sh/lwval87e","slide":4,"bbox":[700,352,10,10]}
+{"kind":"shape","id":"sh/wb2hwfyx","slide":4,"bbox":[716,352,10,10]}
+{"kind":"shape","id":"sh/3q5o7qpg","slide":4,"bbox":[732,352,10,10]}
+{"kind":"shape","id":"sh/e9cvixcz","slide":4,"bbox":[748,352,10,10]}
+{"kind":"shape","id":"sh/loj2t83i","slide":4,"bbox":[340,380,436,90]}
+{"kind":"textbox","id":"sh/w3m94fu1","slide":4,"text":"RECENT","textPreview":"RECENT","textChars":6,"textLines":1,"bbox":[356,392,400,16]}
+{"kind":"textbox","id":"sh/3itgfmlk","slide":4,"text":"Food bank — 3.0h · Sat","textPreview":"Food bank — 3.0h · Sat","textChars":22,"textLines":1,"bbox":[356,412,400,18]}
+{"kind":"textbox","id":"sh/ex0nuxc3","slide":4,"text":"Park cleanup — 2.5h · Sun","textPreview":"Park cleanup — 2.5h · Sun","textChars":25,"textLines":1,"bbox":[356,432,400,18]}
+{"kind":"textbox","id":"sh/lkjm1cfa","slide":4,"text":"Tutoring — 1.5h · Wed","textPreview":"Tutoring — 1.5h · Wed","textChars":21,"textLines":1,"bbox":[356,452,400,18]}
+{"kind":"shape","id":"sh/szqtcj6t","slide":4,"bbox":[104,485,672,110]}
+{"kind":"textbox","id":"sh/0nuxc3yl","slide":4,"text":"THIS WEEK","textPreview":"THIS WEEK","textChars":9,"textLines":1,"bbox":[120,498,200,16]}
+{"kind":"shape","id":"sh/p8nqxs72","slide":4,"bbox":[130,530,50,40]}
+{"kind":"shape","id":"sh/ih4byhgn","slide":4,"bbox":[220,500,50,70]}
+{"kind":"shape","id":"sh/72x4nap4","slide":4,"bbox":[310,540,50,30]}
+{"kind":"shape","id":"sh/0z61032l","slide":4,"bbox":[400,480,50,90]}
+{"kind":"shape","id":"sh/pkzupwb2","slide":4,"bbox":[490,515,50,55]}
+{"kind":"shape","id":"sh/itgfmlkj","slide":4,"bbox":[580,550,50,20]}
+{"kind":"shape","id":"sh/7ed8bat4","slide":4,"bbox":[670,510,50,60]}
+{"kind":"textbox","id":"sh/0bi9s36h","slide":4,"text":"M","textPreview":"M","textChars":1,"textLines":1,"bbox":[130,578,50,14]}
+{"kind":"textbox","id":"sh/pwb2hwfy","slide":4,"text":"T","textPreview":"T","textChars":1,"textLines":1,"bbox":[220,578,50,14]}
+{"kind":"textbox","id":"sh/fu18jqh0","slide":4,"text":"W","textPreview":"W","textChars":1,"textLines":1,"bbox":[310,578,50,14]}
+{"kind":"textbox","id":"sh/m94fu18j","slide":4,"text":"T","textPreview":"T","textChars":1,"textLines":1,"bbox":[400,578,50,14]}
+{"kind":"textbox","id":"sh/x0nuxc3y","slide":4,"text":"F","textPreview":"F","textChars":1,"textLines":1,"bbox":[490,578,50,14]}
+{"kind":"textbox","id":"sh/4fu18jqh","slide":4,"text":"S","textPreview":"S","textChars":1,"textLines":1,"bbox":[580,578,50,14]}
+{"kind":"textbox","id":"sh/fil0rqd4","slide":4,"text":"S","textPreview":"S","textChars":1,"textLines":1,"bbox":[670,578,50,14]}
+{"kind":"shape","id":"sh/qxs72x4n","slide":4,"bbox":[830,200,370,130]}
+{"kind":"textbox","id":"sh/xobm58z2","slide":4,"text":"ONE SENTENCE","textPreview":"ONE SENTENCE","textChars":12,"textLines":1,"bbox":[850,216,200,16]}
+{"kind":"textbox","id":"sh/83itgfml","slide":4,"text":"AI hour logger","textPreview":"AI hour logger","textChars":14,"textLines":1,"bbox":[850,236,330,28]}
+{"kind":"textbox","id":"sh/fepkzupw","slide":4,"text":"Type a sentence — the on-device agent drafts a full log entry. Confirm and you're done.","textPreview":"Type a sentence — the on-device agent drafts a full log entry. Confirm and you're done.","textChars":87,"textLines":1,"bbox":[850,270,330,52]}
+{"kind":"shape","id":"sh/mtwra5gb","slide":4,"bbox":[830,342,370,130]}
+{"kind":"textbox","id":"sh/u18jqh0f","slide":4,"text":"PROGRESS","textPreview":"PROGRESS","textChars":8,"textLines":1,"bbox":[850,358,200,16]}
+{"kind":"textbox","id":"sh/jm1cfa9w","slide":4,"text":"Streaks + rings","textPreview":"Streaks + rings","textChars":15,"textLines":1,"bbox":[850,378,330,28]}
+{"kind":"textbox","id":"sh/c7u54zid","slide":4,"text":"Daily streak, weekly chart, and a progress ring toward the primary goal.","textPreview":"Daily streak, weekly chart, and a progress ring toward the primary goal.","textChars":72,"textLines":1,"bbox":[850,412,330,52]}
+{"kind":"shape","id":"sh/1orytsvu","slide":4,"bbox":[830,484,370,130]}
+{"kind":"textbox","id":"sh/u9knih4b","slide":4,"text":"PORTABLE","textPreview":"PORTABLE","textChars":8,"textLines":1,"bbox":[850,500,200,16]}
+{"kind":"textbox","id":"sh/judg7ads","slide":4,"text":"PDF + CSV export","textPreview":"PDF + CSV export","textChars":16,"textLines":1,"bbox":[850,520,330,28]}
+{"kind":"textbox","id":"sh/cfa9w3m9","slide":4,"text":"Counselor-ready service log and a printable certificate. No locked-in formats.","textPreview":"Counselor-ready service log and a printable certificate. No locked-in formats.","textChars":78,"textLines":1,"bbox":[850,554,330,52]}
+{"kind":"textbox","id":"sh/1032lszq","slide":4,"text":"voluntrack.app","textPreview":"voluntrack.app","textChars":14,"textLines":1,"bbox":[80,670,400,20]}
+{"kind":"textbox","id":"sh/udg7adsj","slide":4,"text":"Slide 4","textPreview":"Slide 4","textChars":7,"textLines":1,"bbox":[1180,670,80,20]}
+{"kind":"notes","id":"nt/h3e1o1","slide":4,"text":""}
+{"kind":"slide","id":"sl/f3nok9","slide":5,"title":"AUDIENCE","textShapes":19}
+{"kind":"textbox","id":"sh/6hcrmhk3","slide":5,"text":"AUDIENCE","textPreview":"AUDIENCE","textChars":8,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/d8v6psfi","slide":5,"text":"One product, three real buyers.","textPreview":"One product, three real buyers.","textChars":31,"textLines":1,"bbox":[80,96,1120,60]}
+{"kind":"shape","id":"sh/onyd0z61","slide":5,"bbox":[80,210,360,410]}
+{"kind":"shape","id":"sh/vahoza1g","slide":5,"bbox":[80,210,360,6]}
+{"kind":"textbox","id":"sh/6tovahoz","slide":5,"text":"STUDENTS","textPreview":"STUDENTS","textChars":8,"textLines":1,"bbox":[104,240,320,18]}
+{"kind":"textbox","id":"sh/dg7adsji","slide":5,"text":"Log it once, prove it forever.","textPreview":"Log it once, prove it forever.","textChars":30,"textLines":1,"bbox":[104,270,320,80]}
+{"kind":"shape","id":"sh/ovahoza1","slide":5,"bbox":[104,368,8,8]}
+{"kind":"textbox","id":"sh/vmtwra5g","slide":5,"text":"One-tap logging with photo proof","textPreview":"One-tap logging with photo proof","textChars":32,"textLines":1,"bbox":[124,360,296,40]}
+{"kind":"shape","id":"sh/61032lsz","slide":5,"bbox":[104,418,8,8]}
+{"kind":"textbox","id":"sh/wval87ed","slide":5,"text":"12 badges that turn consistency into something visible","textPreview":"12 badges that turn consistency into something visible","textChars":54,"textLines":1,"bbox":[124,410,296,40]}
+{"kind":"shape","id":"sh/pg3ex0nu","slide":5,"bbox":[104,468,8,8]}
+{"kind":"textbox","id":"sh/epkzupwb","slide":5,"text":"PDF report that survives a college application","textPreview":"PDF report that survives a college application","textChars":46,"textLines":1,"bbox":[124,460,296,40]}
+{"kind":"shape","id":"sh/7adsji5s","slide":5,"bbox":[460,210,360,410]}
+{"kind":"shape","id":"sh/w7mp0bi9","slide":5,"bbox":[460,210,360,6]}
+{"kind":"textbox","id":"sh/psfil0rq","slide":5,"text":"SCHOOLS","textPreview":"SCHOOLS","textChars":7,"textLines":1,"bbox":[484,240,320,18]}
+{"kind":"textbox","id":"sh/e1w7mp0b","slide":5,"text":"Stop chasing spreadsheets.","textPreview":"Stop chasing spreadsheets.","textChars":26,"textLines":1,"bbox":[484,270,320,80]}
+{"kind":"shape","id":"sh/7mp0bi9s","slide":5,"bbox":[484,368,8,8]}
+{"kind":"textbox","id":"sh/wfyxobm5","slide":5,"text":"School PIN join — no manual roster uploads","textPreview":"School PIN join — no manual roster uploads","textChars":42,"textLines":1,"bbox":[504,360,296,40]}
+{"kind":"shape","id":"sh/l0rqd4vm","slide":5,"bbox":[484,418,8,8]}
+{"kind":"textbox","id":"sh/pwb2hwfy","slide":5,"text":"Verified supervisor flow with PDF review","textPreview":"Verified supervisor flow with PDF review","textChars":40,"textLines":1,"bbox":[504,410,296,40]}
+{"kind":"shape","id":"sh/0bi9s36h","slide":5,"bbox":[484,468,8,8]}
+{"kind":"textbox","id":"sh/7qpg3ex0","slide":5,"text":"Bulk CSV import + export for counseling","textPreview":"Bulk CSV import + export for counseling","textChars":39,"textLines":1,"bbox":[504,460,296,40]}
+{"kind":"shape","id":"sh/i5sneloj","slide":5,"bbox":[840,210,360,410]}
+{"kind":"shape","id":"sh/p4r65wju","slide":5,"bbox":[840,210,360,6]}
+{"kind":"textbox","id":"sh/wjudg7ad","slide":5,"text":"DISTRICTS","textPreview":"DISTRICTS","textChars":9,"textLines":1,"bbox":[864,240,320,18]}
+{"kind":"textbox","id":"sh/7y1kre1w","slide":5,"text":"One rollout, every student.","textPreview":"One rollout, every student.","textChars":27,"textLines":1,"bbox":[864,270,320,80]}
+{"kind":"shape","id":"sh/ed8v6psf","slide":5,"bbox":[864,368,8,8]}
+{"kind":"textbox","id":"sh/p8nqxs72","slide":5,"text":"Multi-school admin dashboard","textPreview":"Multi-school admin dashboard","textChars":28,"textLines":1,"bbox":[884,360,296,40]}
+{"kind":"shape","id":"sh/0nuxc3yl","slide":5,"bbox":[864,418,8,8]}
+{"kind":"textbox","id":"sh/q5o7qpg3","slide":5,"text":"Payment + subscription tracking already built","textPreview":"Payment + subscription tracking already built","textChars":45,"textLines":1,"bbox":[884,410,296,40]}
+{"kind":"shape","id":"sh/jqh0fepk","slide":5,"bbox":[864,468,8,8]}
+{"kind":"textbox","id":"sh/8bat47y1","slide":5,"text":"An AI agent that monitors system health 24/7","textPreview":"An AI agent that monitors system health 24/7","textChars":44,"textLines":1,"bbox":[884,460,296,40]}
+{"kind":"textbox","id":"sh/1w7mp0bi","slide":5,"text":"voluntrack.app","textPreview":"voluntrack.app","textChars":14,"textLines":1,"bbox":[80,670,400,20]}
+{"kind":"textbox","id":"sh/qh0fepkz","slide":5,"text":"Slide 5","textPreview":"Slide 5","textChars":7,"textLines":1,"bbox":[1180,670,80,20]}
+{"kind":"notes","id":"nt/f3nok9","slide":5,"text":""}
+{"kind":"slide","id":"sl/tc64yn","slide":6,"title":"WHY IT'S SAFE","textShapes":23}
+{"kind":"textbox","id":"sh/mhk3q5o7","slide":6,"text":"WHY IT'S SAFE","textPreview":"WHY IT'S SAFE","textChars":13,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/t83itgfm","slide":6,"text":"Privacy isn't a feature. It's the foundation.","textPreview":"Privacy isn't a feature. It's the foundation.","textChars":45,"textLines":1,"bbox":[80,96,1120,60]}
+{"kind":"textbox","id":"sh/4nap4r65","slide":6,"text":"Counselors and parents ask the same question first. Here's the honest answer.","textPreview":"Counselors and parents ask the same question first. Here's the honest answer.","textChars":77,"textLines":1,"bbox":[80,168,1120,30]}
+{"kind":"shape","id":"sh/bq1oryts","slide":6,"bbox":[80,230,360,200]}
+{"kind":"shape","id":"sh/m58z25kb","slide":6,"bbox":[104,254,40,40]}
+{"kind":"textbox","id":"sh/twra5gbq","slide":6,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[104,254,40,40]}
+{"kind":"textbox","id":"sh/4byhgn29","slide":6,"text":"Local-first by default","textPreview":"Local-first by default","textChars":22,"textLines":1,"bbox":[104,310,312,28]}
+{"kind":"textbox","id":"sh/bm58z25k","slide":6,"text":"Volunteer logs live in the student's browser (localStorage). No cloud, no account, no server talking to volunteer data.","textPreview":"Volunteer logs live in the student's browser (localStorage). No cloud, no account, no server talking to volunteer data.","textChars":119,"textLines":1,"bbox":[104,346,312,76]}
+{"kind":"shape","id":"sh/m1cfa9w3","slide":6,"bbox":[460,230,360,200]}
+{"kind":"shape","id":"sh/cfa9w3m9","slide":6,"bbox":[484,254,40,40]}
+{"kind":"textbox","id":"sh/1032lszq","slide":6,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[484,254,40,40]}
+{"kind":"textbox","id":"sh/u9knih4b","slide":6,"text":"No tracking, no telemetry","textPreview":"No tracking, no telemetry","textChars":25,"textLines":1,"bbox":[484,310,312,28]}
+{"kind":"textbox","id":"sh/judg7ads","slide":6,"text":"The only analytics are Vercel pageviews and speed metrics. There is no event tracking on hours, names, schools, or activity.","textPreview":"The only analytics are Vercel pageviews and speed metrics. There is no event tracking on hours, names, schools, or activity.","textChars":124,"textLines":1,"bbox":[484,346,312,76]}
+{"kind":"shape","id":"sh/c7u54zid","slide":6,"bbox":[840,230,360,200]}
+{"kind":"shape","id":"sh/1orytsvu","slide":6,"bbox":[864,254,40,40]}
+{"kind":"textbox","id":"sh/u18jqh0f","slide":6,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[864,254,40,40]}
+{"kind":"textbox","id":"sh/jm1cfa9w","slide":6,"text":"School data is opt-in","textPreview":"School data is opt-in","textChars":21,"textLines":1,"bbox":[864,310,312,28]}
+{"kind":"textbox","id":"sh/cvixczed","slide":6,"text":"When a school signs up, only then does the server see anything — and only what the student explicitly submits.","textPreview":"When a school signs up, only then does the server see anything — and only what the student explicitly submits.","textChars":110,"textLines":1,"bbox":[864,346,312,76]}
+{"kind":"shape","id":"sh/5gbq1ory","slide":6,"bbox":[80,450,360,200]}
+{"kind":"shape","id":"sh/90je9cvi","slide":6,"bbox":[104,474,40,40]}
+{"kind":"textbox","id":"sh/gfmlkjm1","slide":6,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[104,474,40,40]}
+{"kind":"textbox","id":"sh/rytsvu9k","slide":6,"text":"JWT + bcrypt, rate-limited","textPreview":"JWT + bcrypt, rate-limited","textChars":26,"textLines":1,"bbox":[104,530,312,28]}
+{"kind":"textbox","id":"sh/yd0z6103","slide":6,"text":"Server-side auth uses bcrypt password hashing, JWT tokens, parameterized queries, and request rate limiting. See SECURITY.md.","textPreview":"Server-side auth uses bcrypt password hashing, JWT tokens, parameterized queries, and request rate limiting. See SECURITY.md.","textChars":125,"textLines":1,"bbox":[104,566,312,76]}
+{"kind":"shape","id":"sh/9s36hcrm","slide":6,"bbox":[460,450,360,200]}
+{"kind":"shape","id":"sh/g7adsji5","slide":6,"bbox":[484,474,40,40]}
+{"kind":"textbox","id":"sh/rmhk3q5o","slide":6,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[484,474,40,40]}
+{"kind":"textbox","id":"sh/y1kre1w7","slide":6,"text":"Open source, MIT","textPreview":"Open source, MIT","textChars":16,"textLines":1,"bbox":[484,530,312,28]}
+{"kind":"textbox","id":"sh/5o7qpg3e","slide":6,"text":"Every line is on GitHub. Schools can self-host, audit, and extend without vendor lock-in.","textPreview":"Every line is on GitHub. Schools can self-host, audit, and extend without vendor lock-in.","textChars":89,"textLines":1,"bbox":[484,566,312,76]}
+{"kind":"shape","id":"sh/g3ex0nux","slide":6,"bbox":[840,450,360,200]}
+{"kind":"shape","id":"sh/adsji5sn","slide":6,"bbox":[864,474,40,40]}
+{"kind":"textbox","id":"sh/3ylc7u54","slide":6,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[864,474,40,40]}
+{"kind":"textbox","id":"sh/sji5snel","slide":6,"text":"Recovery without lockout","textPreview":"Recovery without lockout","textChars":24,"textLines":1,"bbox":[864,530,312,28]}
+{"kind":"textbox","id":"sh/h4byhgn2","slide":6,"text":"Forgot your PIN or password? A 6-digit recovery code is emailed — works for both new and returning students.","textPreview":"Forgot your PIN or password? A 6-digit recovery code is emailed — works for both new and returning students.","textChars":108,"textLines":1,"bbox":[864,566,312,76]}
+{"kind":"textbox","id":"sh/a5gbq1or","slide":6,"text":"voluntrack.app","textPreview":"voluntrack.app","textChars":14,"textLines":1,"bbox":[80,670,400,20]}
+{"kind":"textbox","id":"sh/3m94fu18","slide":6,"text":"Slide 6","textPreview":"Slide 6","textChars":7,"textLines":1,"bbox":[1180,670,80,20]}
+{"kind":"notes","id":"nt/tc64yn","slide":6,"text":""}
+{"kind":"slide","id":"sl/uep2jb","slide":7,"title":"THE STACK","textShapes":23}
+{"kind":"textbox","id":"sh/65wjudg7","slide":7,"text":"THE STACK","textPreview":"THE STACK","textChars":9,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/hwfyxobm","slide":7,"text":"Modern, boring, and ready to extend.","textPreview":"Modern, boring, and ready to extend.","textChars":36,"textLines":1,"bbox":[80,96,1120,60]}
+{"kind":"textbox","id":"sh/obm58z25","slide":7,"text":"Everything is documented in the repo, runs on free tiers, and survives being handed to a junior dev.","textPreview":"Everything is documented in the repo, runs on free tiers, and survives being handed to a junior dev.","textChars":100,"textLines":1,"bbox":[80,168,1120,30]}
+{"kind":"shape","id":"sh/zed8v6ps","slide":7,"bbox":[80,220,1120,70]}
+{"kind":"shape","id":"sh/6xkf6dcb","slide":7,"bbox":[80,220,6,70]}
+{"kind":"textbox","id":"sh/hk3q5o7q","slide":7,"text":"FRONTEND","textPreview":"FRONTEND","textChars":8,"textLines":1,"bbox":[100,232,200,18]}
+{"kind":"textbox","id":"sh/oza1gvy9","slide":7,"text":"React 18 · Vite 5 · React Router 6 · Tailwind CSS 3","textPreview":"React 18 · Vite 5 · React Router 6 · Tailwind CSS 3","textChars":51,"textLines":1,"bbox":[100,252,600,26]}
+{"kind":"textbox","id":"sh/z61032ls","slide":7,"text":"PWA via vite-plugin-pwa. No Webpack, no Next.js, no lock-in.","textPreview":"PWA via vite-plugin-pwa. No Webpack, no Next.js, no lock-in.","textChars":60,"textLines":1,"bbox":[720,242,460,36]}
+{"kind":"shape","id":"sh/al87ed8b","slide":7,"bbox":[80,300,1120,70]}
+{"kind":"shape","id":"sh/k3q5o7qp","slide":7,"bbox":[80,300,6,70]}
+{"kind":"textbox","id":"sh/donyd0z6","slide":7,"text":"STATE","textPreview":"STATE","textChars":5,"textLines":1,"bbox":[100,312,200,18]}
+{"kind":"textbox","id":"sh/2x4nap4r","slide":7,"text":"localStorage namespaces · React Context · custom hooks","textPreview":"localStorage namespaces · React Context · custom hooks","textChars":54,"textLines":1,"bbox":[100,332,600,26]}
+{"kind":"textbox","id":"sh/vixczed8","slide":7,"text":"Data lives under the voluntrack: namespace — fully exportable, fully portable.","textPreview":"Data lives under the voluntrack: namespace — fully exportable, fully portable.","textChars":78,"textLines":1,"bbox":[720,322,460,36]}
+{"kind":"shape","id":"sh/kre1w7mp","slide":7,"bbox":[80,380,1120,70]}
+{"kind":"shape","id":"sh/dcbulwva","slide":7,"bbox":[80,380,6,70]}
+{"kind":"textbox","id":"sh/6psfil0r","slide":7,"text":"BACKEND","textPreview":"BACKEND","textChars":7,"textLines":1,"bbox":[100,392,200,18]}
+{"kind":"textbox","id":"sh/val87ed8","slide":7,"text":"Express 4 · PostgreSQL (Neon) · JWT + bcrypt","textPreview":"Express 4 · PostgreSQL (Neon) · JWT + bcrypt","textChars":44,"textLines":1,"bbox":[100,412,600,26]}
+{"kind":"textbox","id":"sh/knih4byh","slide":7,"text":"Optional. The full app works without it. School features turn it on.","textPreview":"Optional. The full app works without it. School features turn it on.","textChars":68,"textLines":1,"bbox":[720,402,460,36]}
+{"kind":"shape","id":"sh/d8bat47y","slide":7,"bbox":[80,460,1120,70]}
+{"kind":"shape","id":"sh/d4vmtwra","slide":7,"bbox":[80,460,6,70]}
+{"kind":"textbox","id":"sh/oj2t83it","slide":7,"text":"EXPORTS","textPreview":"EXPORTS","textChars":7,"textLines":1,"bbox":[100,472,200,18]}
+{"kind":"textbox","id":"sh/vy90je9c","slide":7,"text":"jsPDF · jspdf-autotable · CSV stringifier","textPreview":"jsPDF · jspdf-autotable · CSV stringifier","textChars":41,"textLines":1,"bbox":[100,492,600,26]}
+{"kind":"textbox","id":"sh/6dcbulwv","slide":7,"text":"Counselor-ready PDF logs, CSV exports, and printable certificates.","textPreview":"Counselor-ready PDF logs, CSV exports, and printable certificates.","textChars":66,"textLines":1,"bbox":[720,482,460,36]}
+{"kind":"shape","id":"sh/dsji5sne","slide":7,"bbox":[80,540,1120,70]}
+{"kind":"shape","id":"sh/o7qpg3ex","slide":7,"bbox":[80,540,6,70]}
+{"kind":"textbox","id":"sh/vmtwra5g","slide":7,"text":"AI HELPER","textPreview":"AI HELPER","textChars":9,"textLines":1,"bbox":[100,552,200,18]}
+{"kind":"textbox","id":"sh/61032lsz","slide":7,"text":"On-device agent for log drafting + system monitoring","textPreview":"On-device agent for log drafting + system monitoring","textChars":52,"textLines":1,"bbox":[100,572,600,26]}
+{"kind":"textbox","id":"sh/dg7adsji","slide":7,"text":"Drafts entries from a single sentence. Detects + auto-fixes production incidents.","textPreview":"Drafts entries from a single sentence. Detects + auto-fixes production incidents.","textChars":81,"textLines":1,"bbox":[720,562,460,36]}
+{"kind":"shape","id":"sh/ovahoza1","slide":7,"bbox":[80,620,1120,70]}
+{"kind":"shape","id":"sh/yxobm58z","slide":7,"bbox":[80,620,6,70]}
+{"kind":"textbox","id":"sh/nih4byhg","slide":7,"text":"DELIVERY","textPreview":"DELIVERY","textChars":8,"textLines":1,"bbox":[100,632,200,18]}
+{"kind":"textbox","id":"sh/g3ex0nux","slide":7,"text":"GitHub Actions · GitHub Pages · Render · Vercel Analytics","textPreview":"GitHub Actions · GitHub Pages · Render · Vercel Analytics","textChars":57,"textLines":1,"bbox":[100,652,600,26]}
+{"kind":"textbox","id":"sh/5o7qpg3e","slide":7,"text":"CI runs lint + build + preview as three jobs. Green commits auto-deploy.","textPreview":"CI runs lint + build + preview as three jobs. Green commits auto-deploy.","textChars":72,"textLines":1,"bbox":[720,642,460,36]}
+{"kind":"textbox","id":"sh/ylc7u54z","slide":7,"text":"voluntrack.app","textPreview":"voluntrack.app","textChars":14,"textLines":1,"bbox":[80,670,400,20]}
+{"kind":"textbox","id":"sh/r65wjudg","slide":7,"text":"Slide 7","textPreview":"Slide 7","textChars":7,"textLines":1,"bbox":[1180,670,80,20]}
+{"kind":"notes","id":"nt/uep2jb","slide":7,"text":""}
+{"kind":"slide","id":"sl/zl6var","slide":8,"title":"WHAT'S SHIPPED","textShapes":26}
+{"kind":"textbox","id":"sh/tsvu9kni","slide":8,"text":"WHAT'S SHIPPED","textPreview":"WHAT'S SHIPPED","textChars":14,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/m1cfa9w3","slide":8,"text":"Phases 1 through 3 are live. Phase 4 is on deck.","textPreview":"Phases 1 through 3 are live. Phase 4 is on deck.","textChars":48,"textLines":1,"bbox":[80,96,1120,60]}
+{"kind":"shape","id":"sh/bm58z25k","slide":8,"bbox":[80,200,270,200]}
+{"kind":"textbox","id":"sh/4vmtwra5","slide":8,"text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[104,220,220,70]}
+{"kind":"textbox","id":"sh/tgfmlkjm","slide":8,"text":"Pages live in the SPA","textPreview":"Pages live in the SPA","textChars":21,"textLines":1,"bbox":[104,290,220,20]}
+{"kind":"textbox","id":"sh/mp0bi9s3","slide":8,"text":"Dashboard, log, calendar, achievements, reports, profile, settings, about, contact, status, admin.","textPreview":"Dashboard, log, calendar, achievements, reports, profile, settings, about, contact, status, admin.","textChars":98,"textLines":1,"bbox":[104,312,220,80]}
+{"kind":"shape","id":"sh/bat47y1k","slide":8,"bbox":[365,200,270,200]}
+{"kind":"textbox","id":"sh/4nap4r65","slide":8,"text":"12","textPreview":"12","textChars":2,"textLines":1,"bbox":[389,220,220,70]}
+{"kind":"textbox","id":"sh/t83itgfm","slide":8,"text":"Auto-earning badges","textPreview":"Auto-earning badges","textChars":19,"textLines":1,"bbox":[389,290,220,20]}
+{"kind":"textbox","id":"sh/9gr2p8nq","slide":8,"text":"First Hour, Streak, 10/50/100 Hours, Category Master, Community Hero, etc.","textPreview":"First Hour, Streak, 10/50/100 Hours, Category Master, Community Hero, etc.","textChars":74,"textLines":1,"bbox":[389,312,220,80]}
+{"kind":"shape","id":"sh/gvy90je9","slide":8,"bbox":[650,200,270,200]}
+{"kind":"textbox","id":"sh/ra5gbq1o","slide":8,"text":"100%","textPreview":"100%","textChars":4,"textLines":1,"bbox":[674,220,220,70]}
+{"kind":"textbox","id":"sh/2p8nqxs7","slide":8,"text":"Client-side privacy","textPreview":"Client-side privacy","textChars":19,"textLines":1,"bbox":[674,290,220,20]}
+{"kind":"textbox","id":"sh/94fu18jq","slide":8,"text":"All volunteer data in the browser under the voluntrack: namespace.","textPreview":"All volunteer data in the browser under the voluntrack: namespace.","textChars":66,"textLines":1,"bbox":[674,312,220,80]}
+{"kind":"shape","id":"sh/kjm1cfa9","slide":8,"bbox":[935,200,270,200]}
+{"kind":"textbox","id":"sh/r2p8nqxs","slide":8,"text":"0","textPreview":"0","textChars":1,"textLines":1,"bbox":[959,220,220,70]}
+{"kind":"textbox","id":"sh/2hwfyxob","slide":8,"text":"Account server needed","textPreview":"Account server needed","textChars":21,"textLines":1,"bbox":[959,290,220,20]}
+{"kind":"textbox","id":"sh/9w3m94fu","slide":8,"text":"The core app is fully usable without ever talking to a server.","textPreview":"The core app is fully usable without ever talking to a server.","textChars":62,"textLines":1,"bbox":[959,312,220,80]}
+{"kind":"textbox","id":"sh/kb6xkf6d","slide":8,"text":"RECENT RELEASES","textPreview":"RECENT RELEASES","textChars":15,"textLines":1,"bbox":[80,440,400,24]}
+{"kind":"shape","id":"sh/0z61032l","slide":8,"bbox":[80,488,10,10]}
+{"kind":"textbox","id":"sh/pkzupwb2","slide":8,"text":"Email reset for PIN recovery","textPreview":"Email reset for PIN recovery","textChars":28,"textLines":1,"bbox":[110,480,700,24]}
+{"kind":"shape","id":"sh/itgfmlkj","slide":8,"bbox":[870,478,200,24]}
+{"kind":"textbox","id":"sh/7ed8bat4","slide":8,"text":"Jul 2025","textPreview":"Jul 2025","textChars":8,"textLines":1,"bbox":[870,478,200,24]}
+{"kind":"textbox","id":"sh/0nuxc3yl","slide":8,"text":"latest","textPreview":"latest","textChars":6,"textLines":1,"bbox":[1100,480,100,24]}
+{"kind":"shape","id":"sh/p8nqxs72","slide":8,"bbox":[80,538,10,10]}
+{"kind":"textbox","id":"sh/ih4byhgn","slide":8,"text":"CI: 3 jobs (lint · build · preview) on Node 24","textPreview":"CI: 3 jobs (lint · build · preview) on Node 24","textChars":46,"textLines":1,"bbox":[110,530,700,24]}
+{"kind":"shape","id":"sh/72x4nap4","slide":8,"bbox":[870,528,200,24]}
+{"kind":"textbox","id":"sh/wjudg7ad","slide":8,"text":"Jun 2025","textPreview":"Jun 2025","textChars":8,"textLines":1,"bbox":[870,528,200,24]}
+{"kind":"textbox","id":"sh/p4r65wju","slide":8,"text":"ci","textPreview":"ci","textChars":2,"textLines":1,"bbox":[1100,530,100,24]}
+{"kind":"shape","id":"sh/f6dcbulw","slide":8,"bbox":[80,588,10,10]}
+{"kind":"textbox","id":"sh/mlkjm1cf","slide":8,"text":"Initial VolunteerTrack release","textPreview":"Initial VolunteerTrack release","textChars":30,"textLines":1,"bbox":[110,580,700,24]}
+{"kind":"shape","id":"sh/xc3ylc7u","slide":8,"bbox":[870,578,200,24]}
+{"kind":"textbox","id":"sh/4r65wjud","slide":8,"text":"Apr 2025","textPreview":"Apr 2025","textChars":8,"textLines":1,"bbox":[870,578,200,24]}
+{"kind":"textbox","id":"sh/fepkzupw","slide":8,"text":"v0.1","textPreview":"v0.1","textChars":4,"textLines":1,"bbox":[1100,580,100,24]}
+{"kind":"textbox","id":"sh/mtwra5gb","slide":8,"text":"voluntrack.app","textPreview":"voluntrack.app","textChars":14,"textLines":1,"bbox":[80,670,400,20]}
+{"kind":"textbox","id":"sh/xkf6dcbu","slide":8,"text":"Slide 8","textPreview":"Slide 8","textChars":7,"textLines":1,"bbox":[1180,670,80,20]}
+{"kind":"notes","id":"nt/zl6var","slide":8,"text":""}
+{"kind":"slide","id":"sl/buz1nr","slide":9,"title":"HOW IT EARNS","textShapes":31}
+{"kind":"textbox","id":"sh/ed8bat47","slide":9,"text":"HOW IT EARNS","textPreview":"HOW IT EARNS","textChars":12,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/l0rqd4vm","slide":9,"text":"Free for students. Paid for the orgs that need admin.","textPreview":"Free for students. Paid for the orgs that need admin.","textChars":53,"textLines":1,"bbox":[80,96,1120,60]}
+{"kind":"shape","id":"sh/wfyxobm5","slide":9,"bbox":[80,200,360,470]}
+{"kind":"shape","id":"sh/36hcrmhk","slide":9,"bbox":[80,200,360,60]}
+{"kind":"shape","id":"sh/eloj2t83","slide":9,"bbox":[80,230,360,30]}
+{"kind":"textbox","id":"sh/lc7u54zi","slide":9,"text":"STUDENT","textPreview":"STUDENT","textChars":7,"textLines":1,"bbox":[104,218,312,24]}
+{"kind":"textbox","id":"sh/wra5gbq1","slide":9,"text":"Free","textPreview":"Free","textChars":4,"textLines":1,"bbox":[104,276,312,60]}
+{"kind":"textbox","id":"sh/7adsji5s","slide":9,"text":"forever","textPreview":"forever","textChars":7,"textLines":1,"bbox":[104,332,312,20]}
+{"kind":"textbox","id":"sh/epkzupwb","slide":9,"text":"Every student gets the full app, every badge, every export, no strings.","textPreview":"Every student gets the full app, every badge, every export, no strings.","textChars":71,"textLines":1,"bbox":[104,358,312,56]}
+{"kind":"shape","id":"sh/8jqh0fep","slide":9,"bbox":[104,436,6,6]}
+{"kind":"textbox","id":"sh/x4nap4r6","slide":9,"text":"Full hour logging + badges","textPreview":"Full hour logging + badges","textChars":26,"textLines":1,"bbox":[118,430,298,24]}
+{"kind":"shape","id":"sh/qd4vmtwr","slide":9,"bbox":[104,464,6,6]}
+{"kind":"textbox","id":"sh/fyxobm58","slide":9,"text":"PDF, CSV, certificate export","textPreview":"PDF, CSV, certificate export","textChars":28,"textLines":1,"bbox":[118,458,298,24]}
+{"kind":"shape","id":"sh/8v6psfil","slide":9,"bbox":[104,492,6,6]}
+{"kind":"textbox","id":"sh/xczed8v6","slide":9,"text":"Offline PWA install","textPreview":"Offline PWA install","textChars":19,"textLines":1,"bbox":[118,486,298,24]}
+{"kind":"shape","id":"sh/qpg3ex0n","slide":9,"bbox":[104,520,6,6]}
+{"kind":"textbox","id":"sh/fa9w3m94","slide":9,"text":"All 12 auto-earning badges","textPreview":"All 12 auto-earning badges","textChars":26,"textLines":1,"bbox":[118,514,298,24]}
+{"kind":"shape","id":"sh/8z25kb6x","slide":9,"bbox":[104,620,312,32]}
+{"kind":"textbox","id":"sh/1gvy90je","slide":9,"text":"Open the app","textPreview":"Open the app","textChars":12,"textLines":1,"bbox":[104,620,312,32]}
+{"kind":"shape","id":"sh/loj2t83i","slide":9,"bbox":[460,200,360,470]}
+{"kind":"shape","id":"sh/w3m94fu1","slide":9,"bbox":[460,200,360,60]}
+{"kind":"shape","id":"sh/3itgfmlk","slide":9,"bbox":[460,230,360,30]}
+{"kind":"textbox","id":"sh/ex0nuxc3","slide":9,"text":"SCHOOL","textPreview":"SCHOOL","textChars":6,"textLines":1,"bbox":[484,218,312,24]}
+{"kind":"textbox","id":"sh/lwval87e","slide":9,"text":"$2","textPreview":"$2","textChars":2,"textLines":1,"bbox":[484,276,312,60]}
+{"kind":"textbox","id":"sh/wb2hwfyx","slide":9,"text":"per student / year","textPreview":"per student / year","textChars":18,"textLines":1,"bbox":[484,332,312,20]}
+{"kind":"textbox","id":"sh/3q5o7qpg","slide":9,"text":"Everything in Student, plus the school admin layer. PIN join, rosters, supervisor flow.","textPreview":"Everything in Student, plus the school admin layer. PIN join, rosters, supervisor flow.","textChars":87,"textLines":1,"bbox":[484,358,312,56]}
+{"kind":"shape","id":"sh/e9cvixcz","slide":9,"bbox":[484,436,6,6]}
+{"kind":"textbox","id":"sh/l87ed8ba","slide":9,"text":"School PIN join (no CSV upload)","textPreview":"School PIN join (no CSV upload)","textChars":31,"textLines":1,"bbox":[498,430,298,24]}
+{"kind":"shape","id":"sh/sneloj2t","slide":9,"bbox":[484,464,6,6]}
+{"kind":"textbox","id":"sh/6hcrmhk3","slide":9,"text":"Verified supervisor + PDF review","textPreview":"Verified supervisor + PDF review","textChars":32,"textLines":1,"bbox":[498,458,298,24]}
+{"kind":"shape","id":"sh/z25kb6xk","slide":9,"bbox":[484,492,6,6]}
+{"kind":"textbox","id":"sh/onyd0z61","slide":9,"text":"Bulk import + roster management","textPreview":"Bulk import + roster management","textChars":31,"textLines":1,"bbox":[498,486,298,24]}
+{"kind":"shape","id":"sh/d8v6psfi","slide":9,"bbox":[484,520,6,6]}
+{"kind":"textbox","id":"sh/6tovahoz","slide":9,"text":"Counselor-ready reports","textPreview":"Counselor-ready reports","textChars":23,"textLines":1,"bbox":[498,514,298,24]}
+{"kind":"shape","id":"sh/vahoza1g","slide":9,"bbox":[484,620,312,32]}
+{"kind":"textbox","id":"sh/ovahoza1","slide":9,"text":"Pilot a school","textPreview":"Pilot a school","textChars":14,"textLines":1,"bbox":[484,620,312,32]}
+{"kind":"shape","id":"sh/dg7adsji","slide":9,"bbox":[840,200,360,470]}
+{"kind":"shape","id":"sh/61032lsz","slide":9,"bbox":[840,200,360,60]}
+{"kind":"shape","id":"sh/vmtwra5g","slide":9,"bbox":[840,230,360,30]}
+{"kind":"textbox","id":"sh/zed8v6ps","slide":9,"text":"DISTRICT","textPreview":"DISTRICT","textChars":8,"textLines":1,"bbox":[864,218,312,24]}
+{"kind":"textbox","id":"sh/6xkf6dcb","slide":9,"text":"Custom","textPreview":"Custom","textChars":6,"textLines":1,"bbox":[864,276,312,60]}
+{"kind":"textbox","id":"sh/hk3q5o7q","slide":9,"text":"per district","textPreview":"per district","textChars":12,"textLines":1,"bbox":[864,332,312,20]}
+{"kind":"textbox","id":"sh/oza1gvy9","slide":9,"text":"Multi-school rollout, white-glove onboarding, AI system monitoring, and SLA support.","textPreview":"Multi-school rollout, white-glove onboarding, AI system monitoring, and SLA support.","textChars":84,"textLines":1,"bbox":[864,358,312,56]}
+{"kind":"shape","id":"sh/zqtcj6to","slide":9,"bbox":[864,436,6,6]}
+{"kind":"textbox","id":"sh/65wjudg7","slide":9,"text":"Multi-school admin dashboard","textPreview":"Multi-school admin dashboard","textChars":28,"textLines":1,"bbox":[878,430,298,24]}
+{"kind":"shape","id":"sh/hwfyxobm","slide":9,"bbox":[864,464,6,6]}
+{"kind":"textbox","id":"sh/obm58z25","slide":9,"text":"Custom branding + subdomain","textPreview":"Custom branding + subdomain","textChars":27,"textLines":1,"bbox":[878,458,298,24]}
+{"kind":"shape","id":"sh/zupwb2hw","slide":9,"bbox":[864,492,6,6]}
+{"kind":"textbox","id":"sh/a9w3m94f","slide":9,"text":"AI agent monitoring + fix log","textPreview":"AI agent monitoring + fix log","textChars":29,"textLines":1,"bbox":[878,486,298,24]}
+{"kind":"shape","id":"sh/0rqd4vmt","slide":9,"bbox":[864,520,6,6]}
+{"kind":"textbox","id":"sh/tcj6tova","slide":9,"text":"Priority support · 24h SLA","textPreview":"Priority support · 24h SLA","textChars":26,"textLines":1,"bbox":[878,514,298,24]}
+{"kind":"shape","id":"sh/il0rqd4v","slide":9,"bbox":[864,620,312,32]}
+{"kind":"textbox","id":"sh/b6xkf6dc","slide":9,"text":"Talk to us","textPreview":"Talk to us","textChars":10,"textLines":1,"bbox":[864,620,312,32]}
+{"kind":"textbox","id":"sh/0je9cvix","slide":9,"text":"voluntrack.app","textPreview":"voluntrack.app","textChars":14,"textLines":1,"bbox":[80,690,400,20]}
+{"kind":"textbox","id":"sh/t47y1kre","slide":9,"text":"Slide 9","textPreview":"Slide 9","textChars":7,"textLines":1,"bbox":[1180,690,80,20]}
+{"kind":"notes","id":"nt/buz1nr","slide":9,"text":""}
+{"kind":"slide","id":"sl/ciu5q2","slide":10,"title":"ROADMAP","textShapes":36}
+{"kind":"textbox","id":"sh/tovahoza","slide":10,"text":"ROADMAP","textPreview":"ROADMAP","textChars":7,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/ixczed8v","slide":10,"text":"Phased, scoped, and already underway.","textPreview":"Phased, scoped, and already underway.","textChars":37,"textLines":1,"bbox":[80,96,1120,60]}
+{"kind":"shape","id":"sh/bi9s36hc","slide":10,"bbox":[80,210,270,420]}
+{"kind":"shape","id":"sh/0fepkzup","slide":10,"bbox":[80,210,270,6]}
+{"kind":"textbox","id":"sh/p0bi9s36","slide":10,"text":"PHASE 1","textPreview":"PHASE 1","textChars":7,"textLines":1,"bbox":[100,232,230,18]}
+{"kind":"textbox","id":"sh/i9s36hcr","slide":10,"text":"Core app","textPreview":"Core app","textChars":8,"textLines":1,"bbox":[100,256,230,60]}
+{"kind":"shape","id":"sh/bulwval8","slide":10,"bbox":[100,320,80,24]}
+{"kind":"textbox","id":"sh/0je9cvix","slide":10,"text":"SHIPPED","textPreview":"SHIPPED","textChars":7,"textLines":1,"bbox":[100,320,80,24]}
+{"kind":"shape","id":"sh/t47y1kre","slide":10,"bbox":[100,376,8,8]}
+{"kind":"textbox","id":"sh/9s36hcrm","slide":10,"text":"Hour logging","textPreview":"Hour logging","textChars":12,"textLines":1,"bbox":[116,370,214,30]}
+{"kind":"shape","id":"sh/g7adsji5","slide":10,"bbox":[100,412,8,8]}
+{"kind":"textbox","id":"sh/rmhk3q5o","slide":10,"text":"Goals + progress","textPreview":"Goals + progress","textChars":16,"textLines":1,"bbox":[116,406,214,30]}
+{"kind":"shape","id":"sh/y1kre1w7","slide":10,"bbox":[100,448,8,8]}
+{"kind":"textbox","id":"sh/90je9cvi","slide":10,"text":"12 badges","textPreview":"12 badges","textChars":9,"textLines":1,"bbox":[116,442,214,30]}
+{"kind":"shape","id":"sh/gfmlkjm1","slide":10,"bbox":[100,484,8,8]}
+{"kind":"textbox","id":"sh/rytsvu9k","slide":10,"text":"Reminders + dark mode","textPreview":"Reminders + dark mode","textChars":21,"textLines":1,"bbox":[116,478,214,30]}
+{"kind":"shape","id":"sh/yd0z6103","slide":10,"bbox":[100,520,8,8]}
+{"kind":"textbox","id":"sh/9cvixcze","slide":10,"text":"PWA install","textPreview":"PWA install","textChars":11,"textLines":1,"bbox":[116,514,214,30]}
+{"kind":"shape","id":"sh/gr2p8nqx","slide":10,"bbox":[365,210,270,420]}
+{"kind":"shape","id":"sh/c7u54zid","slide":10,"bbox":[365,210,270,6]}
+{"kind":"textbox","id":"sh/1orytsvu","slide":10,"text":"PHASE 2","textPreview":"PHASE 2","textChars":7,"textLines":1,"bbox":[385,232,230,18]}
+{"kind":"textbox","id":"sh/u18jqh0f","slide":10,"text":"Auth + recovery","textPreview":"Auth + recovery","textChars":15,"textLines":1,"bbox":[385,256,230,60]}
+{"kind":"shape","id":"sh/jm1cfa9w","slide":10,"bbox":[385,320,80,24]}
+{"kind":"textbox","id":"sh/cfa9w3m9","slide":10,"text":"SHIPPED","textPreview":"SHIPPED","textChars":7,"textLines":1,"bbox":[385,320,80,24]}
+{"kind":"shape","id":"sh/1032lszq","slide":10,"bbox":[385,376,8,8]}
+{"kind":"textbox","id":"sh/u9knih4b","slide":10,"text":"Email + password login","textPreview":"Email + password login","textChars":22,"textLines":1,"bbox":[401,370,214,30]}
+{"kind":"shape","id":"sh/judg7ads","slide":10,"bbox":[385,412,8,8]}
+{"kind":"textbox","id":"sh/cj6tovah","slide":10,"text":"PIN protection","textPreview":"PIN protection","textChars":14,"textLines":1,"bbox":[401,406,214,30]}
+{"kind":"shape","id":"sh/54zidony","slide":10,"bbox":[385,448,8,8]}
+{"kind":"textbox","id":"sh/ra5gbq1o","slide":10,"text":"Recovery codes","textPreview":"Recovery codes","textChars":14,"textLines":1,"bbox":[401,442,214,30]}
+{"kind":"shape","id":"sh/2p8nqxs7","slide":10,"bbox":[385,484,8,8]}
+{"kind":"textbox","id":"sh/9gr2p8nq","slide":10,"text":"Account dashboards","textPreview":"Account dashboards","textChars":18,"textLines":1,"bbox":[401,478,214,30]}
+{"kind":"shape","id":"sh/gvy90je9","slide":10,"bbox":[385,520,8,8]}
+{"kind":"textbox","id":"sh/r2p8nqxs","slide":10,"text":"Multi-user isolation","textPreview":"Multi-user isolation","textChars":20,"textLines":1,"bbox":[401,514,214,30]}
+{"kind":"shape","id":"sh/2hwfyxob","slide":10,"bbox":[650,210,270,420]}
+{"kind":"shape","id":"sh/94fu18jq","slide":10,"bbox":[650,210,270,6]}
+{"kind":"textbox","id":"sh/kjm1cfa9","slide":10,"text":"PHASE 3","textPreview":"PHASE 3","textChars":7,"textLines":1,"bbox":[670,232,230,18]}
+{"kind":"textbox","id":"sh/rqd4vmtw","slide":10,"text":"School partnerships","textPreview":"School partnerships","textChars":19,"textLines":1,"bbox":[670,256,230,60]}
+{"kind":"shape","id":"sh/25kb6xkf","slide":10,"bbox":[670,320,80,24]}
+{"kind":"textbox","id":"sh/i9s36hcr","slide":10,"text":"SHIPPED","textPreview":"SHIPPED","textChars":7,"textLines":1,"bbox":[670,320,80,24]}
+{"kind":"shape","id":"sh/bulwval8","slide":10,"bbox":[670,376,8,8]}
+{"kind":"textbox","id":"sh/0fepkzup","slide":10,"text":"School PIN join","textPreview":"School PIN join","textChars":15,"textLines":1,"bbox":[686,370,214,30]}
+{"kind":"shape","id":"sh/p0bi9s36","slide":10,"bbox":[670,412,8,8]}
+{"kind":"textbox","id":"sh/ixczed8v","slide":10,"text":"Verified supervisor flow","textPreview":"Verified supervisor flow","textChars":24,"textLines":1,"bbox":[686,406,214,30]}
+{"kind":"shape","id":"sh/bi9s36hc","slide":10,"bbox":[670,448,8,8]}
+{"kind":"textbox","id":"sh/032lszqt","slide":10,"text":"Payment + subscription tracking","textPreview":"Payment + subscription tracking","textChars":31,"textLines":1,"bbox":[686,442,214,30]}
+{"kind":"shape","id":"sh/tovahoza","slide":10,"bbox":[670,484,8,8]}
+{"kind":"textbox","id":"sh/il0rqd4v","slide":10,"text":"Admin dashboard","textPreview":"Admin dashboard","textChars":15,"textLines":1,"bbox":[686,478,214,30]}
+{"kind":"shape","id":"sh/b6xkf6dc","slide":10,"bbox":[670,520,8,8]}
+{"kind":"textbox","id":"sh/hwfyxobm","slide":10,"text":"AI system monitoring","textPreview":"AI system monitoring","textChars":20,"textLines":1,"bbox":[686,514,214,30]}
+{"kind":"shape","id":"sh/obm58z25","slide":10,"bbox":[935,210,270,420]}
+{"kind":"shape","id":"sh/zqtcj6to","slide":10,"bbox":[935,210,270,6]}
+{"kind":"textbox","id":"sh/65wjudg7","slide":10,"text":"PHASE 4","textPreview":"PHASE 4","textChars":7,"textLines":1,"bbox":[955,232,230,18]}
+{"kind":"textbox","id":"sh/hk3q5o7q","slide":10,"text":"Native + integrations","textPreview":"Native + integrations","textChars":21,"textLines":1,"bbox":[955,256,230,60]}
+{"kind":"shape","id":"sh/oza1gvy9","slide":10,"bbox":[955,320,80,24]}
+{"kind":"textbox","id":"sh/zed8v6ps","slide":10,"text":"NEXT","textPreview":"NEXT","textChars":4,"textLines":1,"bbox":[955,320,80,24]}
+{"kind":"shape","id":"sh/6xkf6dcb","slide":10,"bbox":[955,376,8,8]}
+{"kind":"textbox","id":"sh/hcrmhk3q","slide":10,"text":"Native iOS + Android","textPreview":"Native iOS + Android","textChars":20,"textLines":1,"bbox":[971,370,214,30]}
+{"kind":"shape","id":"sh/orytsvu9","slide":10,"bbox":[955,412,8,8]}
+{"kind":"textbox","id":"sh/ovahoza1","slide":10,"text":"Public REST API","textPreview":"Public REST API","textChars":15,"textLines":1,"bbox":[971,406,214,30]}
+{"kind":"shape","id":"sh/dg7adsji","slide":10,"bbox":[955,448,8,8]}
+{"kind":"textbox","id":"sh/6tovahoz","slide":10,"text":"Zapier + Make webhooks","textPreview":"Zapier + Make webhooks","textChars":22,"textLines":1,"bbox":[971,442,214,30]}
+{"kind":"shape","id":"sh/vahoza1g","slide":10,"bbox":[955,484,8,8]}
+{"kind":"textbox","id":"sh/onyd0z61","slide":10,"text":"Bulk CSV import v2","textPreview":"Bulk CSV import v2","textChars":18,"textLines":1,"bbox":[971,478,214,30]}
+{"kind":"shape","id":"sh/d8v6psfi","slide":10,"bbox":[955,520,8,8]}
+{"kind":"textbox","id":"sh/6hcrmhk3","slide":10,"text":"Calendar integrations","textPreview":"Calendar integrations","textChars":21,"textLines":1,"bbox":[971,514,214,30]}
+{"kind":"textbox","id":"sh/z25kb6xk","slide":10,"text":"voluntrack.app","textPreview":"voluntrack.app","textChars":14,"textLines":1,"bbox":[80,670,400,20]}
+{"kind":"textbox","id":"sh/oj2t83it","slide":10,"text":"Slide 10","textPreview":"Slide 10","textChars":8,"textLines":1,"bbox":[1180,670,80,20]}
+{"kind":"notes","id":"nt/ciu5q2","slide":10,"text":""}
+{"kind":"slide","id":"sl/hd4i4f","slide":11,"title":"HOW IT PLAYS OUT","textShapes":19}
+{"kind":"textbox","id":"sh/h4byhgn2","slide":11,"text":"HOW IT PLAYS OUT","textPreview":"HOW IT PLAYS OUT","textChars":16,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/adsji5sn","slide":11,"text":"Lincoln High · 1,200 students · one semester.","textPreview":"Lincoln High · 1,200 students · one semester.","textChars":45,"textLines":1,"bbox":[80,96,1120,60]}
+{"kind":"shape","id":"sh/3ylc7u54","slide":11,"bbox":[80,200,560,420]}
+{"kind":"textbox","id":"sh/s72x4nap","slide":11,"text":"THE STORY","textPreview":"THE STORY","textChars":9,"textLines":1,"bbox":[100,220,200,20]}
+{"kind":"textbox","id":"sh/lszqtcj6","slide":11,"text":"Maria is a senior at Lincoln High. She needs 100 verified hours to graduate and 75 for her scholarship application.","textPreview":"Maria is a senior at Lincoln High. She needs 100 verified hours to graduate and 75 for her scholarship application.","textChars":115,"textLines":1,"bbox":[100,248,520,60]}
+{"kind":"textbox","id":"sh/a5gbq1or","slide":11,"text":"She joins VolunTrack with the school PIN and gets a private account on her own device.","textPreview":"She joins VolunTrack with the school PIN and gets a private account on her own device.","textChars":86,"textLines":1,"bbox":[100,322,520,60]}
+{"kind":"textbox","id":"sh/3m94fu18","slide":11,"text":"She logs hours at the food bank. The AI agent drafts the entry from a one-sentence description. She confirms.","textPreview":"She logs hours at the food bank. The AI agent drafts the entry from a one-sentence description. She confirms.","textChars":109,"textLines":1,"bbox":[100,388,520,60]}
+{"kind":"textbox","id":"sh/s36hcrmh","slide":11,"text":"Her supervisor uploads a signed PDF. The school admin verifies it inline. Maria's record updates automatically.","textPreview":"Her supervisor uploads a signed PDF. The school admin verifies it inline. Maria's record updates automatically.","textChars":111,"textLines":1,"bbox":[100,454,520,60]}
+{"kind":"textbox","id":"sh/hoza1gvy","slide":11,"text":"Counselor exports her full log for the scholarship committee. Done — 12 minutes, end to end.","textPreview":"Counselor exports her full log for the scholarship committee. Done — 12 minutes, end to end.","textChars":92,"textLines":1,"bbox":[100,520,520,60]}
+{"kind":"shape","id":"sh/58z25kb6","slide":11,"bbox":[660,200,560,420]}
+{"kind":"textbox","id":"sh/gn29gr2p","slide":11,"text":"THE OUTCOMES","textPreview":"THE OUTCOMES","textChars":12,"textLines":1,"bbox":[680,220,200,20]}
+{"kind":"textbox","id":"sh/n29gr2p8","slide":11,"text":"12 min","textPreview":"12 min","textChars":6,"textLines":1,"bbox":[680,260,200,50]}
+{"kind":"textbox","id":"sh/yhgn29gr","slide":11,"text":"average time to log + verify a single session","textPreview":"average time to log + verify a single session","textChars":45,"textLines":1,"bbox":[880,268,320,50]}
+{"kind":"textbox","id":"sh/5wjudg7a","slide":11,"text":"$0","textPreview":"$0","textChars":2,"textLines":1,"bbox":[680,348,200,50]}
+{"kind":"textbox","id":"sh/gbq1oryt","slide":11,"text":"student pays for the app","textPreview":"student pays for the app","textChars":24,"textLines":1,"bbox":[880,356,320,50]}
+{"kind":"textbox","id":"sh/nuxc3ylc","slide":11,"text":"100%","textPreview":"100%","textChars":4,"textLines":1,"bbox":[680,436,200,50]}
+{"kind":"textbox","id":"sh/y90je9cv","slide":11,"text":"of her hours are exportable, portable, and provable","textPreview":"of her hours are exportable, portable, and provable","textChars":51,"textLines":1,"bbox":[880,444,320,50]}
+{"kind":"textbox","id":"sh/5sneloj2","slide":11,"text":"1 link","textPreview":"1 link","textChars":6,"textLines":1,"bbox":[680,524,200,50]}
+{"kind":"textbox","id":"sh/cbulwval","slide":11,"text":"instead of a backpack full of paper sign-in sheets","textPreview":"instead of a backpack full of paper sign-in sheets","textChars":50,"textLines":1,"bbox":[880,532,320,50]}
+{"kind":"textbox","id":"sh/8nqxs72x","slide":11,"text":"voluntrack.app","textPreview":"voluntrack.app","textChars":14,"textLines":1,"bbox":[80,670,400,20]}
+{"kind":"textbox","id":"sh/18jqh0fe","slide":11,"text":"Slide 11","textPreview":"Slide 11","textChars":8,"textLines":1,"bbox":[1180,670,80,20]}
+{"kind":"notes","id":"nt/hd4i4f","slide":11,"text":""}
+{"kind":"slide","id":"sl/kcsmy0","slide":12,"title":"HIRE ME","textShapes":21}
+{"kind":"textbox","id":"sh/z25kb6xk","slide":12,"text":"HIRE ME","textPreview":"HIRE ME","textChars":7,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/onyd0z61","slide":12,"text":"I built VolunTrack. I can build yours too.","textPreview":"I built VolunTrack. I can build yours too.","textChars":42,"textLines":1,"bbox":[80,96,1120,60]}
+{"kind":"textbox","id":"sh/d8v6psfi","slide":12,"text":"Same stack, same discipline, applied to your product, your school, or your internal tool.","textPreview":"Same stack, same discipline, applied to your product, your school, or your internal tool.","textChars":89,"textLines":1,"bbox":[80,168,1120,30]}
+{"kind":"shape","id":"sh/6tovahoz","slide":12,"bbox":[80,220,270,360]}
+{"kind":"shape","id":"sh/vahoza1g","slide":12,"bbox":[80,220,270,6]}
+{"kind":"textbox","id":"sh/ovahoza1","slide":12,"text":"BUILD","textPreview":"BUILD","textChars":5,"textLines":1,"bbox":[102,248,240,18]}
+{"kind":"textbox","id":"sh/dg7adsji","slide":12,"text":"Custom product","textPreview":"Custom product","textChars":14,"textLines":1,"bbox":[102,278,240,50]}
+{"kind":"textbox","id":"sh/61032lsz","slide":12,"text":"$8k – $25k","textPreview":"$8k – $25k","textChars":10,"textLines":1,"bbox":[102,332,240,44]}
+{"kind":"textbox","id":"sh/vmtwra5g","slide":12,"text":"A full React + Vite + Tailwind PWA, deployed to your domain, branded to you. 3–6 weeks.","textPreview":"A full React + Vite + Tailwind PWA, deployed to your domain, branded to you. 3–6 weeks.","textChars":87,"textLines":1,"bbox":[102,386,240,180]}
+{"kind":"shape","id":"sh/b2hwfyxo","slide":12,"bbox":[360,220,270,360]}
+{"kind":"shape","id":"sh/mhk3q5o7","slide":12,"bbox":[360,220,270,6]}
+{"kind":"textbox","id":"sh/t83itgfm","slide":12,"text":"EXTEND","textPreview":"EXTEND","textChars":6,"textLines":1,"bbox":[382,248,240,18]}
+{"kind":"textbox","id":"sh/4nap4r65","slide":12,"text":"Add a feature","textPreview":"Add a feature","textChars":13,"textLines":1,"bbox":[382,278,240,50]}
+{"kind":"textbox","id":"sh/bq1oryts","slide":12,"text":"$500 – $4k","textPreview":"$500 – $4k","textChars":10,"textLines":1,"bbox":[382,332,240,44]}
+{"kind":"textbox","id":"sh/m58z25kb","slide":12,"text":"Auth, payments, dashboards, AI helpers, export pipelines, integrations. Scoped per ticket.","textPreview":"Auth, payments, dashboards, AI helpers, export pipelines, integrations. Scoped per ticket.","textChars":90,"textLines":1,"bbox":[382,386,240,180]}
+{"kind":"shape","id":"sh/twra5gbq","slide":12,"bbox":[640,220,270,360]}
+{"kind":"shape","id":"sh/4byhgn29","slide":12,"bbox":[640,220,270,6]}
+{"kind":"textbox","id":"sh/bm58z25k","slide":12,"text":"WHITE-LABEL","textPreview":"WHITE-LABEL","textChars":11,"textLines":1,"bbox":[662,248,240,18]}
+{"kind":"textbox","id":"sh/m1cfa9w3","slide":12,"text":"License VolunTrack","textPreview":"License VolunTrack","textChars":18,"textLines":1,"bbox":[662,278,240,50]}
+{"kind":"textbox","id":"sh/q5o7qpg3","slide":12,"text":"$5k + $1k/yr","textPreview":"$5k + $1k/yr","textChars":12,"textLines":1,"bbox":[662,332,240,44]}
+{"kind":"textbox","id":"sh/jqh0fepk","slide":12,"text":"Your branding, your domain, your student data on your Postgres. Source code included.","textPreview":"Your branding, your domain, your student data on your Postgres. Source code included.","textChars":85,"textLines":1,"bbox":[662,386,240,180]}
+{"kind":"shape","id":"sh/8bat47y1","slide":12,"bbox":[920,220,270,360]}
+{"kind":"shape","id":"sh/1w7mp0bi","slide":12,"bbox":[920,220,270,6]}
+{"kind":"textbox","id":"sh/qh0fepkz","slide":12,"text":"RETAIN","textPreview":"RETAIN","textChars":6,"textLines":1,"bbox":[942,248,240,18]}
+{"kind":"textbox","id":"sh/j2t83itg","slide":12,"text":"Monthly partnership","textPreview":"Monthly partnership","textChars":19,"textLines":1,"bbox":[942,278,240,50]}
+{"kind":"textbox","id":"sh/8nqxs72x","slide":12,"text":"$2k – $6k / mo","textPreview":"$2k – $6k / mo","textChars":14,"textLines":1,"bbox":[942,332,240,44]}
+{"kind":"textbox","id":"sh/18jqh0fe","slide":12,"text":"Hosting, monitoring, AI agent ops, feature requests, and on-call. Cancel any month.","textPreview":"Hosting, monitoring, AI agent ops, feature requests, and on-call. Cancel any month.","textChars":83,"textLines":1,"bbox":[942,386,240,180]}
+{"kind":"textbox","id":"sh/ulwval87","slide":12,"text":"voluntrack.app","textPreview":"voluntrack.app","textChars":14,"textLines":1,"bbox":[80,670,400,20]}
+{"kind":"textbox","id":"sh/j6tovaho","slide":12,"text":"Slide 12","textPreview":"Slide 12","textChars":8,"textLines":1,"bbox":[1180,670,80,20]}
+{"kind":"notes","id":"nt/kcsmy0","slide":12,"text":""}
+{"kind":"slide","id":"sl/hmh8pg","slide":13,"title":"NEXT STEPS","textShapes":19}
+{"kind":"textbox","id":"sh/c7u54zid","slide":13,"text":"NEXT STEPS","textPreview":"NEXT STEPS","textChars":10,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/jm1cfa9w","slide":13,"text":"Three ways to take the next ten minutes.","textPreview":"Three ways to take the next ten minutes.","textChars":40,"textLines":1,"bbox":[80,96,1120,60]}
+{"kind":"shape","id":"sh/u18jqh0f","slide":13,"bbox":[80,200,1120,130]}
+{"kind":"shape","id":"sh/1032lszq","slide":13,"bbox":[80,200,6,130]}
+{"kind":"textbox","id":"sh/cfa9w3m9","slide":13,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[110,224,100,80]}
+{"kind":"textbox","id":"sh/judg7ads","slide":13,"text":"Try the live demo","textPreview":"Try the live demo","textChars":17,"textLines":1,"bbox":[220,230,500,36]}
+{"kind":"textbox","id":"sh/u9knih4b","slide":13,"text":"Open the app, sign in with any email + password, and log a single hour. Time it — it's under 90 seconds.","textPreview":"Open the app, sign in with any email + password, and log a single hour. Time it — it's under 90 seconds.","textChars":104,"textLines":1,"bbox":[220,272,540,50]}
+{"kind":"textbox","id":"sh/54zidony","slide":13,"text":"OPEN THE APP","textPreview":"OPEN THE APP","textChars":12,"textLines":1,"bbox":[780,232,400,18]}
+{"kind":"textbox","id":"sh/cj6tovah","slide":13,"text":"hriday21223.github.io/VolunteerTrack","textPreview":"hriday21223.github.io/VolunteerTrack","textChars":36,"textLines":1,"bbox":[780,258,400,30]}
+{"kind":"shape","id":"sh/ex0nuxc3","slide":13,"bbox":[80,345,1120,130]}
+{"kind":"shape","id":"sh/3itgfmlk","slide":13,"bbox":[80,345,6,130]}
+{"kind":"textbox","id":"sh/w3m94fu1","slide":13,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[110,369,100,80]}
+{"kind":"textbox","id":"sh/loj2t83i","slide":13,"text":"Read the source","textPreview":"Read the source","textChars":15,"textLines":1,"bbox":[220,375,500,36]}
+{"kind":"textbox","id":"sh/e9cvixcz","slide":13,"text":"Everything is on GitHub under MIT. Read SECURITY.md for the auth model, README.md for the stack.","textPreview":"Everything is on GitHub under MIT. Read SECURITY.md for the auth model, README.md for the stack.","textChars":96,"textLines":1,"bbox":[220,417,540,50]}
+{"kind":"textbox","id":"sh/3q5o7qpg","slide":13,"text":"VIEW ON GITHUB","textPreview":"VIEW ON GITHUB","textChars":14,"textLines":1,"bbox":[780,377,400,18]}
+{"kind":"textbox","id":"sh/wb2hwfyx","slide":13,"text":"github.com/Hriday21223/VolunteerTrack","textPreview":"github.com/Hriday21223/VolunteerTrack","textChars":37,"textLines":1,"bbox":[780,403,400,30]}
+{"kind":"shape","id":"sh/lwval87e","slide":13,"bbox":[80,490,1120,130]}
+{"kind":"shape","id":"sh/ahoza1gv","slide":13,"bbox":[80,490,6,130]}
+{"kind":"textbox","id":"sh/32lszqtc","slide":13,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[110,514,100,80]}
+{"kind":"textbox","id":"sh/v6psfil0","slide":13,"text":"Start the conversation","textPreview":"Start the conversation","textChars":22,"textLines":1,"bbox":[220,520,500,36]}
+{"kind":"textbox","id":"sh/2lszqtcj","slide":13,"text":"Email is the fastest path. I reply within a business day, and I'm happy to do a 20-minute call before any commitment.","textPreview":"Email is the fastest path. I reply within a business day, and I'm happy to do a 20-minute call before any commitment.","textChars":117,"textLines":1,"bbox":[220,562,540,50]}
+{"kind":"textbox","id":"sh/d8bat47y","slide":13,"text":"EMAIL ME","textPreview":"EMAIL ME","textChars":8,"textLines":1,"bbox":[780,522,400,18]}
+{"kind":"textbox","id":"sh/knih4byh","slide":13,"text":"volunteertrack@googlegroups.com","textPreview":"volunteertrack@googlegroups.com","textChars":31,"textLines":1,"bbox":[780,548,400,30]}
+{"kind":"textbox","id":"sh/vu9knih4","slide":13,"text":"voluntrack.app","textPreview":"voluntrack.app","textChars":14,"textLines":1,"bbox":[80,670,400,20]}
+{"kind":"textbox","id":"sh/29gr2p8n","slide":13,"text":"Slide 13","textPreview":"Slide 13","textChars":8,"textLines":1,"bbox":[1180,670,80,20]}
+{"kind":"notes","id":"nt/hmh8pg","slide":13,"text":""}
