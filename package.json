@@ -14,7 +14,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "predeploy": "npm run build && cp dist/index.html dist/404.html && echo '{\"buildCommand\":null,\"installCommand\":null,\"outputDirectory\":\".\",\"rewrites\":[{\"source\":\"/(.*)\",\"destination\":\"/index.html\"}]}' > dist/vercel.json",
+    "predeploy": "npm run build && cp dist/index.html dist/404.html && printf '{\"framework\":null,\"buildCommand\":null,\"installCommand\":null,\"outputDirectory\":\".\",\"rewrites\":[{\"source\":\"/(.*)\",\"destination\":\"/index.html\"}]}' > dist/vercel.json",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
