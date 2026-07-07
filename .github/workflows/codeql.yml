@@ -3,8 +3,24 @@ name: "CodeQL"
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'android/**'
+      - 'ios/**'
+      - 'dist/**'
+      - 'node_modules/**'
+      - 'output/**'
+      - 'outputs/**'
+      - '_site/**'
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - 'android/**'
+      - 'ios/**'
+      - 'dist/**'
+      - 'node_modules/**'
+      - 'output/**'
+      - 'outputs/**'
+      - '_site/**'
   schedule:
     - cron: '17 6 * * 1'
   workflow_dispatch:
@@ -32,14 +48,6 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           queries: security-extended
-          paths-ignore:
-            - 'android/**'
-            - 'ios/**'
-            - 'dist/**'
-            - 'node_modules/**'
-            - 'output/**'
-            - 'outputs/**'
-            - '_site/**'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
