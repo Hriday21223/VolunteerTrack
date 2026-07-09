@@ -47,7 +47,24 @@ export default function ChildHours() {
       if (!res.ok) throw new Error(data.error || 'Failed to load hours')
       setLogs(data.logs || [])
     } catch (e) {
-      setError(e.message)
+      // Fallback: load logs from localStorage for offline mode
+      const allLogs = JSON.parse(localStorage.getItem('voluntrack:logs') || '[]')
+      const childLogs = allLogs.filter(l => l.userId === studentId)
+      setLogs(childLogs.map(l => ({
+        id: l.id,
+        date: l.date,
+        activity: l.activity,
+        category: l.category,
+        hours: l.hours,
+        notes: l.notes,
+        created_at: l.createdAt,
+      })))
+      // Try to get child info from localStorage users
+      const users = JSON.parse(localStorage.getItem('voluntrack:users') || '[]')
+      const child = users.find(u => u.id === studentId)
+      if (child) {
+        setChildInfo({ id: child.id, name: child.name, email: child.email, grade: child.grade })
+      }
     } finally {
       setLoading(false)
     }

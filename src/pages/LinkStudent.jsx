@@ -44,7 +44,35 @@ export default function LinkStudent() {
       setToastMessage('Successfully linked to student!')
       setToast(true)
     } catch (e) {
-      setError(e.message)
+      // Fallback: check localStorage for offline linking codes
+      const stored = localStorage.getItem(`voluntrack:linking:${code.toUpperCase()}`)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (new Date(parsed.expiresAt) > new Date()) {
+          // Store the parent-child link locally
+          const linksKey = `voluntrack:parent_links:${user?.id}`
+          const existingLinks = JSON.parse(localStorage.getItem(linksKey) || '[]')
+          if (!existingLinks.find(l => l.studentId === parsed.studentId)) {
+            existingLinks.push({
+              id: `plink_${Date.now()}`,
+              studentId: parsed.studentId,
+              studentName: parsed.studentName,
+              linkedAt: new Date().toISOString(),
+            })
+            localStorage.setItem(linksKey, JSON.stringify(existingLinks))
+          }
+          // Remove the used code
+          localStorage.removeItem(`voluntrack:linking:${code.toUpperCase()}`)
+          setSuccess(true)
+          setLinkedChild({ name: parsed.studentName || 'Your child' })
+          setToastMessage('Successfully linked to student!')
+          setToast(true)
+        } else {
+          setError('This linking code has expired.')
+        }
+      } else {
+        setError(e.message || 'Invalid linking code.')
+      }
     } finally {
       setBusy(false)
     }

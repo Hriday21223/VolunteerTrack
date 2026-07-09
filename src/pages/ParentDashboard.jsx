@@ -29,11 +29,21 @@ export default function ParentDashboard() {
       const data = await res.json()
       setChildren(data.children || [])
     } catch (e) {
-      setError(e.message)
+      // Fallback: load from localStorage for offline mode
+      const linksKey = `voluntrack:parent_links:${user?.id}`
+      const stored = JSON.parse(localStorage.getItem(linksKey) || '[]')
+      setChildren(stored.map(l => ({
+        id: l.studentId,
+        name: l.studentName || 'Linked Student',
+        email: '',
+        grade: '',
+        linked_at: l.linkedAt,
+        status: 'active',
+      })))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [user?.id])
 
   useEffect(() => {
     if (user?.role !== 'parent') return

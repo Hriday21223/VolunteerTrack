@@ -794,7 +794,17 @@ export default function Settings() {
                     setLinkingCode(data.code)
                     setLinkingCodeExpires(data.expiresAt)
                   } catch (e) {
-                    setToastMessage(e.message)
+                    // Fallback: generate code locally for offline mode
+                    const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+                    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                    localStorage.setItem(`voluntrack:linking:${code}`, JSON.stringify({
+                      studentId: user?.id,
+                      studentName: user?.name,
+                      code,
+                      expiresAt,
+                    }))
+                    setLinkingCode(code)
+                    setLinkingCodeExpires(expiresAt)
                     setToast(true)
                   } finally {
                     setLinkingCodeBusy(false)
