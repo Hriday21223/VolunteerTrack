@@ -44,12 +44,11 @@ export default function LinkStudent() {
       setToastMessage('Successfully linked to student!')
       setToast(true)
     } catch (e) {
-      // Fallback: check localStorage for offline linking codes
+      // Fallback: check localStorage for offline linking codes (same device only)
       const stored = localStorage.getItem(`voluntrack:linking:${code.toUpperCase()}`)
       if (stored) {
         const parsed = JSON.parse(stored)
         if (new Date(parsed.expiresAt) > new Date()) {
-          // Store the parent-child link locally
           const linksKey = `voluntrack:parent_links:${user?.id}`
           const existingLinks = JSON.parse(localStorage.getItem(linksKey) || '[]')
           if (!existingLinks.find(l => l.studentId === parsed.studentId)) {
@@ -61,17 +60,16 @@ export default function LinkStudent() {
             })
             localStorage.setItem(linksKey, JSON.stringify(existingLinks))
           }
-          // Remove the used code
           localStorage.removeItem(`voluntrack:linking:${code.toUpperCase()}`)
           setSuccess(true)
           setLinkedChild({ name: parsed.studentName || 'Your child' })
           setToastMessage('Successfully linked to student!')
           setToast(true)
         } else {
-          setError('This linking code has expired.')
+          setError('This linking code has expired. Ask your child to generate a new one.')
         }
       } else {
-        setError(e.message || 'Invalid linking code.')
+        setError('Could not link. Make sure both accounts are on the same device, or the server is running.')
       }
     } finally {
       setBusy(false)

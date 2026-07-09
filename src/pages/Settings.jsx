@@ -794,7 +794,6 @@ export default function Settings() {
                     setLinkingCode(data.code)
                     setLinkingCodeExpires(data.expiresAt)
                   } catch (e) {
-                    // Fallback: generate code locally for offline mode
                     const code = Math.random().toString(36).substring(2, 8).toUpperCase()
                     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
                     localStorage.setItem(`voluntrack:linking:${code}`, JSON.stringify({
@@ -805,6 +804,7 @@ export default function Settings() {
                     }))
                     setLinkingCode(code)
                     setLinkingCodeExpires(expiresAt)
+                    setToastMessage('Code generated locally (offline mode). Both accounts must use the same device.')
                     setToast(true)
                   } finally {
                     setLinkingCodeBusy(false)
