@@ -1,8 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { Mail, Lock, User as UserIcon, ArrowRight, School, Hash } from 'lucide-react'
+import { Mail, Lock, User as UserIcon, ArrowRight, School, Hash, Download } from 'lucide-react'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
+import { generateSchoolRoomPDF } from '@/lib/export.js'
 
 const apiUrl = import.meta.env.VITE_API_URL || '/api'
 
@@ -30,6 +31,21 @@ export default function SchoolRegister() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Registration failed')
       localStorage.setItem('voluntrack:auth_token', data.token)
+      
+      // Generate room creation PDF automatically
+      try {
+        const doc = generateSchoolRoomPDF({
+          schoolName: form.name,
+          schoolId: data.user.schoolId || 'N/A',
+          adminName: form.name,
+          date: new Date().toLocaleDateString()
+        })
+        doc.save(`${form.name.replace(/\s+/g, '_')}_room_creation.pdf`)
+      } catch (pdfError) {
+        console.error('Failed to generate room creation PDF:', pdfError)
+        // Don't block registration if PDF generation fails
+      }
+      
       setToast(true)
       setTimeout(() => nav('/school/dashboard', { replace: true }), 600)
     } catch (e) {

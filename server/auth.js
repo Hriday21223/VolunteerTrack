@@ -64,3 +64,15 @@ export function requireAuth(...roles) {
     next()
   }
 }
+
+// Allow parent role to access student routes
+export function requireParentOrStudent(...roles) {
+  return (req, res, next) => {
+    if (!req.auth) return res.status(401).json({ error: 'Authentication required.' })
+    const allowedRoles = [...roles, 'parent']
+    if (roles.length && !allowedRoles.includes(req.auth.role)) {
+      return res.status(403).json({ error: 'Not allowed.' })
+    }
+    next()
+  }
+}

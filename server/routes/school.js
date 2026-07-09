@@ -421,23 +421,156 @@ router.post('/public-tasks/:id/log-hours', limiter, requireDb, requireAuth(), as
 })
 
 // Get logs for a volunteer on a specific task (so the organizer can see what was already logged)
-router.get('/public-tasks/:id/logs', limiter, requireDb, requireAuth(), async (req, res) => {
+router.get('/public-tasks/:id/logs/:volunteerId', limiter, requireDb, requireAuth(), async (req, res) => {
   try {
-    const { rows: taskRows } = await query('SELECT created_by FROM public_tasks WHERE id = $1', [req.params.id])
+    const { rows: taskRows } = await query('SELECT * FROM public_tasks WHERE id = $1', [req.params.id])
     if (taskRows.length === 0) return res.status(404).json({ error: 'Task not found.' })
     if (taskRows[0].created_by !== req.auth.sub) return res.status(403).json({ error: 'Only the task creator can view logs.' })
 
     const { rows } = await query(
-      `SELECT id, user_id, hours, date, notes, created_at
-       FROM logs WHERE activity = (SELECT title FROM public_tasks WHERE id = $1) AND user_id IN
-         (SELECT user_id FROM public_task_signups WHERE task_id = $1)
-       ORDER BY created_at DESC`,
-      [req.params.id],
+      `SELECT id, date, activity, category, hours, notes, created_at
+       FROM logs WHERE user_id = $1 AND activity = $2 ORDER BY created_at DESC`,
+      [req.params.volunteerId, taskRows[0].title],
     )
     return res.json({ logs: rows })
   } catch (error) {
-    console.error('task logs failed:', error)
+    console.error('get task logs failed:', error)
     return res.status(500).json({ error: 'Could not fetch logs.' })
+  }
+})
+
+// --- Parent linking system ---
+
+// Generate a linking code (for students)
+router.post('/linking-code', limiter, requireDb, requireAuth('student'), async (req, res) => {
+  try {
+    const id = uid('link')
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+
+    await query(
+      `INSERT INTO linking_codes (id, student_id, code, expires_at)
+       VALUES ($1, $2, $3, $4)`,
+      [id, req.auth.sub, code, expiresAt],
+    )
+    return res.status(201).json({ code, expiresAt: expiresAt.toISOString() })
+  } catch (error) {
+    console.error('generate linking code failed:', error)
+    return res.status(500).json({ error: 'Could not generate linking code.' })
+  }
+})
+
+// Link parent to student using code (for parents)
+router.post('/link-student', limiter, requireDb, requireAuth('parent'), async (req, res) => {
+  const { code } = req.body
+  if (!code) return res.status(400).json({ error: 'Linking code is required.' })
+
+  try {
+    const { rows: codeRows } = await query(
+      `SELECT * FROM linking_codes WHERE code = $1 AND used = false AND expires_at > now()`,
+      [code.toUpperCase()],
+    )
+    if (codeRows.length === 0) return res.status(404).json({ error: 'Invalid or expired linking code.' })
+
+    const linkingCode = codeRows[0]
+
+    // Check if already linked
+    const { rows: existingLinks } = await query(
+      `SELECT * FROM parent_links WHERE parent_id = $1 AND student_id = $2 AND status = 'active'`,
+      [req.auth.sub, linkingCode.student_id],
+    )
+    if (existingLinks.length > 0) return res.status(409).json({ error: 'Already linked to this student.' })
+
+    // Create the link
+    const linkId = uid('plink')
+    await query(
+      `INSERT INTO parent_links (id, parent_id, student_id)
+       VALUES ($1, $2, $3)`,
+      [linkId, req.auth.sub, linkingCode.student_id],
+    )
+
+    // Mark code as used
+    await query('UPDATE linking_codes SET used = true WHERE id = $1', [linkingCode.id])
+
+    return res.status(201).json({ ok: true })
+  } catch (error) {
+    console.error('link student failed:', error)
+    return res.status(500).json({ error: 'Could not link to student.' })
+  }
+})
+
+// Get linked children (for parents)
+router.get('/linked-children', limiter, requireDb, requireAuth('parent'), async (req, res) => {
+  try {
+    const { rows } = await query(
+      `SELECT u.id, u.name, u.email, u.grade, pl.linked_at, pl.status
+       FROM parent_links pl
+       JOIN users u ON pl.student_id = u.id
+       WHERE pl.parent_id = $1 AND pl.status = 'active'
+       ORDER BY pl.linked_at DESC`,
+      [req.auth.sub],
+    )
+    return res.json({ children: rows })
+  } catch (error) {
+    console.error('get linked children failed:', error)
+    return res.status(500).json({ error: 'Could not fetch linked children.' })
+  }
+})
+
+// Get child's volunteer hours (for parents)
+router.get('/child-hours/:studentId', limiter, requireDb, requireAuth('parent'), async (req, res) => {
+  try {
+    // Verify parent is linked to this student
+    const { rows: linkRows } = await query(
+      `SELECT * FROM parent_links WHERE parent_id = $1 AND student_id = $2 AND status = 'active'`,
+      [req.auth.sub, req.params.studentId],
+    )
+    if (linkRows.length === 0) return res.status(403).json({ error: 'Not linked to this student.' })
+
+    const { rows } = await query(
+      `SELECT id, date, activity, category, hours, notes, created_at
+       FROM logs WHERE user_id = $1 ORDER BY created_at DESC`,
+      [req.params.studentId],
+    )
+    return res.json({ logs: rows })
+  } catch (error) {
+    console.error('get child hours failed:', error)
+    return res.status(500).json({ error: 'Could not fetch child hours.' })
+  }
+})
+
+// Revoke parent link (for students)
+router.delete('/parent-link/:linkId', limiter, requireDb, requireAuth('student'), async (req, res) => {
+  try {
+    const { rows: linkRows } = await query(
+      `SELECT * FROM parent_links WHERE id = $1 AND student_id = $2`,
+      [req.params.linkId, req.auth.sub],
+    )
+    if (linkRows.length === 0) return res.status(404).json({ error: 'Link not found.' })
+
+    await query('UPDATE parent_links SET status = $1 WHERE id = $2', ['revoked', req.params.linkId])
+    return res.json({ ok: true })
+  } catch (error) {
+    console.error('revoke parent link failed:', error)
+    return res.status(500).json({ error: 'Could not revoke link.' })
+  }
+})
+
+// Get active parent links (for students)
+router.get('/parent-links', limiter, requireDb, requireAuth('student'), async (req, res) => {
+  try {
+    const { rows } = await query(
+      `SELECT pl.id, pl.linked_at, pl.status, u.name as parent_name, u.email as parent_email
+       FROM parent_links pl
+       JOIN users u ON pl.parent_id = u.id
+       WHERE pl.student_id = $1
+       ORDER BY pl.linked_at DESC`,
+      [req.auth.sub],
+    )
+    return res.json({ links: rows })
+  } catch (error) {
+    console.error('get parent links failed:', error)
+    return res.status(500).json({ error: 'Could not fetch parent links.' })
   }
 })
 

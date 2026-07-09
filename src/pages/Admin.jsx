@@ -7,6 +7,7 @@ import Toast from '@/components/Toast.jsx'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { getReviews } from '@/api/index.js'
 import { runAgent, updateIncidentStatus, getAgentLog, logAgentAction, getAgentStatus, toggleAgentPause, getCustomAgents, saveCustomAgent, deleteCustomAgent, runCustomAgent } from '@/lib/agent.js'
+import { generateSchoolRoomPDF } from '@/lib/export.js'
 
 const apiUrl = import.meta.env.VITE_API_URL || '/api'
 
@@ -165,6 +166,24 @@ export default function Admin() {
     const a = document.createElement('a')
     a.href = url; a.download = 'schools.csv'; a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const generateRoomPDF = (school) => {
+    try {
+      const doc = generateSchoolRoomPDF({
+        schoolName: school.name,
+        schoolId: school.id,
+        adminName: user?.name || 'System Administrator',
+        date: new Date().toLocaleDateString()
+      })
+      doc.save(`${school.name.replace(/\s+/g, '_')}_room_creation.pdf`)
+      setToastMessage('Room creation PDF generated successfully')
+      setToast(true)
+    } catch (error) {
+      console.error('Failed to generate PDF:', error)
+      setToastMessage('Failed to generate PDF')
+      setToast(true)
+    }
   }
 
   const setGlobalDueDate = async () => {
@@ -411,6 +430,9 @@ export default function Admin() {
                     </div>
                   </div>
                   <div className="flex gap-1">
+                    <button onClick={() => generateRoomPDF(s)} className="text-sky-400 hover:text-sky-300 p-2" title="Generate room creation PDF">
+                      <Download className="w-4 h-4" />
+                    </button>
                     {s.payment_status === 'paid' ? (
                       <button onClick={() => markUnpaid(s.id)} className="text-amber-400 hover:text-amber-300 p-2" title="Mark as unpaid">
                         <CreditCard className="w-4 h-4" />

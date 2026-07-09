@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Mail, Lock, User as UserIcon, ArrowRight, School, GraduationCap, Hash, Hand, Check } from 'lucide-react'
+import { Mail, Lock, User as UserIcon, ArrowRight, School, GraduationCap, Hash, Hand, Check, Users } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -17,6 +17,12 @@ const ROLES = [
     label: "I'm a Volunteer Task Maker",
     description: 'Post volunteer opportunities, manage signups, and log hours for your team.',
     icon: Hand,
+  },
+  {
+    id: 'parent',
+    label: "I'm a Parent",
+    description: 'Link to your child and track their volunteer hours and progress.',
+    icon: Users,
   },
 ]
 
@@ -135,6 +141,13 @@ export default function Register() {
                   <Field icon={GraduationCap} label="Grade or Role" value={form.grade} onChange={onChange('grade')} placeholder="11th grade / Volunteer lead" />
                 </div>
               </>
+            )}
+            {role === 'parent' && (
+              <div className="animate-fade-in-up p-4 rounded-2xl border border-brand-800/30 bg-brand-900/10" style={{ animationDelay: '650ms' }}>
+                <p className="text-sm text-brand-200">
+                  As a parent, you'll be able to link to your child's account using a code they generate, then track their volunteer hours and progress.
+                </p>
+              </div>
             )}
 
             {err && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-300 px-3 py-2 rounded-lg animate-shake">{err}</div>}

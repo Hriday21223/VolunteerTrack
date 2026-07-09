@@ -91,7 +91,7 @@ router.post('/register', authLimiter, requireDb, async (req, res) => {
   const email = validateEmail(req.body.email || '')
   const password = validatePassword(req.body.password || '')
   const grade = validateGrade(req.body.grade || '')
-  const role = req.body.role === 'volunteer' ? 'volunteer' : 'student'
+  const role = req.body.role === 'volunteer' ? 'volunteer' : req.body.role === 'parent' ? 'parent' : 'student'
 
   if (!name) {
     return res.status(400).json({ error: 'Name is required and must be valid.' })

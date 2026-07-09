@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS schools (
 
 CREATE TABLE IF NOT EXISTS users (
   id            TEXT PRIMARY KEY,
-  role          TEXT NOT NULL CHECK (role IN ('admin','school','student','volunteer')),
+  role          TEXT NOT NULL CHECK (role IN ('admin','school','student','volunteer','parent')),
   name          TEXT NOT NULL,
   email         TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
@@ -132,12 +132,34 @@ CREATE TABLE IF NOT EXISTS school_messages (
 );
 
 CREATE INDEX IF NOT EXISTS idx_school_messages_school ON school_messages(school_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_parent_links_parent ON parent_links(parent_id);
+CREATE INDEX IF NOT EXISTS idx_parent_links_student ON parent_links(student_id);
+CREATE INDEX IF NOT EXISTS idx_linking_codes_student ON linking_codes(student_id);
+CREATE INDEX IF NOT EXISTS idx_linking_codes_code ON linking_codes(code);
 
 CREATE TABLE IF NOT EXISTS admin_notifications (
   id          TEXT PRIMARY KEY,
   school_id   TEXT REFERENCES schools(id) ON DELETE CASCADE,
   message     TEXT NOT NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS parent_links (
+  id          TEXT PRIMARY KEY,
+  parent_id   TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  student_id  TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  linked_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  status      TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','revoked')),
+  UNIQUE(parent_id, student_id)
+);
+
+CREATE TABLE IF NOT EXISTS linking_codes (
+  id          TEXT PRIMARY KEY,
+  student_id  TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  code        TEXT UNIQUE NOT NULL,
+  expires_at  TIMESTAMPTZ NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  used        BOOLEAN NOT NULL DEFAULT false
 );
 `
 
@@ -155,5 +177,25 @@ export async function initSchema() {
   try { await query(`ALTER TABLE schools ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ`) } catch {}
   try { await query(`ALTER TABLE schools ADD COLUMN IF NOT EXISTS payment_due_date DATE`) } catch {}
   try { await query(`ALTER TABLE admin_notifications ADD COLUMN IF NOT EXISTS school_id TEXT REFERENCES schools(id) ON DELETE CASCADE`) } catch {}
+  // Migration: add parent role to users
+  try { await query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check`) } catch {}
+  try { await query(`ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','school','student','volunteer','parent'))`) } catch {}
+  // Migration: add parent linking tables
+  try { await query(`CREATE TABLE IF NOT EXISTS parent_links (
+    id          TEXT PRIMARY KEY,
+    parent_id   TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    student_id  TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    linked_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    status      TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','revoked')),
+    UNIQUE(parent_id, student_id)
+  )`) } catch {}
+  try { await query(`CREATE TABLE IF NOT EXISTS linking_codes (
+    id          TEXT PRIMARY KEY,
+    student_id  TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    code        TEXT UNIQUE NOT NULL,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    used        BOOLEAN NOT NULL DEFAULT false
+  )`) } catch {}
   return true
 }

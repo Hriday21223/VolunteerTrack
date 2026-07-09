@@ -30,6 +30,10 @@ import SchoolRegister from '@/pages/SchoolRegister.jsx'
 import Help from '@/pages/Help.jsx'
 import MyTasks from '@/pages/MyTasks.jsx'
 import Status from '@/pages/Status.jsx'
+import Terms from '@/pages/Terms.jsx'
+import ChildHours from '@/pages/ChildHours.jsx'
+import ParentDashboard from '@/pages/ParentDashboard.jsx'
+import LinkStudent from '@/pages/LinkStudent.jsx'
 
 const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
 
@@ -76,6 +80,10 @@ function Shell() {
         <Route path="/about"           element={<About />} />
         <Route path="/contact"         element={<Contact />} />
         <Route path="/status"         element={<Status />} />
+        <Route path="/terms"           element={<Terms />} />
+        <Route path="/child-hours/:studentId" element={<Protected><ChildHours /></Protected>} />
+        <Route path="/parent/dashboard" element={<Protected><ParentDashboard /></Protected>} />
+        <Route path="/link-student" element={<Protected><LinkStudent /></Protected>} />
 
         <Route path="/"             element={<Home />} />
         <Route path="/log"          element={<Protected><LogHours /></Protected>} />
