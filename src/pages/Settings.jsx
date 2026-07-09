@@ -18,6 +18,7 @@ export default function Settings() {
   const { user, logout, deleteAccount, updateProfile, setSyncPin: setSyncPinAuth } = useAuth()
   const { goals, saveGoal, removeGoal, logs } = useData()
   const nav = useNavigate()
+  const apiUrl = import.meta.env.VITE_API_URL || '/api'
   const [newGoal, setNewGoal] = useState({ title: '', targetHours: 50, primary: false })
   const [toast, setToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
@@ -86,7 +87,7 @@ export default function Settings() {
     finally {
       setLoadingParentLinks(false)
     }
-  }, [user?.role])
+  }, [user?.role, apiUrl])
 
   // Load linked children for parents
   const loadLinkedChildren = useCallback(async () => {
@@ -105,7 +106,7 @@ export default function Settings() {
     finally {
       setLoadingChildren(false)
     }
-  }, [user?.role])
+  }, [user?.role, apiUrl])
 
   useEffect(() => {
     loadParentLinks()
@@ -188,7 +189,6 @@ export default function Settings() {
     setPwBusy(true)
     try {
       const token = localStorage.getItem('voluntrack:auth_token')
-      const apiUrl = import.meta.env.VITE_API_URL || '/api'
       const res = await fetch(`${apiUrl}/auth/password`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
@@ -268,7 +268,6 @@ export default function Settings() {
     if (!syncPassword) return
     if (!displaySyncPin) return
     setSyncPasswordBusy(true)
-    const apiUrl = import.meta.env.VITE_API_URL || '/api'
     try {
       const response = await fetch(`${apiUrl}/auth/sync-pin-auth`, {
         method: 'POST',
@@ -703,7 +702,6 @@ export default function Settings() {
                     setSchoolBusy(true)
                     try {
                       const token = localStorage.getItem('voluntrack:auth_token')
-                      const apiUrl = import.meta.env.VITE_API_URL || '/api'
                       const res = await fetch(`${apiUrl}/school/join`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
