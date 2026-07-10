@@ -132,10 +132,6 @@ CREATE TABLE IF NOT EXISTS school_messages (
 );
 
 CREATE INDEX IF NOT EXISTS idx_school_messages_school ON school_messages(school_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_parent_links_parent ON parent_links(parent_id);
-CREATE INDEX IF NOT EXISTS idx_parent_links_student ON parent_links(student_id);
-CREATE INDEX IF NOT EXISTS idx_linking_codes_student ON linking_codes(student_id);
-CREATE INDEX IF NOT EXISTS idx_linking_codes_code ON linking_codes(code);
 
 CREATE TABLE IF NOT EXISTS admin_notifications (
   id          TEXT PRIMARY KEY,
@@ -161,6 +157,11 @@ CREATE TABLE IF NOT EXISTS linking_codes (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   used        BOOLEAN NOT NULL DEFAULT false
 );
+
+CREATE INDEX IF NOT EXISTS idx_parent_links_parent ON parent_links(parent_id);
+CREATE INDEX IF NOT EXISTS idx_parent_links_student ON parent_links(student_id);
+CREATE INDEX IF NOT EXISTS idx_linking_codes_student ON linking_codes(student_id);
+CREATE INDEX IF NOT EXISTS idx_linking_codes_code ON linking_codes(code);
 `
 
 // Idempotent: safe to run on every boot. Creates tables if missing.
