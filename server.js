@@ -305,6 +305,63 @@ app.post('/api/contact', emailLimiter, async (req, res) => {
   }
 })
 
+// Root route — show available API endpoints
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'VolunTrack API',
+    version: '1.0.0',
+    description: 'Backend server for VolunTrack — volunteer hour tracking for students, parents, and schools.',
+    endpoints: {
+      auth: {
+        'POST /api/auth/register': 'Create a new account (student, parent, volunteer, school, admin)',
+        'POST /api/auth/login': 'Log in with email and password',
+        'POST /api/auth/sync-login': 'Log in with a 5-digit sync PIN',
+        'PUT /api/auth/password': 'Change account password',
+        'POST /api/auth/reset-password': 'Reset password with a recovery code',
+        'DELETE /api/auth/account': 'Delete your account',
+        'PUT /api/auth/sync-pin': 'Set or update your 5-digit sync PIN',
+        'POST /api/auth/sync-pin-auth': 'Link local account to server with sync PIN',
+        'GET /api/auth/me': 'Get current user profile',
+      },
+      schools: {
+        'POST /api/school/register': 'Register a new school',
+        'POST /api/school/join': 'Join a school with its PIN code',
+        'GET /api/school/info': 'Get school information',
+        'GET /api/school/students': 'List students in a school (school admin)',
+        'GET /api/school/students/:schoolId/pdf-status': 'Check student PDF upload status',
+        'POST /api/school/upload-pdf': 'Upload a verification PDF',
+        'GET /api/school/pdfs': 'List uploaded PDFs for a school',
+        'PUT /api/school/pdf/:id/approve': 'Approve a PDF (school admin)',
+        'PUT /api/school/pdf/:id/reject': 'Reject a PDF (school admin)',
+      },
+      parentLinking: {
+        'POST /api/school/linking-code': 'Generate a 6-char linking code (student)',
+        'POST /api/school/link-student': 'Link parent to student with code (parent)',
+        'GET /api/school/linked-children': 'List linked children (parent)',
+        'GET /api/school/child-hours/:studentId': 'Get child volunteer hours (parent)',
+        'GET /api/school/parent-links': 'List linked parents (student)',
+        'DELETE /api/school/parent-link/:linkId': 'Revoke a parent link (student)',
+      },
+      publicTasks: {
+        'POST /api/school/public-tasks': 'Create a volunteer opportunity',
+        'GET /api/school/public-tasks': 'Browse volunteer opportunities',
+        'POST /api/school/public-tasks/:id/signup': 'Sign up for a task',
+        'GET /api/school/public-tasks/:id/signups': 'View signups for a task',
+        'PUT /api/school/public-tasks/:id/signups/:signupId': 'Approve/reject a signup',
+      },
+      email: {
+        'POST /api/send-reset-email': 'Send a password/PIN recovery email',
+        'POST /api/send-report': 'Send a volunteer report via email',
+        'POST /api/contact': 'Send a contact form message',
+      },
+      other: {
+        'GET /api/recovery-status': 'Check email server configuration',
+        'GET /api/dev-recovery-code': 'Get recovery code (dev only)',
+      },
+    },
+  })
+})
+
 // 404 handler for unknown routes
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' })
