@@ -783,6 +783,7 @@ export default function Settings() {
               <button
                 onClick={async () => {
                   setLinkingCodeBusy(true)
+                  let code, expiresAt
                   try {
                     const token = localStorage.getItem('voluntrack:auth_token')
                     const res = await fetch(`${apiUrl}/school/linking-code`, {
@@ -791,21 +792,21 @@ export default function Settings() {
                     })
                     const data = await res.json()
                     if (!res.ok) throw new Error(data.error)
-                    setLinkingCode(data.code)
-                    setLinkingCodeExpires(data.expiresAt)
+                    code = data.code
+                    expiresAt = data.expiresAt
                   } catch {
-                    const code = Math.random().toString(36).substring(2, 8).toUpperCase()
-                    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-                    const allCodes = JSON.parse(localStorage.getItem('voluntrack:linking_codes') || '[]')
-                    allCodes.push({ code, studentId: user?.id, studentName: user?.name, expiresAt })
-                    localStorage.setItem('voluntrack:linking_codes', JSON.stringify(allCodes))
-                    setLinkingCode(code)
-                    setLinkingCodeExpires(expiresAt)
+                    code = Math.random().toString(36).substring(2, 8).toUpperCase()
+                    expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
                     setToastMessage('Offline mode — both accounts must be on this device.')
                     setToast(true)
-                  } finally {
-                    setLinkingCodeBusy(false)
                   }
+                  // Always store in localStorage so offline linking works
+                  const allCodes = JSON.parse(localStorage.getItem('voluntrack:linking_codes') || '[]')
+                  allCodes.push({ code, studentId: user?.id, studentName: user?.name, expiresAt })
+                  localStorage.setItem('voluntrack:linking_codes', JSON.stringify(allCodes))
+                  setLinkingCode(code)
+                  setLinkingCodeExpires(expiresAt)
+                  setLinkingCodeBusy(false)
                 }}
                 disabled={linkingCodeBusy}
                 className="btn-primary w-full"
@@ -880,6 +881,8 @@ export default function Settings() {
                     return
                   }
                   setChildLinkBusy(true)
+                  let linked = false
+                  // Try backend API first
                   try {
                     const token = localStorage.getItem('voluntrack:auth_token')
                     const res = await fetch(`${apiUrl}/school/link-student`, {
@@ -892,16 +895,36 @@ export default function Settings() {
                     })
                     const data = await res.json()
                     if (!res.ok) throw new Error(data.error || 'Failed to link')
+                    linked = true
+                  } catch {
+                    // Fallback: look up code in localStorage
+                    const allCodes = JSON.parse(localStorage.getItem('voluntrack:linking_codes') || '[]')
+                    const match = allCodes.find(c => c.code === childLinkCode.toUpperCase() && new Date(c.expiresAt) > new Date())
+                    if (match) {
+                      const linksKey = `voluntrack:parent_links:${user?.id}`
+                      const existingLinks = JSON.parse(localStorage.getItem(linksKey) || '[]')
+                      if (!existingLinks.find(l => l.studentId === match.studentId)) {
+                        existingLinks.push({
+                          id: `plink_${Date.now()}`,
+                          studentId: match.studentId,
+                          studentName: match.studentName,
+                          linkedAt: new Date().toISOString(),
+                        })
+                        localStorage.setItem(linksKey, JSON.stringify(existingLinks))
+                      }
+                      linked = true
+                    }
+                  }
+                  if (linked) {
                     setChildLinkCode('')
                     loadLinkedChildren()
                     setToastMessage('Successfully linked to student')
                     setToast(true)
-                  } catch (e) {
-                    setToastMessage(e.message)
+                  } else {
+                    setToastMessage('Code not found or expired. Ask your child to generate a new code.')
                     setToast(true)
-                  } finally {
-                    setChildLinkBusy(false)
                   }
+                  setChildLinkBusy(false)
                 }}
                 disabled={childLinkBusy}
                 className="btn-primary w-full"

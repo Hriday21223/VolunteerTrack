@@ -27,6 +27,8 @@ export default function LinkStudent() {
       return
     }
     setBusy(true)
+    let matchedChild = null
+    // Try backend API first
     try {
       const token = localStorage.getItem('voluntrack:auth_token')
       const res = await fetch(`${apiUrl}/school/link-student`, {
@@ -39,35 +41,36 @@ export default function LinkStudent() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to link')
-      setSuccess(true)
-      setLinkedChild(data.child || { name: 'Your child' })
-      setToastMessage('Successfully linked to student!')
-      setToast(true)
-    } catch (e) {
+      matchedChild = data.child || { name: 'Your child' }
+    } catch {
+      // Fallback: look up code in localStorage
       const allCodes = JSON.parse(localStorage.getItem('voluntrack:linking_codes') || '[]')
       const match = allCodes.find(c => c.code === code.toUpperCase() && new Date(c.expiresAt) > new Date())
       if (match) {
-        const linksKey = `voluntrack:parent_links:${user?.id}`
-        const existingLinks = JSON.parse(localStorage.getItem(linksKey) || '[]')
-        if (!existingLinks.find(l => l.studentId === match.studentId)) {
-          existingLinks.push({
-            id: `plink_${Date.now()}`,
-            studentId: match.studentId,
-            studentName: match.studentName,
-            linkedAt: new Date().toISOString(),
-          })
-          localStorage.setItem(linksKey, JSON.stringify(existingLinks))
-        }
-        setSuccess(true)
-        setLinkedChild({ name: match.studentName || 'Your child' })
-        setToastMessage('Successfully linked to student!')
-        setToast(true)
-      } else {
-        setError('Code not found or expired. Ask your child to generate a new code on this device.')
+        matchedChild = { name: match.studentName || 'Your child', id: match.studentId }
       }
-    } finally {
-      setBusy(false)
     }
+    if (matchedChild) {
+      // Store link in localStorage so it persists across sessions
+      const linksKey = `voluntrack:parent_links:${user?.id}`
+      const existingLinks = JSON.parse(localStorage.getItem(linksKey) || '[]')
+      if (!existingLinks.find(l => l.studentId === matchedChild.id)) {
+        existingLinks.push({
+          id: `plink_${Date.now()}`,
+          studentId: matchedChild.id,
+          studentName: matchedChild.name,
+          linkedAt: new Date().toISOString(),
+        })
+        localStorage.setItem(linksKey, JSON.stringify(existingLinks))
+      }
+      setSuccess(true)
+      setLinkedChild(matchedChild)
+      setToastMessage('Successfully linked to student!')
+      setToast(true)
+    } else {
+      setError('Code not found or expired. Ask your child to generate a new code on this device.')
+    }
+    setBusy(false)
   }
 
   if (success) {
