@@ -790,21 +790,18 @@ export default function Settings() {
                       headers: { Authorization: `Bearer ${token}` },
                     })
                     const data = await res.json()
-                    if (!res.ok) throw new Error(data.error || 'Failed to generate code')
+                    if (!res.ok) throw new Error(data.error)
                     setLinkingCode(data.code)
                     setLinkingCodeExpires(data.expiresAt)
-                  } catch (e) {
+                  } catch {
                     const code = Math.random().toString(36).substring(2, 8).toUpperCase()
                     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-                    localStorage.setItem(`voluntrack:linking:${code}`, JSON.stringify({
-                      studentId: user?.id,
-                      studentName: user?.name,
-                      code,
-                      expiresAt,
-                    }))
+                    const allCodes = JSON.parse(localStorage.getItem('voluntrack:linking_codes') || '[]')
+                    allCodes.push({ code, studentId: user?.id, studentName: user?.name, expiresAt })
+                    localStorage.setItem('voluntrack:linking_codes', JSON.stringify(allCodes))
                     setLinkingCode(code)
                     setLinkingCodeExpires(expiresAt)
-                    setToastMessage('Code generated locally (offline mode). Both accounts must use the same device.')
+                    setToastMessage('Offline mode — both accounts must be on this device.')
                     setToast(true)
                   } finally {
                     setLinkingCodeBusy(false)

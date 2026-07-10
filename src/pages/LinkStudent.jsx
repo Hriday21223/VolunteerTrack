@@ -44,32 +44,26 @@ export default function LinkStudent() {
       setToastMessage('Successfully linked to student!')
       setToast(true)
     } catch (e) {
-      // Fallback: check localStorage for offline linking codes (same device only)
-      const stored = localStorage.getItem(`voluntrack:linking:${code.toUpperCase()}`)
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        if (new Date(parsed.expiresAt) > new Date()) {
-          const linksKey = `voluntrack:parent_links:${user?.id}`
-          const existingLinks = JSON.parse(localStorage.getItem(linksKey) || '[]')
-          if (!existingLinks.find(l => l.studentId === parsed.studentId)) {
-            existingLinks.push({
-              id: `plink_${Date.now()}`,
-              studentId: parsed.studentId,
-              studentName: parsed.studentName,
-              linkedAt: new Date().toISOString(),
-            })
-            localStorage.setItem(linksKey, JSON.stringify(existingLinks))
-          }
-          localStorage.removeItem(`voluntrack:linking:${code.toUpperCase()}`)
-          setSuccess(true)
-          setLinkedChild({ name: parsed.studentName || 'Your child' })
-          setToastMessage('Successfully linked to student!')
-          setToast(true)
-        } else {
-          setError('This linking code has expired. Ask your child to generate a new one.')
+      const allCodes = JSON.parse(localStorage.getItem('voluntrack:linking_codes') || '[]')
+      const match = allCodes.find(c => c.code === code.toUpperCase() && new Date(c.expiresAt) > new Date())
+      if (match) {
+        const linksKey = `voluntrack:parent_links:${user?.id}`
+        const existingLinks = JSON.parse(localStorage.getItem(linksKey) || '[]')
+        if (!existingLinks.find(l => l.studentId === match.studentId)) {
+          existingLinks.push({
+            id: `plink_${Date.now()}`,
+            studentId: match.studentId,
+            studentName: match.studentName,
+            linkedAt: new Date().toISOString(),
+          })
+          localStorage.setItem(linksKey, JSON.stringify(existingLinks))
         }
+        setSuccess(true)
+        setLinkedChild({ name: match.studentName || 'Your child' })
+        setToastMessage('Successfully linked to student!')
+        setToast(true)
       } else {
-        setError('Could not link. Make sure both accounts are on the same device, or the server is running.')
+        setError('Code not found or expired. Ask your child to generate a new code on this device.')
       }
     } finally {
       setBusy(false)
