@@ -392,7 +392,7 @@ const slides = [
         </div>
         <div className="rounded-2xl border border-earth-800/40 bg-earth-900/20 p-5 text-sm text-earth-400">
           <p className="font-medium text-white mb-1">Contact</p>
-          <p>Email: volunteertrack@googlegroups.com</p>
+          <p>Email: volunteertrackinfo@gmail.com</p>
           <p>GitHub: Hriday21223</p>
         </div>
       </div>

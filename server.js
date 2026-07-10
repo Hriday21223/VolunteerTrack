@@ -284,7 +284,7 @@ app.post('/api/contact', emailLimiter, async (req, res) => {
     })
   }
 
-  const to = process.env.CONTACT_EMAIL || 'volunteertrack@googlegroups.com'
+  const to = process.env.CONTACT_EMAIL || 'volunteertrackinfo@gmail.com'
   const sanitizedMessage = message.trim()
   const sanitizedSubject = subject ? subject.trim() : 'General question'
   const body = `New contact message from ${name.trim()} <${email.trim()}>\nSubject: ${sanitizedSubject}\n\n${sanitizedMessage}`

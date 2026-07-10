@@ -141,7 +141,7 @@ export default function Terms() {
             </div>
             
             <div className="ml-7">
-              <p className="text-earth-300">If you have any questions about these Terms, please contact us at: <a href="mailto:volunteertrack@googlegroups.com" className="text-brand-400 hover:text-brand-300">volunteertrack@googlegroups.com</a></p>
+              <p className="text-earth-300">If you have any questions about these Terms, please contact us at: <a href="mailto:volunteertrackinfo@gmail.com" className="text-brand-400 hover:text-brand-300">volunteertrackinfo@gmail.com</a></p>
             </div>
           </div>
 
