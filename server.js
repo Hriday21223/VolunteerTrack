@@ -73,6 +73,9 @@ function transporter() {
       port: smtpPort,
       secure: process.env.EMAIL_SECURE === 'true',
       auth: { user, pass },
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
     }),
     missing: [],
   }
