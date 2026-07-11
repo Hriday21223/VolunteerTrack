@@ -59,7 +59,7 @@ function logDevCode(entry) {
 
 function transporter() {
   const apiKey = process.env.RESEND_API_KEY
-  const from = process.env.EMAIL_FROM || 'volunteertrackinfo@gmail.com'
+  const from = process.env.EMAIL_FROM || 'onboarding@resend.dev'
 
   if (!apiKey) {
     return { resend: null, missing: ['RESEND_API_KEY'] }
