@@ -2,7 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 import { initSchema, hasDatabase, query } from './server/db.js'
 import { authenticate, hashPassword } from './server/auth.js'
 import { uid } from './server/ids.js'
@@ -58,25 +58,16 @@ function logDevCode(entry) {
 }
 
 function transporter() {
-  const host = process.env.EMAIL_HOST
-  const smtpPort = Number(process.env.EMAIL_PORT || 587)
-  const user = process.env.EMAIL_USER
-  const pass = process.env.EMAIL_PASSWORD
+  const apiKey = process.env.RESEND_API_KEY
+  const from = process.env.EMAIL_FROM || 'volunteertrackinfo@gmail.com'
 
-  if (!host || !user || !pass) {
-    return { transport: null, missing: missingVars({ host, user, pass }) }
+  if (!apiKey) {
+    return { resend: null, missing: ['RESEND_API_KEY'] }
   }
 
   return {
-    transport: nodemailer.createTransport({
-      host,
-      port: smtpPort,
-      secure: process.env.EMAIL_SECURE === 'true',
-      auth: { user, pass },
-      connectionTimeout: 15000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
-    }),
+    resend: new Resend(apiKey),
+    from,
     missing: [],
   }
 }
@@ -87,20 +78,13 @@ function escapeHtml(s) {
   }[c]))
 }
 
-function missingVars({ host, user, pass }) {
-  const missing = []
-  if (!host) missing.push('EMAIL_HOST')
-  if (!user) missing.push('EMAIL_USER')
-  if (!pass) missing.push('EMAIL_PASSWORD')
-  return missing
-}
 
 // Lightweight status endpoint so the UI can show real setup hints instead of
 // a generic "not configured" message.
 app.get('/api/recovery-status', (_req, res) => {
-  const { transport, missing } = transporter()
+  const { resend, missing } = transporter()
   res.json({
-    smtpConfigured: Boolean(transport),
+    smtpConfigured: Boolean(resend),
     missingVars: missing,
     devMode: !isProd,
     devCodeCount: devCodeLog.length,
@@ -167,10 +151,10 @@ app.post('/api/send-reset-email', emailLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Invalid type.' })
   }
 
-  const { transport, missing } = transporter()
+  const { resend, from, missing } = transporter()
   logDevCode({ email: email.trim(), code, type, at: new Date().toISOString() })
 
-  if (!transport) {
+  if (!resend) {
     return res.status(503).json({
       error: 'Email backend is not configured.',
       missingVars: missing,
@@ -184,8 +168,8 @@ app.post('/api/send-reset-email', emailLimiter, async (req, res) => {
   const html = `<p>Your VolunTrack recovery code is <strong>${code}</strong>.</p><p>It expires in 15 minutes.</p>`
 
   try {
-    await transport.sendMail({
-      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    await resend.emails.send({
+      from,
       to: email,
       subject,
       text,
@@ -216,8 +200,8 @@ app.post('/api/send-report', async (req, res) => {
     return res.status(400).json({ error: 'Missing recipient or student.' })
   }
 
-  const { transport, missing } = transporter()
-  if (!transport) {
+  const { resend, from, missing } = transporter()
+  if (!resend) {
     return res.status(503).json({
       error: 'Email backend is not configured.',
       missingVars: missing,
@@ -248,8 +232,8 @@ app.post('/api/send-report', async (req, res) => {
     </table>`
 
   try {
-    await transport.sendMail({
-      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    await resend.emails.send({
+      from,
       to,
       subject: `VolunTrack volunteer report — ${student}`,
       text,
@@ -279,8 +263,8 @@ app.post('/api/contact', emailLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Invalid subject.' })
   }
 
-  const { transport, missing } = transporter()
-  if (!transport) {
+  const { resend, from, missing } = transporter()
+  if (!resend) {
     return res.status(503).json({
       error: 'Email backend is not configured.',
       missingVars: missing,
@@ -293,10 +277,10 @@ app.post('/api/contact', emailLimiter, async (req, res) => {
   const body = `New contact message from ${name.trim()} <${email.trim()}>\nSubject: ${sanitizedSubject}\n\n${sanitizedMessage}`
 
   try {
-    await transport.sendMail({
-      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    await resend.emails.send({
+      from,
       to,
-      replyTo: email,
+      reply_to: email,
       subject: `VolunTrack contact: ${subject || 'General question'}`,
       text: body,
       html: `<pre style="font-family: sans-serif; white-space: pre-wrap;">${body}</pre>`,
