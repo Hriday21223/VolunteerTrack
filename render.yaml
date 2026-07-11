@@ -1,21 +1,24 @@
-# Render blueprint: one Node web service using external Neon database.
-# Deploy by connecting this repo in the Render dashboard (New > Blueprint).
-# After the first deploy, set ADMIN_EMAIL and ADMIN_PASSWORD in the Environment tab.
-#
-# ⚠️  Sensitive env vars (DATABASE_URL, EMAIL_USER, EMAIL_PASSWORD) are NOT
-#     stored in this file. Set them in the Render dashboard under
-#     Dashboard → your-service → Environment to keep them out of version control.
+version: "1"
 services:
-  - type: web
-    name: voluntrack-backend
-    runtime: node
-    plan: free
-    buildCommand: npm ci
-    startCommand: node server.js
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: JWT_SECRET
-        generateValue: true
-      - key: EMAIL_FROM
-        value: volunteertrackinfo@gmail.com
+- type: web
+  name: voluntrack-backend
+  runtime: node
+  repo: https://github.com/Hriday21223/VolunteerTrack
+  plan: free
+  envVars:
+  - key: RESEND_API_KEY
+    sync: false
+  - key: NODE_ENV
+    sync: false
+  - key: JWT_SECRET
+    sync: false
+  - key: EMAIL_FROM
+    sync: false
+  - key: DATABASE_URL
+    sync: false
+  - key: PORT
+    sync: false
+  region: oregon
+  buildCommand: npm ci
+  startCommand: node server.js
+  autoDeployTrigger: commit
