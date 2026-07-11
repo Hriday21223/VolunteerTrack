@@ -36,7 +36,7 @@ export async function sendRecoveryEmail({ email, code, type }) {
   }
   try {
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 8000)
+    const timer = setTimeout(() => controller.abort(), 30000)
     const response = await fetch(`${apiUrl}/send-reset-email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
