@@ -223,7 +223,7 @@ export default function Settings() {
         if (data.school) setSchoolInfo(data.school)
       } catch {}
     })()
-  }, [user?.schoolId])
+  }, [user?.schoolId, apiUrl])
 
   const savePin = () => {
     if (!user) return
