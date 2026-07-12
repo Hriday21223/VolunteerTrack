@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Upload, CheckCircle, XCircle, Clock, FileText, Download, Search, Users, MapPin, Calendar, MessageSquare, Bell } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
@@ -35,7 +35,7 @@ export default function SchoolDashboard() {
   useEffect(() => {
     if (!user) return
     loadData()
-  }, [user])
+  }, [user, loadData])
 
   const loadMessages = async () => {
     try {
@@ -64,7 +64,7 @@ export default function SchoolDashboard() {
     } catch (e) { setToastMsg(e.message); setToast(true) } finally { setSendingMsg(false) }
   }
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('voluntrack:auth_token')
@@ -99,7 +99,7 @@ export default function SchoolDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0]

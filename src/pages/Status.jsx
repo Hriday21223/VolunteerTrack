@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Activity, CheckCircle2, XCircle, Globe, HardDrive, Smartphone, Clock, Database, Cpu, Monitor, Eye, AlertTriangle, Bell, Bot, Loader2, Wrench, Server, List, PauseCircle, PlayCircle } from 'lucide-react'
 import Card from '@/components/Card.jsx'
@@ -117,7 +117,7 @@ export default function Status() {
   const webAudioOk = (() => { try { return !!(window.AudioContext || window.webkitAudioContext) } catch { return false } })()
   const screenWakeOk = 'wakeLock' in navigator
 
-  const services = [
+  const services = useMemo(() => [
     { name: 'Application', ok: appHealthy, critical: true },
     { name: 'Service Worker', ok: swStatus === 'active' || swStatus === 'none', critical: true },
     { name: 'Connection', ok: online, critical: true },
@@ -140,7 +140,7 @@ export default function Status() {
     { name: 'Web Audio', ok: webAudioOk },
     { name: 'Screen Wake Lock', ok: screenWakeOk },
     { name: 'PWA', ok: pwaSupported && swStatus === 'active' },
-  ]
+  ], [appHealthy, swStatus, online, sessionOk, storageOk, indexedDbOk, cacheOk, cookiesOk, notificationOk, geolocationOk, fileApiOk, canvasOk, webglOk, workersOk, clipboardOk, touchOk, batteryOk, vibrationOk, webSocketOk, webAudioOk, screenWakeOk, pwaSupported])
 
   useEffect(() => {
     if (!ready) return
@@ -175,7 +175,7 @@ export default function Status() {
       })
       setTimeout(() => setAgentRunning(false), toFix.length * 3000)
     }
-  }, [ready, appHealthy, online, swStatus, storageOk, sessionOk, indexedDbOk, cacheOk, cookiesOk, notificationOk, geolocationOk, pwaSupported, canvasOk, webglOk, fileApiOk, clipboardOk, touchOk, batteryOk, vibrationOk, webSocketOk, webAudioOk, screenWakeOk, workersOk])
+  }, [ready, services])
 
   useEffect(() => {
     const h = () => { setAgentLog(getAgentLog()); setIncidents(getIncidents()) }

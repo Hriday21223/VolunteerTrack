@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ChevronLeft, ChevronRight, Sparkles, School, ShieldCheck, TrendingUp, Award, Phone, Server, Lock, BarChart3, Smartphone, Globe, DollarSign, Download, MessageSquareText, CheckCircle2, XCircle, Loader2, Wrench, AlertTriangle } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
@@ -426,8 +426,11 @@ export default function AdminShowcase() {
     try { setAgentLog(JSON.parse(localStorage.getItem('voluntrack:agent_log') || '[]')) } catch { setAgentLog([]) }
   }, [])
 
-  const incByStatus = { detected: 0, investigating: 0, fixing: 0, resolved: 0, failed: 0 }
-  incidents.forEach((i) => { incByStatus[i.status] = (incByStatus[i.status] || 0) + 1 })
+  const incByStatus = useMemo(() => {
+    const m = { detected: 0, investigating: 0, fixing: 0, resolved: 0, failed: 0 }
+    incidents.forEach((i) => { m[i.status] = (m[i.status] || 0) + 1 })
+    return m
+  }, [incidents])
   const totalInc = incidents.length
   const resolvedInc = incByStatus.resolved
   const failedInc = incByStatus.failed
