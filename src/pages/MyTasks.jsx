@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { ChevronDown, ChevronUp, MapPin, Calendar as CalIcon, Users, Clock, Phone, CheckCircle, XCircle, Plus } from 'lucide-react'
+import { ChevronDown, ChevronUp, MapPin, Calendar as CalIcon, Users, Clock, Phone, CheckCircle, XCircle, Plus, Send } from 'lucide-react'
 import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
@@ -18,9 +18,12 @@ export default function MyTasks() {
   const [toast, setToast] = useState(false)
   const [toastMsg, setToastMsg] = useState('')
   const [showPostTask, setShowPostTask] = useState(false)
-  const [taskForm, setTaskForm] = useState({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1, phone: '', latitude: null, longitude: null })
+  const [taskForm, setTaskForm] = useState({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1, phone: '', importantInfo: '', latitude: null, longitude: null })
   const [taskBusy, setTaskBusy] = useState(false)
   const [gettingLocation, setGettingLocation] = useState(false)
+  const [batchHours, setBatchHours] = useState({})
+  const [batchDate, setBatchDate] = useState('')
+  const [batchBusy, setBatchBusy] = useState(false)
 
   const loadTasks = useCallback(async () => {
     setLoading(true)
@@ -60,7 +63,7 @@ export default function MyTasks() {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
-      setToastMsg('Signup approved — phone number shared'); setToast(true); loadTasks()
+      setToastMsg('Signup approved — contact info shared'); setToast(true); loadTasks()
     } catch (e) { setToastMsg(e.message); setToast(true) }
   }
 
@@ -79,6 +82,27 @@ export default function MyTasks() {
   const openLogForm = (taskId, volunteerId, taskDate) => {
     setLogForm({ volunteerId, taskId, hours: '', date: taskDate || '' })
     setShowLogForm(true)
+  }
+
+  const handleBatchLog = async (taskId, taskDate) => {
+    const entries = Object.entries(batchHours)
+      .filter(([, hrs]) => hrs && Number(hrs) > 0)
+      .map(([volunteerId, hours]) => ({ volunteerId, hours: Number(hours) }))
+    if (entries.length === 0) { setToastMsg('Enter hours for at least one volunteer'); setToast(true); return }
+    setBatchBusy(true)
+    try {
+      const token = localStorage.getItem('voluntrack:auth_token')
+      const res = await fetch(`${apiUrl}/school/public-tasks/${taskId}/log-hours-batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ entries, date: batchDate || taskDate || undefined }),
+      })
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
+      const d = await res.json()
+      setToastMsg(`Logged hours for ${d.logged} volunteer${d.logged === 1 ? '' : 's'}`); setToast(true)
+      setBatchHours({}); setBatchDate('')
+      refreshLogs(); loadTasks()
+    } catch (e) { setToastMsg(e.message); setToast(true) } finally { setBatchBusy(false) }
   }
 
   const getLocation = () => {
@@ -104,7 +128,7 @@ export default function MyTasks() {
         body: JSON.stringify(taskForm),
       })
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
-      setTaskForm({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1, phone: '', latitude: null, longitude: null })
+      setTaskForm({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1, phone: '', importantInfo: '', latitude: null, longitude: null })
       setShowPostTask(false); loadTasks()
       setToastMsg('Task posted!'); setToast(true)
     } catch (e) { setToastMsg(e.message); setToast(true) } finally { setTaskBusy(false) }
@@ -137,11 +161,21 @@ export default function MyTasks() {
               <input className="input" placeholder="Task title" value={taskForm.title} onChange={(e) => setTaskForm({...taskForm, title: e.target.value})} required />
               <textarea className="input" rows={2} placeholder="Description — what volunteers will do" value={taskForm.description} onChange={(e) => setTaskForm({...taskForm, description: e.target.value})} required />
               <input className="input" placeholder="Location — where it happens" value={taskForm.location} onChange={(e) => setTaskForm({...taskForm, location: e.target.value})} required />
+              <textarea className="input" rows={2} placeholder="Important info — only shown to approved volunteers (e.g. what to bring, parking, contact details)" value={taskForm.importantInfo} onChange={(e) => setTaskForm({...taskForm, importantInfo: e.target.value})} />
               <input className="input" type="tel" placeholder="Phone number — shown to approved volunteers" value={taskForm.phone} onChange={(e) => setTaskForm({...taskForm, phone: e.target.value})} required />
               <div className="grid grid-cols-3 gap-2">
-                <input type="date" className="input" value={taskForm.date} onChange={(e) => setTaskForm({...taskForm, date: e.target.value})} required />
-                <input type="time" className="input" value={taskForm.time} onChange={(e) => setTaskForm({...taskForm, time: e.target.value})} />
-                <input type="number" className="input" min={1} placeholder="Slots" value={taskForm.slotsTotal} onChange={(e) => setTaskForm({...taskForm, slotsTotal: e.target.value})} />
+                <div>
+                  <label className="label text-xs">Date *</label>
+                  <input type="date" className="input" value={taskForm.date} onChange={(e) => setTaskForm({...taskForm, date: e.target.value})} required />
+                </div>
+                <div>
+                  <label className="label text-xs">Time *</label>
+                  <input type="time" className="input" value={taskForm.time} onChange={(e) => setTaskForm({...taskForm, time: e.target.value})} required />
+                </div>
+                <div>
+                  <label className="label text-xs">Volunteers needed *</label>
+                  <input type="number" className="input" min={1} placeholder="Slots" value={taskForm.slotsTotal} onChange={(e) => setTaskForm({...taskForm, slotsTotal: e.target.value})} required />
+                </div>
               </div>
               {taskForm.latitude && taskForm.longitude ? (
                 <p className="text-xs text-emerald-400">Location captured ✓</p>
@@ -197,45 +231,75 @@ export default function MyTasks() {
                   {signups.length === 0 ? (
                     <p className="text-sm text-earth-500 text-center py-4">No one has signed up yet.</p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <p className="text-xs font-medium text-earth-400 uppercase tracking-wider">Volunteers signed up</p>
-                      {signups.map((s) => (
-                        <div key={s.id} className="flex items-center justify-between gap-3 rounded-xl bg-white/5 p-3">
-                          <div>
-                            <p className="text-sm font-medium">{s.name}</p>
-                            <p className="text-xs text-earth-400">{s.email}</p>
-                            {s.status === 'approved' && (
-                              <p className="text-xs text-emerald-400 mt-0.5">Approved</p>
+                      {signups.map((s) => {
+                        const isApproved = s.status === 'approved'
+                        return (
+                          <div key={s.id} className="flex items-center gap-3 rounded-xl bg-white/5 p-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{s.name}</p>
+                              <p className="text-xs text-earth-400 truncate">{s.email}</p>
+                              {s.status === 'approved' && <p className="text-xs text-emerald-400 mt-0.5">Approved</p>}
+                              {s.status === 'rejected' && <p className="text-xs text-red-400 mt-0.5">Rejected</p>}
+                              {s.status === 'pending' && <p className="text-xs text-amber-400 mt-0.5">Pending approval</p>}
+                            </div>
+                            {isApproved && (
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <input
+                                  type="number"
+                                  step="0.5"
+                                  min="0.5"
+                                  className="input w-16 text-center text-xs py-1"
+                                  placeholder="hrs"
+                                  value={batchHours[s.id] || ''}
+                                  onChange={(e) => setBatchHours((h) => ({ ...h, [s.id]: e.target.value }))}
+                                />
+                                <button
+                                  onClick={() => openLogForm(t.id, s.id, t.date)}
+                                  className="text-xs text-earth-400 hover:text-white px-1.5 py-1 rounded-lg hover:bg-white/10 transition-colors"
+                                  title="Log specific hours"
+                                >
+                                  <Clock className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             )}
-                            {s.status === 'rejected' && (
-                              <p className="text-xs text-red-400 mt-0.5">Rejected</p>
-                            )}
-                            {s.status === 'pending' && (
-                              <p className="text-xs text-amber-400 mt-0.5">Pending approval</p>
+                            {!isApproved && (
+                              <div className="flex gap-1.5 shrink-0">
+                                {s.status === 'pending' && (
+                                  <>
+                                    <button onClick={() => handleApprove(t.id, s.id)} className="btn-sm text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-2 py-1">
+                                      <CheckCircle className="w-3 h-3 mr-1" /> Approve
+                                    </button>
+                                    <button onClick={() => handleReject(t.id, s.id)} className="btn-sm text-xs bg-red-600 hover:bg-red-500 text-white rounded-lg px-2 py-1">
+                                      <XCircle className="w-3 h-3 mr-1" /> Reject
+                                    </button>
+                                  </>
+                                )}
+                              </div>
                             )}
                           </div>
-                          <div className="flex gap-1.5 shrink-0">
-                            {s.status === 'pending' && (
-                              <>
-                                <button onClick={() => handleApprove(t.id, s.id)} className="btn-sm text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-2 py-1">
-                                  <CheckCircle className="w-3 h-3 mr-1" /> Approve
-                                </button>
-                                <button onClick={() => handleReject(t.id, s.id)} className="btn-sm text-xs bg-red-600 hover:bg-red-500 text-white rounded-lg px-2 py-1">
-                                  <XCircle className="w-3 h-3 mr-1" /> Reject
-                                </button>
-                              </>
-                            )}
-                            {s.status === 'approved' && (
-                              <button
-                                onClick={() => openLogForm(t.id, s.id, t.date)}
-                                className="btn-primary text-xs"
-                              >
-                                <Clock className="w-3 h-3 mr-1" /> Log hours
-                              </button>
-                            )}
-                          </div>
+                        )
+                      })}
+                      {signups.some((s) => s.status === 'approved') && (
+                        <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+                          <input
+                            type="date"
+                            className="input text-xs flex-1"
+                            value={batchDate}
+                            onChange={(e) => setBatchDate(e.target.value)}
+                            placeholder="Date"
+                          />
+                          <button
+                            onClick={() => handleBatchLog(t.id, t.date)}
+                            disabled={batchBusy}
+                            className="btn-primary text-xs shrink-0"
+                          >
+                            <Send className="w-3 h-3 mr-1" />
+                            {batchBusy ? 'Saving…' : 'Log all hours'}
+                          </button>
                         </div>
-                      ))}
+                      )}
                     </div>
                   )}
                 </div>

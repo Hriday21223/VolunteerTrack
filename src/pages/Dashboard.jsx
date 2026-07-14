@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Clock, Calendar as CalIcon, TrendingUp, Plus, Trophy, Sparkles, ChevronRight, MapPin, X, School, Users, Hand, FileText, MessageSquare, Bell, Calendar } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 import { useData } from '@/hooks/useData.jsx'
@@ -8,6 +8,7 @@ import AppLayout from '@/components/AppLayout.jsx'
 import Card from '@/components/Card.jsx'
 import ProgressRing from '@/components/ProgressRing.jsx'
 import BarChart from '@/components/BarChart.jsx'
+import Toast from '@/components/Toast.jsx'
 import { categoryColor } from '@/lib/categories.js'
 import { fmtDate, fmtHours, fromNow } from '@/utils/date.js'
 import { format, startOfWeek, startOfMonth, addDays, parseISO } from 'date-fns'
@@ -25,14 +26,26 @@ const fmtDist = (km) => {
 export default function Dashboard() {
   const { user } = useAuth()
   const { logs, goals, earned } = useData()
+  const [searchParams] = useSearchParams()
   const [hasSeenTour, setHasSeenTour] = useLocalStorage('voluntrack:dashboard-tour', false)
   const [showTour, setShowTour] = useState(!hasSeenTour)
   const [schoolInfo, setSchoolInfo] = useState(null)
   const [publicTasks, setPublicTasks] = useState([])
+  const [nearbyTasks, setNearbyTasks] = useState([])
   const [dashTab, setDashTab] = useState('home')
   const [userLoc, setUserLoc] = useState(null)
   const [schoolMessages, setSchoolMessages] = useState([])
   const [adminNotifs, setAdminNotifs] = useState([])
+  const [nearbyRadius, setNearbyRadius] = useState(25)
+  const [toast, setToast] = useState(false)
+  const [toastMsg, setToastMsg] = useState('')
+
+  // Read ?view= param from URL to set dashTab
+  useEffect(() => {
+    const view = searchParams.get('view')
+    if (view === 'nearby') setDashTab('nearby')
+    else if (view === 'volunteer') setDashTab('volunteer')
+  }, [searchParams])
 
   const total = useMemo(() => logs.reduce((s, l) => s + (Number(l.hours) || 0), 0), [logs])
 
@@ -89,6 +102,15 @@ export default function Dashboard() {
     } catch {}
   }, [])
 
+  const loadNearbyTasks = useCallback(async (lat, lng, radius) => {
+    try {
+      let url = `${apiUrl}/school/public-tasks?maxDistance=${radius}`
+      if (lat != null && lng != null) url += `&lat=${lat}&lng=${lng}`
+      const res = await fetch(url)
+      if (res.ok) { const d = await res.json(); setNearbyTasks(d.tasks || []) }
+    } catch {}
+  }, [])
+
   useEffect(() => {
     // Get user location only for students
     if (user?.role === 'student' && navigator.geolocation) {
@@ -97,14 +119,23 @@ export default function Dashboard() {
           const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
           setUserLoc(loc)
           loadPublicTasks(loc.lat, loc.lng)
+          loadNearbyTasks(loc.lat, loc.lng, nearbyRadius)
         },
-        () => loadPublicTasks(),
+        () => { loadPublicTasks(); loadNearbyTasks(null, null, nearbyRadius) },
         { enableHighAccuracy: true, timeout: 10000 },
       )
     } else {
       loadPublicTasks()
+      loadNearbyTasks(null, null, nearbyRadius)
     }
-  }, [user?.role, loadPublicTasks])
+  }, [user?.role, loadPublicTasks, loadNearbyTasks, nearbyRadius])
+
+  // Reload nearby tasks when radius changes
+  useEffect(() => {
+    if (userLoc) {
+      loadNearbyTasks(userLoc.lat, userLoc.lng, nearbyRadius)
+    }
+  }, [nearbyRadius, userLoc, loadNearbyTasks])
 
   const recent = useMemo(() => logs.slice(0, 5), [logs])
 
@@ -127,9 +158,14 @@ export default function Dashboard() {
       action={
         <div className="flex gap-2">
           {user?.role === 'student' && (
-            <button onClick={() => setDashTab(dashTab === 'volunteer' ? 'home' : 'volunteer')} className={`btn-sm ${dashTab === 'volunteer' ? 'btn-primary' : 'btn-ghost'}`}>
-              <Hand className="w-3.5 h-3.5 mr-1" /> Volunteer
-            </button>
+            <>
+              <button onClick={() => setDashTab(dashTab === 'nearby' ? 'home' : 'nearby')} className={`btn-sm ${dashTab === 'nearby' ? 'btn-primary' : 'btn-ghost'}`}>
+                <MapPin className="w-3.5 h-3.5 mr-1" /> Opportunities
+              </button>
+              <button onClick={() => setDashTab(dashTab === 'volunteer' ? 'home' : 'volunteer')} className={`btn-sm ${dashTab === 'volunteer' ? 'btn-primary' : 'btn-ghost'}`}>
+                <Hand className="w-3.5 h-3.5 mr-1" /> Volunteer
+              </button>
+            </>
           )}
           {dashTab === 'home' && (
             <Link to="/log" className="btn-primary">
@@ -201,7 +237,131 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {dashTab === 'volunteer' && user?.role === 'student' ? (
+      {dashTab === 'nearby' && user?.role === 'student' ? (
+        <div className="max-w-2xl mx-auto space-y-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <h2 className="text-xl font-bold">Opportunities near you</h2>
+              <p className="text-sm text-earth-400 mt-1">
+                {userLoc ? `Showing tasks within ${nearbyRadius}km of your location` : 'Enable location to see nearby tasks'}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-earth-400">Radius:</label>
+              <select
+                value={nearbyRadius}
+                onChange={(e) => setNearbyRadius(Number(e.target.value))}
+                className="input py-1 px-2 text-sm w-24"
+              >
+                <option value={5}>5 km</option>
+                <option value={10}>10 km</option>
+                <option value={25}>25 km</option>
+                <option value={50}>50 km</option>
+                <option value={100}>100 km</option>
+              </select>
+            </div>
+          </div>
+
+          {!userLoc && (
+            <Card className="border border-dashed border-brand-700/40 bg-brand-900/10">
+              <div className="flex items-center gap-3">
+                <MapPin className="w-5 h-5 text-brand-400 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm text-white">Location access needed</p>
+                  <p className="text-xs text-earth-400 mt-0.5">Allow location access to see volunteer opportunities near you.</p>
+                </div>
+                <button onClick={() => {
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                      const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+                      setUserLoc(loc)
+                      loadNearbyTasks(loc.lat, loc.lng, nearbyRadius)
+                    },
+                    () => {},
+                    { enableHighAccuracy: true, timeout: 10000 },
+                  )
+                }} className="btn-primary text-xs">Enable</button>
+              </div>
+            </Card>
+          )}
+
+          {nearbyTasks.length === 0 ? (
+            <Card>
+              <div className="text-center py-8">
+                <MapPin className="w-10 h-10 text-earth-600 mx-auto mb-3" />
+                <p className="text-earth-400">No volunteer opportunities within {nearbyRadius}km.</p>
+                <p className="text-xs text-earth-500 mt-1">Try increasing the radius or check back later.</p>
+              </div>
+            </Card>
+          ) : nearbyTasks.map((t) => {
+            const filled = Number(t.slots_filled)
+            const total = Number(t.slots_total)
+            const full = filled >= total
+            const approved = t.my_signup_status === 'approved'
+            return (
+              <Card key={t.id} padded={false} className="p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{t.title}</p>
+                      {t.distance != null && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 font-medium shrink-0">
+                          {fmtDist(t.distance)} away
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-earth-400 mt-1">{t.description}</p>
+                    <div className="flex flex-wrap gap-3 mt-2 text-xs text-earth-500">
+                      <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {t.location}</span>
+                      <span className="flex items-center gap-1"><CalIcon className="w-3 h-3" /> {new Date(t.date).toLocaleDateString()}{t.time ? ` · ${t.time}` : ''}</span>
+                      <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {filled}/{total} slots</span>
+                    </div>
+                    <p className="text-xs text-earth-600 mt-1">Posted by {t.creator_name}</p>
+                    {approved && t.phone && (
+                      <p className="text-xs text-emerald-400 mt-1 font-medium">Contact: {t.phone}</p>
+                    )}
+                    {approved && t.important_info && (
+                      <div className="mt-2 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                        <p className="text-xs font-semibold text-emerald-300 mb-0.5">Important info</p>
+                        <p className="text-xs text-emerald-200/80">{t.important_info}</p>
+                      </div>
+                    )}
+                    {t.my_signup_status === 'pending' && (
+                      <p className="text-xs text-amber-400 mt-1">Awaiting organizer approval</p>
+                    )}
+                    {t.my_signup_status === 'rejected' && (
+                      <p className="text-xs text-red-400 mt-1">Signup rejected</p>
+                    )}
+                  </div>
+                  <div className="shrink-0">
+                    {t.my_signup_status === 'approved' ? (
+                      <span className="text-xs text-emerald-400 font-medium">Approved</span>
+                    ) : t.my_signup_status === 'pending' ? (
+                      <span className="text-xs text-amber-400 font-medium">Pending</span>
+                    ) : t.my_signup_status === 'rejected' ? (
+                      <span className="text-xs text-red-400 font-medium">Rejected</span>
+                    ) : full ? (
+                      <span className="text-xs text-red-400 font-medium">Full</span>
+                    ) : (
+                      <button onClick={async () => {
+                        try {
+                          const token = localStorage.getItem('voluntrack:auth_token')
+                          const res = await fetch(`${apiUrl}/school/public-tasks/${t.id}/signup`, {
+                            method: 'POST',
+                            headers: { Authorization: `Bearer ${token}` },
+                          })
+                          if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
+                          setToastMsg('Signed up — awaiting organizer approval'); setToast(true); loadNearbyTasks(userLoc?.lat, userLoc?.lng, nearbyRadius)
+                        } catch (e) { setToastMsg(e.message); setToast(true) }
+                      }} className="btn-primary text-sm">Sign up</button>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            )
+          })}
+        </div>
+      ) : dashTab === 'volunteer' && user?.role === 'student' ? (
         <div className="max-w-2xl mx-auto space-y-4">
           <h2 className="text-xl font-bold">Needed volunteers</h2>
 
@@ -229,6 +389,12 @@ export default function Dashboard() {
                     <p className="text-xs text-earth-600 mt-1">Posted by {t.creator_name}</p>
                     {approved && t.phone && (
                       <p className="text-xs text-emerald-400 mt-1 font-medium">Contact: {t.phone}</p>
+                    )}
+                    {approved && t.important_info && (
+                      <div className="mt-2 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                        <p className="text-xs font-semibold text-emerald-300 mb-0.5">Important info</p>
+                        <p className="text-xs text-emerald-200/80">{t.important_info}</p>
+                      </div>
                     )}
                     {t.my_signup_status === 'pending' && (
                       <p className="text-xs text-amber-400 mt-1">Awaiting organizer approval</p>
@@ -386,48 +552,48 @@ export default function Dashboard() {
       )}
 
       {/* Mobile-first summary cards */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 md:hidden">
-        <Card className="p-4">
-          <div className="text-xs font-medium text-earth-500 uppercase tracking-wide">Total hours</div>
-          <div className="mt-1 text-2xl font-bold text-white">{fmtHours(total)}</div>
-          <div className="text-xs text-earth-400 mt-1">{logs.length} sessions</div>
+      <div className="grid gap-2 grid-cols-2 md:hidden">
+        <Card className="p-3">
+          <div className="text-[10px] font-medium text-earth-500 uppercase tracking-wide">Total hours</div>
+          <div className="mt-1 text-xl font-bold text-white">{fmtHours(total)}</div>
+          <div className="text-[10px] text-earth-400">{logs.length} sessions</div>
         </Card>
-        <Card className="p-4">
-          <div className="text-xs font-medium text-earth-500 uppercase tracking-wide">This month</div>
-          <div className="mt-1 text-2xl font-bold text-white">{fmtHours(thisMonth)}</div>
-          <div className="text-xs text-earth-400 mt-1">Monthly progress</div>
+        <Card className="p-3">
+          <div className="text-[10px] font-medium text-earth-500 uppercase tracking-wide">This month</div>
+          <div className="mt-1 text-xl font-bold text-white">{fmtHours(thisMonth)}</div>
+          <div className="text-[10px] text-earth-400">Monthly progress</div>
         </Card>
-        <Card className="p-4">
-          <div className="text-xs font-medium text-earth-500 uppercase tracking-wide">Goal</div>
-          <div className="mt-1 text-2xl font-bold text-white">{Math.round(percent * 100)}%</div>
-          <div className="text-xs text-earth-400 mt-1">{primary?.title || 'No goal set'}</div>
+        <Card className="p-3">
+          <div className="text-[10px] font-medium text-earth-500 uppercase tracking-wide">Goal</div>
+          <div className="mt-1 text-xl font-bold text-white">{Math.round(percent * 100)}%</div>
+          <div className="text-[10px] text-earth-400">{primary?.title || 'No goal set'}</div>
         </Card>
-        <Card className="p-4">
-          <div className="text-xs font-medium text-earth-500 uppercase tracking-wide">Badges</div>
-          <div className="mt-1 text-2xl font-bold text-white">{earned.length}/12</div>
-          <div className="text-xs text-earth-400 mt-1">Achievements</div>
+        <Card className="p-3">
+          <div className="text-[10px] font-medium text-earth-500 uppercase tracking-wide">Badges</div>
+          <div className="mt-1 text-xl font-bold text-white">{earned.length}/12</div>
+          <div className="text-[10px] text-earth-400">Achievements</div>
         </Card>
       </div>
 
       <div className="grid gap-5">
         <Card className="overflow-hidden lg:col-span-3">
-          <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] bg-gradient-to-r from-brand-800 via-slate-950 to-slate-900 p-8">
-            <div className="space-y-5 text-white">
+          <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr] bg-gradient-to-r from-brand-800 via-slate-950 to-slate-900 p-5">
+            <div className="space-y-3 text-white">
               <span className="text-xs uppercase tracking-[0.35em] text-brand-300">Volunteer snapshot</span>
-              <h2 className="text-3xl font-bold leading-tight">A cleaner way to track hours, goals, and progress.</h2>
-              <p className="max-w-xl text-sm text-slate-300 leading-7">
-                Use VolunTrack to log sessions fast, keep your goals moving, and export polished records for school, club, or scholarship review.
+              <h2 className="text-xl font-bold leading-tight">A cleaner way to track hours, goals, and progress.</h2>
+              <p className="max-w-xl text-sm text-slate-300 leading-6">
+                Log sessions fast, keep your goals moving, and export polished records for school, club, or scholarship review.
               </p>
-              <div className="flex flex-wrap gap-3">
-                <Link to="/log" className="btn-primary">Log hours</Link>
-                <Link to="/calendar" className="btn-secondary">View calendar</Link>
+              <div className="flex flex-wrap gap-2">
+                <Link to="/log" className="btn-primary btn-sm">Log hours</Link>
+                <Link to="/calendar" className="btn-secondary btn-sm">View calendar</Link>
               </div>
             </div>
-            <div className="rounded-[2rem] bg-slate-950/95 p-6 ring-1 ring-white/10 shadow-soft">
-              <div className="text-sm text-earth-400">Total this year</div>
-              <div className="mt-4 text-5xl font-bold text-white">{fmtHours(total)}</div>
-              <div className="mt-3 text-sm text-earth-400">{logs.length} volunteer sessions logged</div>
-              <div className="mt-6 grid gap-3">
+            <div className="rounded-[1.5rem] bg-slate-950/95 p-4 ring-1 ring-white/10 shadow-soft">
+              <div className="text-xs text-earth-400">Total this year</div>
+              <div className="mt-2 text-3xl font-bold text-white">{fmtHours(total)}</div>
+              <div className="mt-1 text-xs text-earth-400">{logs.length} volunteer sessions logged</div>
+              <div className="mt-3 grid gap-2">
                 <StatCard icon={Clock} label="This month" value={fmtHours(thisMonth)} accent="brand" compact />
                 <StatCard icon={CalIcon} label="Sessions" value={logs.length} accent="earth" compact />
               </div>
@@ -435,70 +601,70 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <div className="grid lg:grid-cols-3 gap-5">
-          <Card>
-            <div className="flex items-center justify-between mb-4">
+        <div className="grid lg:grid-cols-3 gap-3">
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-2">
               <div>
-                <div className="text-sm text-earth-400">Goal progress</div>
-                <div className="text-2xl font-bold text-white">{Math.round(percent * 100)}%</div>
+                <div className="text-xs text-earth-400">Goal progress</div>
+                <div className="text-lg font-bold text-white">{Math.round(percent * 100)}%</div>
               </div>
-              <div className="text-xs uppercase tracking-[0.25em] text-brand-400">Primary goal</div>
+              <div className="text-[10px] uppercase tracking-[0.25em] text-brand-400">Primary goal</div>
             </div>
             <ProgressRing
               percent={percent}
-              size={160} stroke={16}
+              size={120} stroke={12}
               label={`${Math.round(percent * 100)}%`}
               sublabel={target ? `${fmtHours(remaining)} to goal` : 'No goal set yet'}
             />
             {primary && (
-              <div className="mt-4 text-xs text-earth-400">
+              <div className="mt-2 text-xs text-earth-400">
                 Goal: {fmtHours(target)} · {primary.title}
               </div>
             )}
             {!primary && (
-              <Link to="/settings" className="mt-4 block text-sm text-brand-400 hover:underline">Set a goal →</Link>
+              <Link to="/settings" className="mt-2 block text-xs text-brand-400 hover:underline">Set a goal →</Link>
             )}
           </Card>
 
-          <Card>
-            <div className="text-sm text-earth-500">This month</div>
-            <div className="mt-3 text-3xl font-bold text-earth-100">{fmtHours(thisMonth)}</div>
-            <div className="mt-4 text-sm text-earth-400">Hours recorded since the start of this month.</div>
+          <Card className="p-4">
+            <div className="text-xs text-earth-400">This month</div>
+            <div className="mt-2 text-2xl font-bold text-earth-100">{fmtHours(thisMonth)}</div>
+            <div className="mt-2 text-xs text-earth-400">Hours recorded since the start of this month.</div>
           </Card>
 
-          <Card>
-            <div className="text-sm text-earth-500">Badges earned</div>
-            <div className="mt-3 text-3xl font-bold text-earth-100">{earned.length}/12</div>
-            <div className="mt-4 text-sm text-earth-400">Earned badges appear as you log more hours.</div>
+          <Card className="p-4">
+            <div className="text-xs text-earth-400">Badges earned</div>
+            <div className="mt-2 text-2xl font-bold text-earth-100">{earned.length}/12</div>
+            <div className="mt-2 text-xs text-earth-400">Earned badges appear as you log more hours.</div>
           </Card>
         </div>
 
-        <Card className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-2">
+        <Card className="lg:col-span-2 p-4">
+          <div className="flex items-center justify-between mb-1">
             <div>
-              <div className="text-sm text-earth-400">This week</div>
-              <div className="font-display text-lg font-semibold flex items-center gap-2 text-white">
-                <TrendingUp className="w-4 h-4 text-brand-500" /> {fmtHours(weekly.reduce((s, d) => s + d.value, 0))} logged
+              <div className="text-xs text-earth-400">This week</div>
+              <div className="font-display text-sm font-semibold flex items-center gap-2 text-white">
+                <TrendingUp className="w-3.5 h-3.5 text-brand-500" /> {fmtHours(weekly.reduce((s, d) => s + d.value, 0))} logged
               </div>
             </div>
           </div>
           <BarChart data={weekly} color="#38bdf8" />
         </Card>
 
-        <Card>
-          <div className="flex items-center justify-between mb-3">
-            <div className="font-display font-semibold">Recent badges</div>
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-display font-semibold text-sm">Recent badges</div>
             <Link to="/achievements" className="text-xs text-brand-500 hover:underline flex items-center gap-0.5">
               All <ChevronRight className="w-3 h-3" />
             </Link>
           </div>
           {earned.length === 0 ? (
-            <div className="text-sm text-earth-400 py-6 text-center">
+            <div className="text-xs text-earth-400 py-4 text-center">
               No badges yet — log your first hour to earn one.
             </div>
           ) : (
-            <ul className="space-y-2">
-              {earned.slice(-4).reverse().map((id) => (
+            <ul className="space-y-1">
+              {earned.slice(-3).reverse().map((id) => (
                 <li key={id} className="text-sm font-medium capitalize text-earth-100">
                   🏅 {id.replaceAll('-', ' ')}
                 </li>
@@ -508,26 +674,26 @@ export default function Dashboard() {
         </Card>
 
         <Card className="lg:col-span-3">
-          <div className="flex items-center justify-between mb-3">
-            <div className="font-display font-semibold">Recent activity</div>
-            <Link to="/log" className="text-sm text-brand-500 hover:underline flex items-center gap-0.5">
-              Log new hours <ChevronRight className="w-4 h-4" />
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-display font-semibold text-sm">Recent activity</div>
+            <Link to="/log" className="text-xs text-brand-500 hover:underline flex items-center gap-0.5">
+              Log new hours <ChevronRight className="w-3 h-3" />
             </Link>
           </div>
           {recent.length === 0 ? (
-            <div className="py-10 text-center text-earth-400">
-              <p>No hours logged yet.</p>
-              <Link to="/log" className="btn-primary mt-4 inline-flex">Log your first hours</Link>
+            <div className="py-8 text-center text-earth-400">
+              <p className="text-sm">No hours logged yet.</p>
+              <Link to="/log" className="btn-primary mt-3 btn-sm inline-flex">Log your first hours</Link>
             </div>
           ) : (
             <ul className="divide-y divide-earth-900">
               {recent.map((l) => (
-                <li key={l.id} className="py-3 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-brand-500/10 grid place-items-center text-brand-500 font-bold">
+                <li key={l.id} className="py-2.5 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-brand-500/10 grid place-items-center text-brand-500 font-bold text-sm">
                     {fmtHours(Number(l.hours) || 0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate text-earth-100">{l.activity || 'Volunteer activity'}</div>
+                    <div className="font-medium truncate text-earth-100 text-sm">{l.activity || 'Volunteer activity'}</div>
                     <div className="text-xs text-earth-400 flex items-center gap-2 flex-wrap">
                       <span>{fmtDate(l.date)}</span>
                       {l.location && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{l.location}</span>}
@@ -545,6 +711,7 @@ export default function Dashboard() {
       </div>
       </>
       )}
+      <Toast open={toast} onClose={() => setToast(false)}>{toastMsg}</Toast>
     </AppLayout>
   )
 }
@@ -556,14 +723,14 @@ function StatCard({ icon: Icon, label, value, accent = 'brand' }) {
     amber: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
   }[accent]
   return (
-    <Card>
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-xl grid place-items-center ${ring}`}>
-          <Icon className="w-5 h-5" />
+    <Card className="p-2">
+      <div className="flex items-center gap-2">
+        <div className={`w-8 h-8 rounded-lg grid place-items-center ${ring}`}>
+          <Icon className="w-4 h-4" />
         </div>
         <div>
-          <div className="text-xs text-earth-500 dark:text-earth-400">{label}</div>
-          <div className="text-xl font-bold leading-tight">{value}</div>
+          <div className="text-[10px] text-earth-500 dark:text-earth-400">{label}</div>
+          <div className="text-sm font-bold leading-tight">{value}</div>
         </div>
       </div>
     </Card>

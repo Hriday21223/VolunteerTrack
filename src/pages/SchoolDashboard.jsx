@@ -24,7 +24,7 @@ export default function SchoolDashboard() {
   const [adding, setAdding] = useState(false)
   const [addErr, setAddErr] = useState('')
   const [subTab, setSubTab] = useState('reports')
-  const [taskForm, setTaskForm] = useState({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1 })
+  const [taskForm, setTaskForm] = useState({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1, phone: '', importantInfo: '' })
   const [taskBusy, setTaskBusy] = useState(false)
   const [messages, setMessages] = useState([])
   const [messageText, setMessageText] = useState('')
@@ -387,18 +387,28 @@ export default function SchoolDashboard() {
                     body: JSON.stringify(taskForm),
                   })
                   if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed') }
-                  setTaskForm({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1, phone: '' })
+                   setTaskForm({ title: '', description: '', location: '', date: '', time: '', slotsTotal: 1, phone: '', importantInfo: '' })
                   setToastMsg('Task posted!'); setToast(true); loadData()
                 } catch (e) { setToastMsg(e.message); setToast(true) } finally { setTaskBusy(false) }
               }} className="space-y-3">
                 <input className="input" placeholder="Task title" value={taskForm.title} onChange={(e) => setTaskForm({...taskForm, title: e.target.value})} required />
-                <textarea className="input" rows={2} placeholder="Description" value={taskForm.description} onChange={(e) => setTaskForm({...taskForm, description: e.target.value})} required />
-                  <input className="input" placeholder="Location" value={taskForm.location} onChange={(e) => setTaskForm({...taskForm, location: e.target.value})} required />
-                  <input className="input" type="tel" placeholder="Phone number — shown to approved volunteers" value={taskForm.phone} onChange={(e) => setTaskForm({...taskForm, phone: e.target.value})} required />
-                  <div className="grid grid-cols-3 gap-2">
-                  <input type="date" className="input" value={taskForm.date} onChange={(e) => setTaskForm({...taskForm, date: e.target.value})} required />
-                  <input type="time" className="input" value={taskForm.time} onChange={(e) => setTaskForm({...taskForm, time: e.target.value})} />
-                  <input type="number" className="input" min={1} placeholder="Slots" value={taskForm.slotsTotal} onChange={(e) => setTaskForm({...taskForm, slotsTotal: e.target.value})} />
+                <textarea className="input" rows={2} placeholder="Description — what volunteers will do" value={taskForm.description} onChange={(e) => setTaskForm({...taskForm, description: e.target.value})} required />
+                <input className="input" placeholder="Location — where it happens" value={taskForm.location} onChange={(e) => setTaskForm({...taskForm, location: e.target.value})} required />
+                <textarea className="input" rows={2} placeholder="Important info — only shown to approved volunteers (e.g. what to bring, parking, contact details)" value={taskForm.importantInfo} onChange={(e) => setTaskForm({...taskForm, importantInfo: e.target.value})} />
+                <input className="input" type="tel" placeholder="Phone number — shown to approved volunteers" value={taskForm.phone} onChange={(e) => setTaskForm({...taskForm, phone: e.target.value})} required />
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="label text-xs">Date *</label>
+                    <input type="date" className="input" value={taskForm.date} onChange={(e) => setTaskForm({...taskForm, date: e.target.value})} required />
+                  </div>
+                  <div>
+                    <label className="label text-xs">Time *</label>
+                    <input type="time" className="input" value={taskForm.time} onChange={(e) => setTaskForm({...taskForm, time: e.target.value})} required />
+                  </div>
+                  <div>
+                    <label className="label text-xs">Volunteers needed *</label>
+                    <input type="number" className="input" min={1} placeholder="Slots" value={taskForm.slotsTotal} onChange={(e) => setTaskForm({...taskForm, slotsTotal: e.target.value})} required />
+                  </div>
                 </div>
                 <button type="submit" className="btn-primary w-full" disabled={taskBusy}>{taskBusy ? 'Posting…' : 'Post task'}</button>
               </form>
@@ -424,6 +434,12 @@ export default function SchoolDashboard() {
                       </div>
                       {approved && t.phone && (
                         <p className="text-xs text-emerald-400 mt-1 font-medium">Contact: {t.phone}</p>
+                      )}
+                      {approved && t.important_info && (
+                        <div className="mt-2 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                          <p className="text-xs font-semibold text-emerald-300 mb-0.5">Important info</p>
+                          <p className="text-xs text-emerald-200/80">{t.important_info}</p>
+                        </div>
                       )}
                       {t.my_signup_status === 'pending' && (
                         <p className="text-xs text-amber-400 mt-1">Awaiting organizer approval</p>

@@ -241,7 +241,7 @@ router.get('/info', limiter, requireDb, async (req, res) => {
 
 // Create a public task (phone required)
 router.post('/public-tasks', limiter, requireDb, requireAuth(), async (req, res) => {
-  const { title, description, location, date, time, slotsTotal, phone, latitude, longitude } = req.body
+  const { title, description, location, date, time, slotsTotal, phone, latitude, longitude, importantInfo } = req.body
   if (!title || !description || !location || !date) return res.status(400).json({ error: 'Title, description, location, and date required.' })
   if (!phone) return res.status(400).json({ error: 'Phone number is required so volunteers can reach you.' })
 
@@ -251,9 +251,9 @@ router.post('/public-tasks', limiter, requireDb, requireAuth(), async (req, res)
 
     const id = uid('ptask')
     await query(
-      `INSERT INTO public_tasks (id, title, description, location, date, time, slots_total, created_by, creator_name, creator_email, phone, latitude, longitude)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-      [id, title, description, location, date, time || null, Number(slotsTotal) || 1, req.auth.sub, rows[0].name, rows[0].email, phone, latitude || null, longitude || null],
+      `INSERT INTO public_tasks (id, title, description, location, date, time, slots_total, created_by, creator_name, creator_email, phone, latitude, longitude, important_info)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+      [id, title, description, location, date, time || null, Number(slotsTotal) || 1, req.auth.sub, rows[0].name, rows[0].email, phone, latitude || null, longitude || null, importantInfo || null],
     )
     return res.status(201).json({ ok: true, id })
   } catch (error) {
@@ -264,11 +264,13 @@ router.post('/public-tasks', limiter, requireDb, requireAuth(), async (req, res)
 
 // List open public tasks. Phone hidden unless user is signed up and approved.
 // Accept optional lat/lng query params to sort by distance.
+// Accept optional maxDistance (km) to filter by radius.
 router.get('/public-tasks', limiter, requireDb, authenticate, async (req, res) => {
   try {
     const userId = req.auth?.sub || null
     const lat = req.query.lat ? Number(req.query.lat) : null
     const lng = req.query.lng ? Number(req.query.lng) : null
+    const maxDistance = req.query.maxDistance ? Number(req.query.maxDistance) : null
     const useDist = lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)
 
     const params = userId ? [userId] : []
@@ -283,16 +285,34 @@ router.get('/public-tasks', limiter, requireDb, authenticate, async (req, res) =
          ELSE NULL END AS distance`
       : 'NULL AS distance'
 
+    const havingClause = useDist && maxDistance && !isNaN(maxDistance)
+      ? `HAVING CASE WHEN t.latitude IS NOT NULL AND t.longitude IS NOT NULL THEN
+           6371 * 2 * ASIN(SQRT(
+             POWER(SIN(RADIANS(t.latitude - $${params.length + 1}) / 2), 2) +
+             COS(RADIANS($${params.length + 1})) * COS(RADIANS(t.latitude)) *
+             POWER(SIN(RADIANS(t.longitude - $${params.length + 2}) / 2), 2)
+           ))
+         ELSE 999999 END <= $${useDist ? params.length + 3 : params.length + 1}`
+      : ''
+
+    const selectParams = useDist ? [...params, lat, lng] : [...params]
+    const havingParams = useDist && maxDistance ? [lat, lng, maxDistance] : []
+    const orderParams = useDist ? [lat, lng] : []
+
     const { rows } = await query(
-      `SELECT t.id, t.title, t.description, t.location, t.date, t.time, t.slots_total, t.status,
-              t.creator_name, t.latitude, t.longitude, ${distExpr}, t.created_at,
-              (SELECT COUNT(*) FROM public_task_signups WHERE task_id = t.id) AS slots_filled,
-              ${userId ? `(SELECT status FROM public_task_signups WHERE task_id = t.id AND user_id = $1) AS my_signup_status` : 'NULL AS my_signup_status'},
-              ${userId ? `CASE WHEN (SELECT status FROM public_task_signups WHERE task_id = t.id AND user_id = $1) = 'approved' THEN t.phone ELSE NULL END AS phone` : 'NULL AS phone'}
-       FROM public_tasks t
-       WHERE t.status = 'open'
-       ${useDist ? `ORDER BY distance ASC NULLS LAST, t.date ASC, t.created_at DESC` : 'ORDER BY t.date ASC, t.created_at DESC'}`,
-      useDist ? [...params, lat, lng] : params,
+      `SELECT * FROM (
+        SELECT t.id, t.title, t.description, t.location, t.date, t.time, t.slots_total, t.status,
+               t.creator_name, t.latitude, t.longitude, ${distExpr}, t.created_at,
+               (SELECT COUNT(*) FROM public_task_signups WHERE task_id = t.id) AS slots_filled,
+               ${userId ? `(SELECT status FROM public_task_signups WHERE task_id = t.id AND user_id = $1) AS my_signup_status` : 'NULL AS my_signup_status'},
+               ${userId ? `CASE WHEN (SELECT status FROM public_task_signups WHERE task_id = t.id AND user_id = $1) = 'approved' THEN t.phone ELSE NULL END AS phone` : 'NULL AS phone'},
+               ${userId ? `CASE WHEN (SELECT status FROM public_task_signups WHERE task_id = t.id AND user_id = $1) = 'approved' THEN t.important_info ELSE NULL END AS important_info` : 'NULL AS important_info'}
+        FROM public_tasks t
+        WHERE t.status = 'open'
+       ) sub
+       ${havingClause}
+       ${useDist ? `ORDER BY distance ASC NULLS LAST, date ASC, created_at DESC` : 'ORDER BY date ASC, created_at DESC'}`,
+      [...selectParams, ...havingParams],
     )
     return res.json({ tasks: rows })
   } catch (error) {
@@ -416,6 +436,51 @@ router.post('/public-tasks/:id/log-hours', limiter, requireDb, requireAuth(), as
     return res.status(201).json({ ok: true, id: lid })
   } catch (error) {
     console.error('log hours failed:', error)
+    return res.status(500).json({ error: 'Could not log hours.' })
+  }
+})
+
+// Batch log hours for multiple approved volunteers at once
+router.post('/public-tasks/:id/log-hours-batch', limiter, requireDb, requireAuth(), async (req, res) => {
+  const { entries, date } = req.body
+  if (!Array.isArray(entries) || entries.length === 0) return res.status(400).json({ error: 'entries array required.' })
+
+  try {
+    const { rows: taskRows } = await query('SELECT * FROM public_tasks WHERE id = $1', [req.params.id])
+    if (taskRows.length === 0) return res.status(404).json({ error: 'Task not found.' })
+    if (taskRows[0].created_by !== req.auth.sub) return res.status(403).json({ error: 'Only the task creator can log hours.' })
+
+    const { rows: approvedRows } = await query(
+      'SELECT user_id FROM public_task_signups WHERE task_id = $1 AND status = \'approved\'',
+      [req.params.id],
+    )
+    const approvedIds = new Set(approvedRows.map((r) => r.user_id))
+
+    let logged = 0
+    for (const entry of entries) {
+      if (!entry.volunteerId || !entry.hours) continue
+      if (!approvedIds.has(entry.volunteerId)) continue
+
+      const lid = uid('log')
+      await query(
+        `INSERT INTO logs (id, user_id, date, activity, category, hours, notes, verified_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          lid,
+          entry.volunteerId,
+          date || taskRows[0].date,
+          taskRows[0].title,
+          'volunteer',
+          Number(entry.hours),
+          `Logged by task organizer (${taskRows[0].title})`,
+          req.auth.sub,
+        ],
+      )
+      logged++
+    }
+    return res.status(201).json({ ok: true, logged })
+  } catch (error) {
+    console.error('batch log hours failed:', error)
     return res.status(500).json({ error: 'Could not log hours.' })
   }
 })

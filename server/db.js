@@ -102,8 +102,9 @@ CREATE TABLE IF NOT EXISTS public_tasks (
   created_by      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   creator_name    TEXT,
   creator_email   TEXT,
-  phone           TEXT,
-  latitude        DECIMAL(10,7),
+   phone           TEXT,
+   important_info  TEXT,
+   latitude        DECIMAL(10,7),
   longitude       DECIMAL(10,7),
   status          TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','closed')),
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -147,6 +148,7 @@ export async function initSchema() {
   await query(SCHEMA)
   // Migration: add columns that may not exist on older databases
   try { await query(`ALTER TABLE public_tasks ADD COLUMN IF NOT EXISTS phone TEXT`) } catch {}
+  try { await query(`ALTER TABLE public_tasks ADD COLUMN IF NOT EXISTS important_info TEXT`) } catch {}
   try { await query(`ALTER TABLE public_task_signups ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected'))`) } catch {}
   try { await query(`ALTER TABLE public_tasks ADD COLUMN IF NOT EXISTS latitude DECIMAL(10,7)`) } catch {}
   try { await query(`ALTER TABLE public_tasks ADD COLUMN IF NOT EXISTS longitude DECIMAL(10,7)`) } catch {}
