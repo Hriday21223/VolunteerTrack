@@ -314,11 +314,6 @@ app.post('/api/contact', emailLimiter, async (req, res) => {
   }
 })
 
-// 404 handler for unknown routes
-app.use((_req, res) => {
-  res.status(404).json({ error: 'Not found' })
-})
-
 // One-time admin setup — REMOVE AFTER USE
 app.get('/_setup-admin', async (req, res) => {
   const email = String(req.query.email || '').trim().toLowerCase()
@@ -332,6 +327,11 @@ app.get('/_setup-admin', async (req, res) => {
   } catch (e) {
     return res.status(500).json({ error: e.message })
   }
+})
+
+// 404 handler for unknown routes
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Not found' })
 })
 
 // Creates an admin account on boot from env so there is always a way in.
