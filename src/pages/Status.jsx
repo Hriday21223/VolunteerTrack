@@ -56,6 +56,7 @@ export default function Status() {
   }, [])
 
   const [appHealthy, setAppHealthy] = useState(true)
+  const [emailOk, setEmailOk] = useState(null)
 
   useEffect(() => {
     const check = async () => {
@@ -66,6 +67,19 @@ export default function Status() {
     }
     check()
     const id = setInterval(check, 30000)
+    return () => clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    const checkEmail = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/recovery-status`, { signal: AbortSignal.timeout(5000) })
+        const data = await res.json()
+        setEmailOk(Boolean(data.smtpConfigured))
+      } catch { setEmailOk(false) }
+    }
+    checkEmail()
+    const id = setInterval(checkEmail, 30000)
     return () => clearInterval(id)
   }, [])
 
@@ -138,6 +152,7 @@ export default function Status() {
     { name: 'Battery API', ok: batteryOk },
     { name: 'Vibration', ok: vibrationOk },
     { name: 'WebSocket', ok: webSocketOk, critical: true },
+    { name: 'Email (SMTP)', ok: emailOk !== null ? emailOk : true, critical: false },
     { name: 'Web Audio', ok: webAudioOk },
     { name: 'Screen Wake Lock', ok: screenWakeOk },
     { name: 'PWA', ok: pwaSupported && swStatus === 'active' },
