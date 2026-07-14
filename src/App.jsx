@@ -29,8 +29,6 @@ import Help from '@/pages/Help.jsx'
 import MyTasks from '@/pages/MyTasks.jsx'
 import Status from '@/pages/Status.jsx'
 
-const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
-
 function Protected({ children }) {
   const { user } = useAuth()
   const loc = useLocation()
@@ -48,7 +46,7 @@ function AdminProtected({ children }) {
   const { user } = useAuth()
   const loc = useLocation()
   if (!user) return <Navigate to="/login" state={{ from: loc }} replace />
-  if (user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+  if (user.role !== 'admin') {
     return <Navigate to="/" replace />
   }
   return children

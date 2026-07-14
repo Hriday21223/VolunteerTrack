@@ -1,14 +1,14 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Mail, Lock, ArrowRight } from 'lucide-react'
+import { Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth.jsx'
 
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
 
 export default function Login() {
-  const { login, loginWithPin, user } = useAuth()
-  const isAdmin = user?.email?.toLowerCase() === 'karnatamhriday@gmail.com'
+  const { login, verifyTotp, verifyBackupCode, loginWithPin, user } = useAuth()
+  const isAdmin = user?.role === 'admin'
   const nav = useNavigate()
   const loc = useLocation()
   const [mode, setMode] = useState('password')
@@ -19,6 +19,13 @@ export default function Login() {
   const [err, setErr] = useState('')
   const [toast, setToast] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+
+  // 2FA challenge state
+  const [totpPending, setTotpPending] = useState(false)
+  const [tempToken, setTempToken] = useState('')
+  const [totpCode, setTotpCode] = useState('')
+  const [backupMode, setBackupMode] = useState(false)
+  const [backupCode, setBackupCode] = useState('')
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)')
     setIsMobile(mq.matches)
@@ -34,9 +41,47 @@ export default function Login() {
     try {
       if (mode === 'pin') {
         await loginWithPin(email, pin)
+        setToast(true)
+        setTimeout(() => nav(loc.state?.from?.pathname || '/', { replace: true }), 600)
       } else {
-        await login(email, password)
+        const result = await login(email, password)
+        if (result?.requiresTotp) {
+          setTempToken(result.tempToken)
+          setTotpPending(true)
+          setBusy(false)
+          return
+        }
+        setToast(true)
+        setTimeout(() => nav(loc.state?.from?.pathname || '/', { replace: true }), 600)
       }
+    } catch (e) {
+      setErr(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onTotpSubmit = async (e) => {
+    e.preventDefault()
+    setErr('')
+    setBusy(true)
+    try {
+      await verifyTotp(tempToken, totpCode)
+      setToast(true)
+      setTimeout(() => nav(loc.state?.from?.pathname || '/', { replace: true }), 600)
+    } catch (e) {
+      setErr(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onBackupSubmit = async (e) => {
+    e.preventDefault()
+    setErr('')
+    setBusy(true)
+    try {
+      await verifyBackupCode(email, backupCode)
       setToast(true)
       setTimeout(() => nav(loc.state?.from?.pathname || '/', { replace: true }), 600)
     } catch (e) {
@@ -101,6 +146,66 @@ export default function Login() {
                 </button>
               </div>
 
+              {totpPending ? (
+                backupMode ? (
+                  <form onSubmit={onBackupSubmit} className="space-y-5">
+                    <div className="text-center mb-2">
+                      <ShieldCheck className="w-10 h-10 text-sky-400 mx-auto mb-2" />
+                      <p className="text-sm text-slate-300">Enter one of your backup codes</p>
+                    </div>
+                    <div>
+                      <label className="label text-slate-300" htmlFor="backup-code">Backup code</label>
+                      <input
+                        id="backup-code"
+                        type="text"
+                        required
+                        className="input bg-slate-900/80 text-white border-white/10 font-mono"
+                        placeholder="e.g. a1b2c3d4"
+                        value={backupCode}
+                        onChange={(e) => setBackupCode(e.target.value)}
+                      />
+                    </div>
+                    {err && <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100 animate-shake">{err}</div>}
+                    <button type="submit" className="btn-primary w-full py-3 text-sm font-semibold" disabled={busy}>
+                      {busy ? 'Verifying…' : <>Verify backup code <ArrowRight className="w-4 h-4" /></>}
+                    </button>
+                    <button type="button" className="w-full text-center text-sm text-sky-200 hover:text-white" onClick={() => { setBackupMode(false); setErr('') }}>
+                      Use authenticator code instead
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={onTotpSubmit} className="space-y-5">
+                    <div className="text-center mb-2">
+                      <ShieldCheck className="w-10 h-10 text-sky-400 mx-auto mb-2" />
+                      <p className="text-sm text-slate-300">Enter the 6-digit code from your authenticator app</p>
+                    </div>
+                    <div>
+                      <label className="label text-slate-300" htmlFor="totp-code">Authenticator code</label>
+                      <input
+                        id="totp-code"
+                        type="text"
+                        required
+                        autoComplete="one-time-code"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={6}
+                        className="input bg-slate-900/80 text-white border-white/10 text-center text-2xl tracking-[0.5em] font-mono"
+                        placeholder="000000"
+                        value={totpCode}
+                        onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        autoFocus
+                      />
+                    </div>
+                    {err && <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100 animate-shake">{err}</div>}
+                    <button type="submit" className="btn-primary w-full py-3 text-sm font-semibold" disabled={busy || totpCode.length !== 6}>
+                      {busy ? 'Verifying…' : <>Verify <ArrowRight className="w-4 h-4" /></>}
+                    </button>
+                    <button type="button" className="w-full text-center text-sm text-sky-200 hover:text-white" onClick={() => { setBackupMode(true); setErr('') }}>
+                      Use a backup code instead
+                    </button>
+                  </form>
+                )
+              ) : (
               <form onSubmit={onSubmit} className="space-y-5">
                 <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
                   <label className="label text-slate-300" htmlFor="email">Email</label>
@@ -150,6 +255,7 @@ export default function Login() {
                   {busy ? (mode === 'pin' ? 'Unlocking…' : 'Signing in…') : (mode === 'pin' ? <>Unlock <ArrowRight className="w-4 h-4" /></> : <>Sign in <ArrowRight className="w-4 h-4" /></>)}
                 </button>
               </form>
+              )}
 
               <div className="mt-6 text-center text-sm text-slate-400">
                 New to VolunTrack?{' '}

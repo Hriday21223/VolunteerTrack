@@ -15,7 +15,7 @@ import QRCode from 'qrcode'
 
 export default function Settings() {
   const { theme, setTheme, toggle } = useTheme()
-  const { user, logout, deleteAccount, updateProfile, setSyncPin: setSyncPinAuth } = useAuth()
+  const { user, logout, deleteAccount, updateProfile, setSyncPin: setSyncPinAuth, setupTotp, verifyTotpSetup, disableTotp } = useAuth()
   const { goals, saveGoal, removeGoal, logs } = useData()
   const nav = useNavigate()
   const [newGoal, setNewGoal] = useState({ title: '', targetHours: 50, primary: false })
@@ -43,6 +43,16 @@ export default function Settings() {
   const [showQR, setShowQR] = useState(false)
   const qrCanvasRef = useRef(null)
 
+  // 2FA state
+  const [totpSetup, setTotpSetup] = useState(null) // { secret, uri, backupCodes }
+  const [totpCode, setTotpCode] = useState('')
+  const [totpBusy, setTotpBusy] = useState(false)
+  const [totpErr, setTotpErr] = useState('')
+  const [totpDone, setTotpDone] = useState(false)
+  const [disablePw, setDisablePw] = useState('')
+  const [showDisableForm, setShowDisableForm] = useState(false)
+  const totpQrRef = useRef(null)
+
   useEffect(() => {
     if (showQR && displaySyncPin && qrCanvasRef.current) {
       QRCode.toCanvas(qrCanvasRef.current, displaySyncPin, {
@@ -52,6 +62,62 @@ export default function Settings() {
       })
     }
   }, [showQR, displaySyncPin])
+
+  useEffect(() => {
+    if (totpSetup?.uri && totpQrRef.current) {
+      QRCode.toCanvas(totpQrRef.current, totpSetup.uri, {
+        width: 180,
+        margin: 2,
+        color: { dark: '#111827', light: '#ffffff' },
+      })
+    }
+  }, [totpSetup?.uri])
+
+  const handleSetupTotp = async () => {
+    setTotpErr('')
+    setTotpBusy(true)
+    try {
+      const data = await setupTotp()
+      setTotpSetup(data)
+    } catch (e) {
+      setTotpErr(e.message)
+    } finally {
+      setTotpBusy(false)
+    }
+  }
+
+  const handleVerifyTotpSetup = async (e) => {
+    e.preventDefault()
+    setTotpErr('')
+    setTotpBusy(true)
+    try {
+      await verifyTotpSetup(totpCode)
+      setTotpDone(true)
+      setTotpSetup(null)
+      setTotpCode('')
+    } catch (e) {
+      setTotpErr(e.message)
+    } finally {
+      setTotpBusy(false)
+    }
+  }
+
+  const handleDisableTotp = async (e) => {
+    e.preventDefault()
+    setTotpErr('')
+    setTotpBusy(true)
+    try {
+      await disableTotp(disablePw)
+      setShowDisableForm(false)
+      setDisablePw('')
+      setToastMessage('2FA disabled')
+      setToast(true)
+    } catch (e) {
+      setTotpErr(e.message)
+    } finally {
+      setTotpBusy(false)
+    }
+  }
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)')
@@ -383,6 +449,103 @@ export default function Settings() {
               </button>
             </div>
           </form>
+        </Card>
+
+        <Card>
+          <h3 className="font-display font-semibold mb-3 flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-brand-600" /> Two-Factor Authentication</h3>
+          <p className="text-sm text-earth-500 dark:text-earth-400 mb-4">
+            Add an extra layer of security to your account by requiring a code from your authenticator app when you sign in.
+          </p>
+
+          {user?.totpEnabled ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                <span className="text-sm font-medium text-emerald-300">2FA is enabled</span>
+              </div>
+              {showDisableForm ? (
+                <form onSubmit={handleDisableTotp} className="space-y-3">
+                  <p className="text-sm text-earth-400">Enter your password to disable 2FA:</p>
+                  <input
+                    type="password"
+                    value={disablePw}
+                    onChange={(e) => setDisablePw(e.target.value)}
+                    placeholder="Your password"
+                    className="input w-full"
+                    required
+                  />
+                  {totpErr && <div className="text-sm text-red-400">{totpErr}</div>}
+                  <div className="flex gap-2">
+                    <button type="submit" disabled={totpBusy} className="btn-danger flex-1">
+                      {totpBusy ? 'Disabling…' : 'Disable 2FA'}
+                    </button>
+                    <button type="button" onClick={() => { setShowDisableForm(false); setDisablePw(''); setTotpErr('') }} className="btn-ghost flex-1">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <button onClick={() => setShowDisableForm(true)} className="btn-ghost w-full text-red-400 hover:text-red-300">
+                  Disable 2FA
+                </button>
+              )}
+            </div>
+          ) : totpSetup ? (
+            <div className="space-y-4">
+              <div className="text-center">
+                <p className="text-sm text-earth-400 mb-3">Scan this QR code with your authenticator app:</p>
+                <div className="flex justify-center p-4 bg-white rounded-xl">
+                  <canvas ref={totpQrRef} />
+                </div>
+                <p className="text-xs text-earth-500 mt-2">Or enter this code manually:</p>
+                <p className="font-mono text-sm text-earth-300 bg-slate-900/50 px-3 py-1.5 rounded-lg mt-1 select-all">{totpSetup.secret}</p>
+              </div>
+
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                <p className="text-xs font-semibold text-amber-300 mb-1">Save your backup codes</p>
+                <p className="text-xs text-amber-200/80 mb-2">Store these safely. Each code can only be used once if you lose access to your authenticator.</p>
+                <div className="grid grid-cols-2 gap-1">
+                  {totpSetup.backupCodes.map((code, i) => (
+                    <code key={i} className="text-xs font-mono text-amber-100 bg-slate-900/50 px-2 py-1 rounded text-center">{code}</code>
+                  ))}
+                </div>
+              </div>
+
+              <form onSubmit={handleVerifyTotpSetup} className="space-y-3">
+                <label className="label">Enter the 6-digit code from your app to confirm</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  className="input w-full text-center text-lg tracking-widest font-mono"
+                  autoFocus
+                />
+                {totpErr && <div className="text-sm text-red-400">{totpErr}</div>}
+                <div className="flex gap-2">
+                  <button type="submit" disabled={totpBusy || totpCode.length !== 6} className="btn-primary flex-1">
+                    {totpBusy ? 'Verifying…' : 'Enable 2FA'}
+                  </button>
+                  <button type="button" onClick={() => { setTotpSetup(null); setTotpCode(''); setTotpErr('') }} className="btn-ghost flex-1">
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <button onClick={handleSetupTotp} disabled={totpBusy} className="btn-primary w-full">
+              {totpBusy ? 'Setting up…' : 'Enable 2FA'}
+            </button>
+          )}
+
+          {totpDone && (
+            <div className="mt-3 text-sm text-emerald-400 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4" /> 2FA enabled successfully!
+            </div>
+          )}
         </Card>
 
         <Card>

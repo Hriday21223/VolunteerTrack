@@ -1,9 +1,12 @@
 import express from 'express'
 import rateLimit from 'express-rate-limit'
 import validator from 'validator'
+import bcrypt from 'bcryptjs'
+import * as OTPAuth from 'otpauth'
+import crypto from 'crypto'
 import { query, hasDatabase } from '../db.js'
 import { uid } from '../ids.js'
-import { hashPassword, verifyPassword, signToken, requireAuth } from '../auth.js'
+import { hashPassword, verifyPassword, signToken, signTempToken, verifyTempToken, requireAuth } from '../auth.js'
 
 const router = express.Router()
 
@@ -75,6 +78,7 @@ function publicUser(row) {
     schoolId: row.school_id,
     grade: row.grade,
     syncPin: row.sync_pin,
+    totpEnabled: row.totp_enabled,
     createdAt: row.created_at,
   }
 }
@@ -126,9 +130,7 @@ router.post('/register', authLimiter, requireDb, async (req, res) => {
 
 router.post('/login', authLimiter, requireDb, async (req, res) => {
   const email = validateEmail(req.body.email || '')
-  const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase()
-  const isAdminLogin = email === adminEmail
-  const password = isAdminLogin ? 'bypass' : validatePassword(req.body.password || '')
+  const password = validatePassword(req.body.password || '')
 
   if (!email) {
     return res.status(400).json({ error: 'Enter a valid email address.' })
@@ -140,16 +142,14 @@ router.post('/login', authLimiter, requireDb, async (req, res) => {
   try {
     const { rows } = await query('SELECT * FROM users WHERE email = $1', [email])
     const row = rows[0]
-    const ok = isAdminLogin ? !!row : row && (await verifyPassword(password, row.password_hash))
+    const ok = row && (await verifyPassword(password, row.password_hash))
     if (!ok) {
       return res.status(401).json({ error: 'Invalid email or password.' })
     }
-    // Auto-promote the configured admin email to admin role on login
-    if (row.email === adminEmail && row.role !== 'admin') {
-      await query('UPDATE users SET role = $1 WHERE id = $2', ['admin', row.id])
-      row.role = 'admin'
-    }
     const user = publicUser(row)
+    if (row.totp_enabled) {
+      return res.json({ requiresTotp: true, tempToken: signTempToken(user) })
+    }
     return res.json({ token: signToken(user), user })
   } catch (error) {
     console.error('login failed:', error)
@@ -295,6 +295,224 @@ router.post('/grant-admin', authLimiter, requireDb, requireAuth(), async (req, r
   } catch (error) {
     console.error('grant-admin failed:', error)
     return res.status(500).json({ error: 'Could not grant admin role.' })
+  }
+})
+
+// ---------------------------------------------------------------------------
+// TOTP Two-Factor Authentication
+// ---------------------------------------------------------------------------
+
+function generateBackupCodes(count = 10) {
+  const codes = []
+  for (let i = 0; i < count; i++) {
+    codes.push(crypto.randomBytes(4).toString('hex'))
+  }
+  return codes
+}
+
+async function hashBackupCodes(codes) {
+  const hashed = []
+  for (const code of codes) {
+    hashed.push(await bcrypt.hash(code, 10))
+  }
+  return JSON.stringify(hashed)
+}
+
+// POST /api/auth/totp/setup — generate secret + backup codes (not yet enabled)
+router.post('/totp/setup', authLimiter, requireDb, requireAuth(), async (req, res) => {
+  try {
+    const { rows } = await query('SELECT * FROM users WHERE id = $1', [req.auth.sub])
+    if (rows.length === 0) return res.status(404).json({ error: 'Account not found.' })
+    const row = rows[0]
+    if (row.totp_enabled) {
+      return res.status(400).json({ error: '2FA is already enabled. Disable it first.' })
+    }
+
+    const totp = new OTPAuth.TOTP({
+      issuer: 'VolunTrack',
+      label: row.email,
+      algorithm: 'SHA1',
+      digits: 6,
+      period: 30,
+      secret: new OTPAuth.Secret({ size: 20 }),
+    })
+
+    const uri = totp.toString()
+    const secretBase32 = totp.secret.base32
+
+    const backupCodes = generateBackupCodes(10)
+    const hashed = await hashBackupCodes(backupCodes)
+
+    // Store the secret temporarily (not enabled yet)
+    await query(
+      'UPDATE users SET totp_secret = $1, backup_codes = $2 WHERE id = $3',
+      [secretBase32, hashed, req.auth.sub],
+    )
+
+    return res.json({ secret: secretBase32, uri, backupCodes })
+  } catch (error) {
+    console.error('totp setup failed:', error)
+    return res.status(500).json({ error: 'Could not set up 2FA.' })
+  }
+})
+
+// POST /api/auth/totp/verify-setup — confirm a code to enable 2FA
+router.post('/totp/verify-setup', authLimiter, requireDb, requireAuth(), async (req, res) => {
+  const code = String(req.body.code || '').trim()
+  if (!/^\d{6}$/.test(code)) {
+    return res.status(400).json({ error: 'Enter a 6-digit code.' })
+  }
+
+  try {
+    const { rows } = await query('SELECT * FROM users WHERE id = $1', [req.auth.sub])
+    if (rows.length === 0) return res.status(404).json({ error: 'Account not found.' })
+    const row = rows[0]
+    if (row.totp_enabled) {
+      return res.status(400).json({ error: '2FA is already enabled.' })
+    }
+    if (!row.totp_secret) {
+      return res.status(400).json({ error: 'No 2FA setup in progress. Run /totp/setup first.' })
+    }
+
+    const totp = new OTPAuth.TOTP({
+      issuer: 'VolunTrack',
+      label: row.email,
+      algorithm: 'SHA1',
+      digits: 6,
+      period: 30,
+      secret: OTPAuth.Secret.fromBase32(row.totp_secret),
+    })
+
+    const delta = totp.validate({ token: code, window: 1 })
+    if (delta === null) {
+      return res.status(401).json({ error: 'Invalid code. Try again.' })
+    }
+
+    await query('UPDATE users SET totp_enabled = true WHERE id = $1', [req.auth.sub])
+    return res.json({ ok: true, user: publicUser(row) })
+  } catch (error) {
+    console.error('totp verify-setup failed:', error)
+    return res.status(500).json({ error: 'Could not verify 2FA code.' })
+  }
+})
+
+// POST /api/auth/totp/challenge — verify TOTP during login (uses temp token)
+router.post('/totp/challenge', authLimiter, requireDb, async (req, res) => {
+  const { tempToken, code } = req.body
+  if (!tempToken || typeof tempToken !== 'string') {
+    return res.status(400).json({ error: 'Missing temporary token.' })
+  }
+  if (!code || typeof code !== 'string' || !/^\d{6}$/.test(code.trim())) {
+    return res.status(400).json({ error: 'Enter a 6-digit code.' })
+  }
+
+  const payload = verifyTempToken(tempToken)
+  if (!payload) {
+    return res.status(401).json({ error: 'Session expired. Please log in again.' })
+  }
+
+  try {
+    const { rows } = await query('SELECT * FROM users WHERE id = $1', [payload.sub])
+    if (rows.length === 0) return res.status(404).json({ error: 'Account not found.' })
+    const row = rows[0]
+
+    if (!row.totp_enabled || !row.totp_secret) {
+      return res.status(400).json({ error: '2FA is not enabled on this account.' })
+    }
+
+    const totp = new OTPAuth.TOTP({
+      issuer: 'VolunTrack',
+      label: row.email,
+      algorithm: 'SHA1',
+      digits: 6,
+      period: 30,
+      secret: OTPAuth.Secret.fromBase32(row.totp_secret),
+    })
+
+    const delta = totp.validate({ token: code.trim(), window: 1 })
+    if (delta === null) {
+      return res.status(401).json({ error: 'Invalid code. Try again.' })
+    }
+
+    const user = publicUser(row)
+    return res.json({ token: signToken(user), user })
+  } catch (error) {
+    console.error('totp challenge failed:', error)
+    return res.status(500).json({ error: 'Could not verify code.' })
+  }
+})
+
+// POST /api/auth/totp/disable — disable 2FA (requires password)
+router.post('/totp/disable', authLimiter, requireDb, requireAuth(), async (req, res) => {
+  const password = req.body.password
+  if (!password || typeof password !== 'string') {
+    return res.status(400).json({ error: 'Password is required to disable 2FA.' })
+  }
+
+  try {
+    const { rows } = await query('SELECT * FROM users WHERE id = $1', [req.auth.sub])
+    if (rows.length === 0) return res.status(404).json({ error: 'Account not found.' })
+    const row = rows[0]
+
+    if (!row.totp_enabled) {
+      return res.status(400).json({ error: '2FA is not enabled.' })
+    }
+
+    const ok = await verifyPassword(password, row.password_hash)
+    if (!ok) return res.status(403).json({ error: 'Incorrect password.' })
+
+    await query(
+      'UPDATE users SET totp_enabled = false, totp_secret = NULL, backup_codes = NULL WHERE id = $1',
+      [req.auth.sub],
+    )
+    const updated = { ...row, totp_enabled: false, totp_secret: null, backup_codes: null }
+    return res.json({ ok: true, user: publicUser(updated) })
+  } catch (error) {
+    console.error('totp disable failed:', error)
+    return res.status(500).json({ error: 'Could not disable 2FA.' })
+  }
+})
+
+// POST /api/auth/totp/backup-recovery — use a backup code to log in
+router.post('/totp/backup-recovery', authLimiter, requireDb, async (req, res) => {
+  const email = validateEmail(req.body.email || '')
+  const code = String(req.body.code || '').trim().toLowerCase()
+
+  if (!email) return res.status(400).json({ error: 'Enter a valid email address.' })
+  if (!code) return res.status(400).json({ error: 'Backup code is required.' })
+
+  try {
+    const { rows } = await query('SELECT * FROM users WHERE email = $1', [email])
+    if (rows.length === 0) return res.status(404).json({ error: 'No account with that email.' })
+    const row = rows[0]
+
+    if (!row.totp_enabled || !row.backup_codes) {
+      return res.status(400).json({ error: '2FA is not enabled on this account.' })
+    }
+
+    const hashedCodes = JSON.parse(row.backup_codes)
+    let matchedIndex = -1
+
+    for (let i = 0; i < hashedCodes.length; i++) {
+      if (await bcrypt.compare(code, hashedCodes[i])) {
+        matchedIndex = i
+        break
+      }
+    }
+
+    if (matchedIndex === -1) {
+      return res.status(401).json({ error: 'Invalid backup code.' })
+    }
+
+    // Remove the used backup code
+    hashedCodes.splice(matchedIndex, 1)
+    await query('UPDATE users SET backup_codes = $1 WHERE id = $2', [JSON.stringify(hashedCodes), row.id])
+
+    const user = publicUser(row)
+    return res.json({ token: signToken(user), user })
+  } catch (error) {
+    console.error('totp backup-recovery failed:', error)
+    return res.status(500).json({ error: 'Could not verify backup code.' })
   }
 })
 

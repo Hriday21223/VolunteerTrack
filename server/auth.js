@@ -33,6 +33,24 @@ export function signToken(user) {
   )
 }
 
+export function signTempToken(user) {
+  return jwt.sign(
+    { sub: user.id, role: user.role, email: user.email, purpose: 'totp' },
+    secret(),
+    { expiresIn: '5m' },
+  )
+}
+
+export function verifyTempToken(token) {
+  try {
+    const payload = jwt.verify(token, secret())
+    if (payload.purpose !== 'totp') return null
+    return payload
+  } catch {
+    return null
+  }
+}
+
 export function verifyToken(token) {
   try {
     return jwt.verify(token, secret())
@@ -48,9 +66,13 @@ function bearer(req) {
 }
 
 // Attaches req.auth = { sub, role, email } when a valid token is present.
+// Rejects temp tokens (purpose: 'totp') — those are only for TOTP challenge.
 export function authenticate(req, _res, next) {
   const token = bearer(req)
-  req.auth = token ? verifyToken(token) : null
+  if (!token) { req.auth = null; return next() }
+  const payload = verifyToken(token)
+  if (payload && payload.purpose) { req.auth = null; return next() }
+  req.auth = payload
   next()
 }
 

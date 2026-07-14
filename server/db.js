@@ -155,5 +155,9 @@ export async function initSchema() {
   try { await query(`ALTER TABLE schools ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ`) } catch {}
   try { await query(`ALTER TABLE schools ADD COLUMN IF NOT EXISTS payment_due_date DATE`) } catch {}
   try { await query(`ALTER TABLE admin_notifications ADD COLUMN IF NOT EXISTS school_id TEXT REFERENCES schools(id) ON DELETE CASCADE`) } catch {}
+  // 2FA columns
+  try { await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret TEXT`) } catch {}
+  try { await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN NOT NULL DEFAULT false`) } catch {}
+  try { await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS backup_codes TEXT`) } catch {}
   return true
 }

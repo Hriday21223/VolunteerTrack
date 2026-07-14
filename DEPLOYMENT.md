@@ -46,16 +46,16 @@ git push
 After creating the service, add these environment variables in Render:
 
 ### Required Variables:
-- `DATABASE_URL`: `postgresql://neondb_owner:npg_7uZriwmaDz1p@ep-misty-recipe-adiolyhv-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=verify-full&channel_binding=require`
-- `JWT_SECRET`: (Render will auto-generate this if using blueprint)
+- `DATABASE_URL`: (your Neon PostgreSQL connection string)
+- `JWT_SECRET`: (generate with `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`)
 - `NODE_ENV`: `production`
 
 ### Optional Variables (for email features):
 - `EMAIL_HOST`: `smtp.gmail.com`
 - `EMAIL_PORT`: `587`
 - `EMAIL_SECURE`: `false`
-- `EMAIL_USER`: `karnatamhriday@gmail.com`
-- `EMAIL_PASSWORD`: `kulo nteg plkx obdo`
+- `EMAIL_USER`: (your Gmail address)
+- `EMAIL_PASSWORD`: (your Gmail app password)
 - `EMAIL_FROM`: `volunteertrack@googlegroups.com`
 
 ### Optional Admin Account:

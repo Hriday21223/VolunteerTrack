@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
 import nodemailer from 'nodemailer'
@@ -35,8 +36,16 @@ const emailLimiter = rateLimit({
 })
 
 app.set('trust proxy', 1)
-app.use(cors())
-app.use(express.json({ limit: '1mb' })) // Limit request body size
+app.use(helmet())
+app.use(cors({
+  origin: [
+    'https://hriday21223.github.io',
+    'http://localhost:5173',
+    'http://localhost:10000',
+  ],
+  credentials: true,
+}))
+app.use(express.json({ limit: '1mb' }))
 app.use(apiLimiter)
 app.use(authenticate)
 

@@ -10,8 +10,6 @@ import { runAgent, updateIncidentStatus, getAgentLog, logAgentAction } from '@/l
 
 const apiUrl = import.meta.env.VITE_API_URL || '/api'
 
-const ADMIN_EMAIL = 'karnatamhriday@gmail.com'
-
 function generateDraft(contact) {
   const subject = contact.subject || 'General question'
   const name = contact.name || 'there'
@@ -84,12 +82,8 @@ export default function Admin() {
   }, [])
 
   useEffect(() => {
-    if (user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-      setIsAuthorized(true)
-    } else {
-      setIsAuthorized(false)
-    }
-  }, [user?.email])
+    setIsAuthorized(user?.role === 'admin')
+  }, [user?.role])
 
   const loadSchools = useCallback(async () => {
     setLoadingSchools(true)

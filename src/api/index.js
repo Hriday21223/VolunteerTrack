@@ -31,12 +31,8 @@ export function findUserByEmail(email) {
 }
 
 export function findUserBySyncPin(syncPin) {
-  console.log('Looking for user with sync PIN:', syncPin)
   const users = getUsers()
-  console.log('All users sync PINs:', users.map(u => ({ email: u.email, syncPin: u.syncPin })))
-  const found = users.find((u) => u.syncPin === syncPin) || null
-  console.log('Found user:', found ? found.email : 'none')
-  return found
+  return users.find((u) => u.syncPin === syncPin) || null
 }
 
 export function updateSyncPin(userId, syncPin) {

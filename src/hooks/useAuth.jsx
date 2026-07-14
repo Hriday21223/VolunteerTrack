@@ -58,8 +58,12 @@ export function AuthProvider({ children }) {
       }
       
       const data = await response.json()
-      console.log('Backend login successful:', data.user)
-      
+
+      // 2FA required — return temp token for the TOTP challenge step
+      if (data.requiresTotp) {
+        return { requiresTotp: true, tempToken: data.tempToken }
+      }
+
       // Store the token for future authenticated requests
       localStorage.setItem('voluntrack:auth_token', data.token)
       
@@ -67,8 +71,7 @@ export function AuthProvider({ children }) {
       write(SESSION_KEY, data.user)
       setUser(data.user)
       return data.user
-    } catch (error) {
-      console.log('Backend login failed, falling back to local storage:', error.message)
+    } catch {
       // Fallback to local storage for demo mode
       const account = findUserByEmail(email)
       if (!account) throw new Error('No account with that email.')
@@ -78,6 +81,95 @@ export function AuthProvider({ children }) {
       setUser(safe)
       return safe
     }
+  }, [])
+
+  const verifyTotp = useCallback(async (tempToken, code) => {
+    const apiUrl = import.meta.env.VITE_API_URL || '/api'
+    const response = await fetch(`${apiUrl}/auth/totp/challenge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tempToken, code }),
+    })
+    if (!response.ok) {
+      const err = await response.json()
+      throw new Error(err.error || 'Invalid code')
+    }
+    const data = await response.json()
+    localStorage.setItem('voluntrack:auth_token', data.token)
+    write(SESSION_KEY, data.user)
+    setUser(data.user)
+    return data.user
+  }, [])
+
+  const verifyBackupCode = useCallback(async (email, code) => {
+    const apiUrl = import.meta.env.VITE_API_URL || '/api'
+    const response = await fetch(`${apiUrl}/auth/totp/backup-recovery`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
+    })
+    if (!response.ok) {
+      const err = await response.json()
+      throw new Error(err.error || 'Invalid backup code')
+    }
+    const data = await response.json()
+    localStorage.setItem('voluntrack:auth_token', data.token)
+    write(SESSION_KEY, data.user)
+    setUser(data.user)
+    return data.user
+  }, [])
+
+  const setupTotp = useCallback(async () => {
+    const token = localStorage.getItem('voluntrack:auth_token')
+    if (!token) throw new Error('Not authenticated')
+    const apiUrl = import.meta.env.VITE_API_URL || '/api'
+    const response = await fetch(`${apiUrl}/auth/totp/setup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    })
+    if (!response.ok) {
+      const err = await response.json()
+      throw new Error(err.error || 'Failed to set up 2FA')
+    }
+    return response.json()
+  }, [])
+
+  const verifyTotpSetup = useCallback(async (code) => {
+    const token = localStorage.getItem('voluntrack:auth_token')
+    if (!token) throw new Error('Not authenticated')
+    const apiUrl = import.meta.env.VITE_API_URL || '/api'
+    const response = await fetch(`${apiUrl}/auth/totp/verify-setup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ code }),
+    })
+    if (!response.ok) {
+      const err = await response.json()
+      throw new Error(err.error || 'Invalid code')
+    }
+    const data = await response.json()
+    write(SESSION_KEY, data.user)
+    setUser(data.user)
+    return data.user
+  }, [])
+
+  const disableTotp = useCallback(async (password) => {
+    const token = localStorage.getItem('voluntrack:auth_token')
+    if (!token) throw new Error('Not authenticated')
+    const apiUrl = import.meta.env.VITE_API_URL || '/api'
+    const response = await fetch(`${apiUrl}/auth/totp/disable`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ password }),
+    })
+    if (!response.ok) {
+      const err = await response.json()
+      throw new Error(err.error || 'Failed to disable 2FA')
+    }
+    const data = await response.json()
+    write(SESSION_KEY, data.user)
+    setUser(data.user)
+    return data.user
   }, [])
 
   const loginWithPin = useCallback(async (email, pin) => {
@@ -91,8 +183,6 @@ export function AuthProvider({ children }) {
   }, [])
 
   const loginWithSyncPin = useCallback(async (syncPin) => {
-    console.log('Attempting login with sync PIN:', syncPin)
-    
     // Try backend API first
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '/api'
@@ -110,8 +200,7 @@ export function AuthProvider({ children }) {
       }
       
       const data = await response.json()
-      console.log('Backend sync login successful:', data.user)
-      
+
       // Store the token for future authenticated requests
       localStorage.setItem('voluntrack:auth_token', data.token)
       
@@ -119,11 +208,9 @@ export function AuthProvider({ children }) {
       write(SESSION_KEY, data.user)
       setUser(data.user)
       return data.user
-    } catch (error) {
-      console.log('Backend sync login failed, falling back to local storage:', error.message)
+    } catch {
       // Fallback to local storage for demo mode
       const account = findUserBySyncPin(syncPin)
-      console.log('Found account:', account ? account.email : 'none')
       if (!account) throw new Error('Invalid sync PIN.')
       const { passwordHash, pinHash, resetPinCode, resetPinCodeExpiresAt, ...safe } = account
       write(SESSION_KEY, safe)
@@ -150,8 +237,7 @@ export function AuthProvider({ children }) {
       }
       
       const result = await response.json()
-      console.log('Backend registration successful:', result.user)
-      
+
       // Store the token for future authenticated requests
       localStorage.setItem('voluntrack:auth_token', result.token)
       
@@ -159,8 +245,7 @@ export function AuthProvider({ children }) {
       write(SESSION_KEY, result.user)
       setUser(result.user)
       return result.user
-    } catch (error) {
-      console.log('Backend registration failed, falling back to local storage:', error.message)
+    } catch {
       // Fallback to local storage for demo mode
       const account = createUser(data)
       const { passwordHash, pinHash, resetPinCode, resetPinCodeExpiresAt, ...safe } = account
@@ -240,7 +325,6 @@ export function AuthProvider({ children }) {
   }, [])
 
   const setSyncPin = useCallback(async (pin) => {
-    console.log('Setting sync PIN for user:', user?.email, 'PIN:', pin)
     if (!user) throw new Error('You must be logged in to set a sync PIN.')
     if (!/^\d{5}$/.test(pin)) throw new Error('Sync PIN must be exactly 5 digits.')
     
@@ -265,16 +349,14 @@ export function AuthProvider({ children }) {
       }
       
       const data = await response.json()
-      console.log('Backend sync PIN updated:', data.user)
+
       // Update the user session with the sync PIN
       write(SESSION_KEY, data.user)
       setUser(data.user)
       return data.user
-    } catch (error) {
-      console.log('Backend sync PIN failed, falling back to local storage:', error.message)
+    } catch {
       // Fallback to local storage for demo mode
       const updated = updateSyncPin(user.id, pin)
-      console.log('Updated user with sync PIN:', updated?.syncPin)
       if (!updated) throw new Error('Failed to update sync PIN.')
       const { passwordHash, pinHash, resetPinCode, resetPinCodeExpiresAt, ...safe } = updated
       write(SESSION_KEY, safe)
@@ -284,7 +366,7 @@ export function AuthProvider({ children }) {
   }, [user])
 
   return (
-    <AuthContext.Provider value={{ user, login, loginWithPin, loginWithSyncPin, register, logout, deleteAccount, updateProfile, requestPinReset, completePinReset, requestPasswordReset, completePasswordReset, setSyncPin }}>
+    <AuthContext.Provider value={{ user, login, verifyTotp, verifyBackupCode, setupTotp, verifyTotpSetup, disableTotp, loginWithPin, loginWithSyncPin, register, logout, deleteAccount, updateProfile, requestPinReset, completePinReset, requestPasswordReset, completePasswordReset, setSyncPin }}>
       {children}
     </AuthContext.Provider>
   )
