@@ -441,6 +441,20 @@ export default function Settings() {
 
         <CollapsibleSection icon={Lock} label="Account & Security" defaultOpen={true}>
           <Card>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-600 dark:text-brand-400 font-display font-bold text-sm uppercase">
+                {user?.name?.charAt(0) || '?'}
+              </div>
+              <div>
+                <p className="font-medium">{user?.name || 'User'}</p>
+                <p className="text-xs text-earth-400">{user?.email}</p>
+              </div>
+              <span className="ml-auto text-xs px-2.5 py-1 rounded-full bg-brand-500/10 text-brand-500 dark:text-brand-400 font-medium capitalize">
+                {user?.role || 'student'}
+              </span>
+            </div>
+          </Card>
+          <Card>
             <h3 className="font-display font-semibold mb-3 flex items-center gap-2"><Lock className="w-4 h-4 text-brand-600" /> Change password</h3>
             <form onSubmit={onChangePassword} className="grid sm:grid-cols-3 gap-4">
               <div>
