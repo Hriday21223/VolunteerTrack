@@ -29,6 +29,8 @@ const STORAGE_KEYS = [
 ]
 
 export default function Status() {
+  useEffect(() => { window.scrollTo(0, 0) }, [])
+
   const storageOk = (() => {
     try {
       localStorage.setItem('__test__', '1')

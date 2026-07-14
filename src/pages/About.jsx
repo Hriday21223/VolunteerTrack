@@ -113,6 +113,7 @@ function FaqItem({ q, a }) {
 
 export default function About() {
   useEffect(() => {
+    window.scrollTo(0, 0)
     const els = document.querySelectorAll('[data-animate]')
     const observer = new IntersectionObserver(
       (entries) => {

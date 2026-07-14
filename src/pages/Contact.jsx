@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Mail, MessageSquare, Send, CheckCircle2, Instagram } from 'lucide-react'
 import Card from '@/components/Card.jsx'
 import Toast from '@/components/Toast.jsx'
 
 export default function Contact() {
+  useEffect(() => { window.scrollTo(0, 0) }, [])
   const [form, setForm] = useState({ name: '', email: '', subject: 'General question', message: '' })
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
