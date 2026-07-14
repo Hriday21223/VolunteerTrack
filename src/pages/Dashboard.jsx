@@ -47,6 +47,11 @@ export default function Dashboard() {
     else if (view === 'volunteer') setDashTab('volunteer')
   }, [searchParams])
 
+  // Scroll to top when switching dashboard tabs
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [dashTab])
+
   const total = useMemo(() => logs.reduce((s, l) => s + (Number(l.hours) || 0), 0), [logs])
 
   // Recomputes when the calendar month changes; identity is stable across renders
