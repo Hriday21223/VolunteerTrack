@@ -314,21 +314,6 @@ app.post('/api/contact', emailLimiter, async (req, res) => {
   }
 })
 
-// One-time admin setup — REMOVE AFTER USE
-app.get('/_setup-admin', async (req, res) => {
-  const email = String(req.query.email || '').trim().toLowerCase()
-  if (!email) return res.status(400).json({ error: 'email required' })
-  if (!hasDatabase()) return res.status(500).json({ error: 'no database' })
-  try {
-    const existing = await query('SELECT id, role FROM users WHERE email = $1', [email])
-    if (existing.rowCount === 0) return res.status(404).json({ error: 'User not found — sign up first' })
-    await query('UPDATE users SET role = $1 WHERE email = $2', ['admin', email])
-    return res.json({ ok: true, message: `${email} is now an admin` })
-  } catch (e) {
-    return res.status(500).json({ error: e.message })
-  }
-})
-
 // 404 handler for unknown routes
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' })
