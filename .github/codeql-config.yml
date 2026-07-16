@@ -1,0 +1,27 @@
+# CodeQL configuration file for security analysis optimization
+# This file excludes non-production code and build artifacts from scanning
+# to improve scan performance and focus on production code quality
+
+name: "CodeQL config"
+disable-default-queries: false
+
+# Directories and files to exclude from CodeQL analysis
+paths-ignore:
+  # Mobile platform builds
+  - android/**
+  - ios/**
+  # Build artifacts and outputs
+  - dist/**
+  - node_modules/**
+  - output/**
+  - outputs/**
+  - _site/**
+  # Test files
+  - '**/*.test.js'
+  - '**/*.spec.js'
+
+# Production code directories to include in analysis
+path-includes:
+  - src/**
+  - server/**
+  - scripts/**
